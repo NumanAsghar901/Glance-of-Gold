@@ -1,0 +1,165 @@
+# Glance of Gold
+
+@AGENTS.md
+
+E-commerce site for **Glance of Gold**, a Pakistani jewellery brand.
+
+**Stack:** Next.js 16 (App Router, TypeScript), Tailwind CSS v4, Framer Motion, Supabase, Nodemailer. shadcn/ui is configured but its generated components use a neutral theme with dark variants, so restyle or rewrite them to the tokens below before use.
+
+**Next.js 16 note:** APIs differ from older versions. Read the matching guide in `node_modules/next/dist/docs/` before using one. Known changes: `middleware.ts` is now `proxy.ts`; caching has a new Cache Components model (`use cache`, `cacheLife`) alongside the previous model. Decide which one to use before building data fetching, then follow it everywhere.
+
+## Design principles
+
+Light, elegant, modern, professional. **Never dark mode.** No `dark:` variants, no `prefers-color-scheme: dark`; set `color-scheme: light` on `:root`.
+
+- Generous whitespace, large photography, thin gold hairlines (1px), subtle motion only.
+- Never use: purple gradients, generic AI-looking layouts (centered hero + three identical feature cards), emoji as icons.
+- Icons: `lucide-react` with a thin stroke (1.25-1.5), or custom SVG.
+- Corners: small radius (2-4px) on buttons and cards, so it reads as refined jewellery rather than a SaaS dashboard.
+- Copy tone: warm, understated, confident. No exclamation marks, no hype.
+
+### Colour tokens
+
+Define once as CSS variables in `globals.css`, map into the Tailwind theme, and never hard-code hex values in components.
+
+| Token | Hex | Use |
+|---|---|---|
+| `background` | `#FBF8F3` | Page background |
+| `surface` | `#FFFFFF` | Cards, inputs, modals |
+| `sand` | `#F3ECE1` | Alternate sections, skeletons, subtle fills |
+| `text` | `#2A2622` | Body and headings |
+| `muted` | `#7A7066` | Secondary text, captions, placeholders |
+| `gold` | `#B8935A` | Accent, hairlines, primary buttons |
+| `gold-hover` | `#8F6E3B` | Hover/active state of gold |
+| `blush` | `#EBD9D0` | Soft highlights, badges, sale/new tags |
+
+Tailwind classes: `bg-background`, `bg-surface`, `bg-sand`, `text-foreground` (the `text` token), `text-muted-foreground`, `bg-gold`, `bg-gold-hover`, `bg-blush`, `border-border` (gold hairline). Fonts: `font-sans`, `font-heading`.
+
+Contrast: `muted` on `background` and white text on `gold` fall below WCAG AA for small text. Use `text` for anything under 18px that carries meaning. Gold buttons use `text` labels on `gold`; on hover they switch to `gold-hover` with white labels.
+
+### Typography
+
+- Headings: **Cormorant Garamond** (500/600). Large, tight tracking, generous line height.
+- Body/UI: **Inter** (400/500).
+- Load both with `next/font/google` (self-hosted, `display: swap`, subset `latin`). No `<link>` to Google Fonts.
+- Fluid type scale with `clamp()`; never fixed px headings that break at 320px.
+
+## Responsiveness
+
+Fully responsive across all devices. Mobile-first.
+
+- Design and test at 320, 375, 414, 768, 1024, 1280, 1536 widths.
+- No horizontal scroll at any width. Touch targets >= 44x44px.
+- Most Pakistani traffic is mid/low-end Android on mobile data. Treat that as the primary target, desktop second.
+- Use `dvh` not `vh` for full-height sections. Respect safe-area insets on sticky bars.
+- Mobile: bottom-reachable primary actions (sticky add-to-cart, sticky checkout button).
+
+## Motion and interactivity
+
+The site should feel highly interactive and polished while every animation stays **subtle and fast**.
+
+- Durations 150-350ms. Ease: `[0.22, 1, 0.36, 1]` (ease-out). Springs only for tiny UI (cart badge, toggles).
+- Animate only `transform` and `opacity`. Never animate `width`, `height`, `top`, `left`, `box-shadow` blur, or `filter` on large areas.
+- Respect `prefers-reduced-motion`: wrap with Framer Motion `MotionConfig reducedMotion="user"` and disable parallax/stagger.
+- Use `LazyMotion` + `m` components with `domAnimation` to keep the bundle small. No `layout` animations on long lists.
+- Scroll reveals: `whileInView` with `once: true`, small translate (12-16px) + fade. No scroll-jacking, no heavy parallax.
+- Low-end phones: no autoplay video above the fold, no per-frame JS animation, no blur/backdrop-filter on scrolling surfaces, cap simultaneous animated elements.
+- Page transitions: quick fade only.
+
+### Buttons
+
+Elegant, restrained hover states. Every interactive element has distinct `hover`, `focus-visible`, `active`, and `disabled` states.
+
+- **Primary:** gold fill; on hover darkens to `gold-hover` with a 1-2px lift (`translateY(-1px)`), arrow icon nudges 2-3px right. Active presses back down.
+- **Secondary/outline:** 1px gold border, transparent fill; on hover a gold fill sweeps in left-to-right via `scaleX` on a pseudo-element, text colour flips.
+- **Text links:** thin gold underline that draws in from the left (`scaleX` origin-left).
+- **Icon buttons:** soft `sand` circle fades in on hover.
+- Use `@media (hover: hover)` for hover effects so touch devices do not get stuck hover states; give touch a quick `active` scale (0.98).
+- Focus ring: 2px gold with 2px offset. Never remove outlines without a replacement.
+
+### Interactive patterns to use (keep light)
+
+Product card with second-image crossfade on hover; quick-view; animated cart drawer; wishlist heart toggle; image gallery with swipe and zoom; sticky add-to-cart bar on mobile; filter drawer; skeleton loading in `sand`; toast confirmations; animated order-progress steps; marquee-free, calm hero.
+
+## Performance
+
+"Fast fetching" is a requirement, not a nice-to-have.
+
+- Server Components by default; `"use client"` only for interactive leaves.
+- Data fetching on the server with Supabase. Product listing and detail pages are cached and revalidated on demand when admin changes data (follow the caching model chosen per the Next.js 16 note above).
+- Use `Suspense` boundaries with skeletons, `loading.tsx` per route, and `next/link` prefetch.
+- Paginate or infinite-scroll product lists (12-24 per page). Select only needed columns. Index every column used in filters/sorts.
+- Budget: LCP < 2.5s on 4G mid-range Android, CLS < 0.1, INP < 200ms, JS < 170KB gzipped on first load per route. Check with `next build` output and Lighthouse mobile.
+- Lazy-load below-the-fold components with `next/dynamic`. Do not import whole icon/animation libraries.
+
+## Images
+
+Photography carries this brand, so optimise without making it look cheap.
+
+- Always `next/image` with correct `sizes`, `fill` + aspect-ratio container (no layout shift), `priority` only on the single LCP image.
+- AVIF/WebP via Next. Source uploads <= 2000px long edge, quality ~75-80.
+- `placeholder="blur"` with a tiny blurDataURL (generate on upload) or a `sand` background.
+- Supabase Storage for product images; configure `images.remotePatterns` for the project host only.
+- Every image has meaningful `alt` text (product name + material/colour). Decorative images use `alt=""`.
+
+## Accessibility
+
+Target WCAG 2.1 AA.
+
+- Semantic HTML (`header`, `nav`, `main`, `section`, `footer`, one `h1` per page). Use shadcn/Radix primitives for dialogs, drawers, menus, and selects so focus trapping and ARIA come for free.
+- Full keyboard operation; visible focus; skip-to-content link.
+- Form fields have visible labels, inline error messages tied via `aria-describedby`, `autocomplete` attributes.
+- Colour is never the only signal. Meet contrast ratios (see colour note).
+- Announce cart updates and toasts with `aria-live="polite"`.
+- Respect `prefers-reduced-motion`.
+
+## Business rules
+
+Full plan and schema: see [PLAN.md](PLAN.md).
+
+- Contact: helpline 03166568142, Glanceofgold@gmail.com. Courier: Leopards.
+- Shipping: flat Rs. 100 everywhere, free at Rs. 2,000+ subtotal (before coupon). Read from the `settings` table, never hard-coded.
+- Guest checkout only; customers track orders by order number + phone. Only admins have accounts.
+- Stock is reserved when the order is placed and released on cancellation. Unverified transfer orders are cancelled manually by admin.
+- Marketing: admin-generated coupons, rotating announcement strip, "buy 2, choose 1 free gift" offer (admin picks the gift pool), Meta Pixel + Conversions API.
+- Not in v1: reviews, size guide, Instagram section, customer accounts, Urdu/RTL.
+- Admin credentials live in `.env.local` only and are created by a script. Never write them into the repo, seeds or docs.
+- Dummy products are placeholders until the owner adds real ones via admin. Mark them clearly as sample data.
+
+## Checkout and orders
+
+Payment is manual. **No payment gateway integration** in v1.
+
+1. **Cash on Delivery (COD)** - the default and first option shown.
+2. **Manual transfer** - JazzCash, Easypaisa, Bank Transfer. Customer sees the account details (from settings table, not hard-coded), transfers, then submits a transaction ID and optionally a payment screenshot. Order status stays `pending_payment` until an admin verifies it.
+
+Flow:
+- Guest checkout allowed. Cart persists (localStorage for guests, DB for logged-in users).
+- Pakistan-specific address fields: full name, phone (03XX-XXXXXXX, validate `^(\+92|0)3\d{9}$`), province, city, full address, optional landmark, optional email.
+- Prices in PKR, formatted `Rs. 12,500` (no decimals). Shipping from the settings/zone table. Server recalculates all totals; never trust client prices.
+- Order creation happens in a server action / route handler using the service role, validated with Zod. Idempotent (guard against double submit).
+- **WhatsApp order confirmation:** after placing an order, show a confirmation page with a "Confirm on WhatsApp" button that opens `https://wa.me/<number>?text=<encoded order summary>`. Business number comes from env/settings. Also store a `whatsapp_confirmed` flag/timestamp when an admin marks it.
+- **Email (Nodemailer):** send an order confirmation email to the customer (if email given) and a new-order notification to the shop owner. SMTP via env vars, HTML template in brand colours (inline styles, table layout, no external CSS). Send asynchronously so email failure never blocks or fails the order; log failures and retry/flag in DB.
+
+## Supabase
+
+- Use `@supabase/ssr` for server/client clients. Anon key in browser, **service role only on the server**, never exposed.
+- RLS enabled on every table. Public read for active catalogue data; orders are written server-side only; customers read only their own rows.
+- All schema changes are SQL migrations in `supabase/migrations/`, never ad-hoc dashboard edits. Regenerate types into `src/types/database.ts` after each migration.
+- Secrets live in `.env.local` (gitignored). Maintain `.env.example` with every variable name and no values.
+
+## Code conventions
+
+- TypeScript `strict`. No `any` without a comment explaining why.
+- Validate all external input (forms, route handlers, webhooks) with Zod.
+- Folder layout: `src/app` (routes), `src/components/ui` (shadcn), `src/components` (feature components), `src/lib` (supabase, email, utils, validators), `src/types`.
+- Tailwind utility classes with design tokens; no inline hex values, no arbitrary colours.
+- Small focused components; keep client components as leaves.
+- Match existing patterns before introducing new ones.
+
+## Workflow rules
+
+- **Commit after each working feature**, small and focused, imperative messages (`Add product card with hover image swap`). Do not commit broken builds. Never commit `.env*` files.
+- Before calling a feature done: `npm run lint`, `npx tsc --noEmit`, and `npm run build` pass; the feature is checked at 375px and 1280px widths.
+- Plan before code for any new area; confirm assumptions with the owner rather than guessing (especially business details: prices, shipping, policies, bank account info).
+- Do not invent product data, testimonials, reviews, or policy text and present it as real. Use clearly marked placeholders.
