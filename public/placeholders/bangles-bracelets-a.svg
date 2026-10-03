@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-label="Sample bangles-bracelets image">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="42%" r="60%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.65"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="1000" fill="#F3ECE1"/>
+  <rect width="800" height="1000" fill="url(#g)"/>
+  <rect x="36" y="36" width="728" height="928" fill="none" stroke="#B8935A" stroke-opacity="0.45" stroke-width="1.5"/>
+  <g fill="none" stroke="#B8935A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="400" cy="520" rx="250" ry="110"/><ellipse cx="400" cy="520" rx="226" ry="90" stroke-width="1.5"/></g>
+  <text x="400" y="930" text-anchor="middle" font-family="Georgia, serif" font-size="22" letter-spacing="6" fill="#7A7066">SAMPLE IMAGE</text>
+</svg>
