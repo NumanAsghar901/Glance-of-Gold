@@ -51,7 +51,7 @@ export default function AboutPage() {
       <section className="wrap pb-24 lg:pb-32">
         <ul className="grid gap-10 md:grid-cols-3 md:gap-12">
           {values.map((v) => (
-            <li key={v.title} className="border-t border-gold pt-6">
+            <li key={v.title} className="reveal border-t border-gold pt-6">
               <h2 className="font-heading text-3xl">{v.title}</h2>
               <p className="mt-3 max-w-xs leading-relaxed text-muted-foreground">{v.text}</p>
             </li>

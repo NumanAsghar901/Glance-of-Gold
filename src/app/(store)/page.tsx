@@ -53,7 +53,7 @@ export default async function Home() {
       <section aria-label="Why shop with us" className="border-y border-border">
         <ul className="wrap grid grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-border">
           {trust.map(({ icon: Icon, title, text }) => (
-            <li key={title} className="flex items-start gap-3 py-6 lg:px-8 lg:first:pl-0 lg:last:pr-0">
+            <li key={title} className="reveal flex items-start gap-3 py-6 lg:px-8 lg:first:pl-0 lg:last:pr-0">
               <Icon className="mt-0.5 size-6 shrink-0 text-gold" strokeWidth={1.25} />
               <div>
                 <p className="text-sm font-medium">{title}</p>

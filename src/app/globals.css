@@ -390,29 +390,4 @@ html.lenis body {
   overflow: hidden;
 }
 
-/* Scroll reveal: CSS only (no JavaScript), runs on the compositor, and falls back to
-   plain visible content in browsers without scroll-driven animations. */
-@supports (animation-timeline: view()) {
-  .reveal {
-    animation: reveal-up linear both;
-    animation-timeline: view();
-    animation-range: entry 4% entry 38%;
-  }
-
-  @keyframes reveal-up {
-    from {
-      opacity: 0;
-      transform: translateY(22px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .reveal {
-    animation: none;
-  }
-}
+/* .reveal marks elements animated by components/layout/scroll-reveal.tsx (Web Animations API; no CSS needed). */

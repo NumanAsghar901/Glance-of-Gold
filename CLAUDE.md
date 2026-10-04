@@ -82,7 +82,7 @@ Elegant, restrained hover states. Every interactive element has distinct `hover`
 ### Motion in practice
 
 - Home hero: `HeroBanner` (client) crossfades slides (opacity only), drifts the photo (transform only), autoplays every 6.5s and pauses on hover/focus/hidden tab/reduced motion; swipe, arrows and progress lines to control it. Slides come from Admin > Home banners (wide + optional tall phone photo); until any exist, `src/lib/hero-defaults.ts` supplies three built-in slides using generated artwork in `public/banners/`. About hero enters with CSS keyframes; the story arch is unveiled once by `RevealCover` (Framer Motion, lazy-loaded, transform only).
-- Scroll: `.reveal` is CSS-only scroll-driven animation (no JS, falls back to visible). `SmoothScroll` (Lenis) runs only on desktop mouse/trackpad, never for reduced motion, and ignores dialogs and `[data-lenis-prevent]`.
+- Scroll: `.reveal` elements are animated by `ScrollReveal` (Web Animations API: slide up 28px + fade, 440ms, 55ms stagger, never edits attributes so hydration stays clean; above-the-fold stays visible; keep it off LCP images). `SmoothScroll` (Lenis) runs only on desktop mouse/trackpad, never for reduced motion, and ignores dialogs and `[data-lenis-prevent]`.
 - Everything else answers an action: hover image swap, quick add, drawer slide, gift picker, button hover states. No fade-up on every section.
 - Framer Motion is used sparingly on purpose (low-end phones). Prefer CSS; reach for it only for state-driven or scroll-triggered effects.
 
@@ -197,3 +197,7 @@ Flow:
 - **Image storage sync rule:** every admin path that replaces, removes or deletes an image must also delete the stored file, using `lib/admin/storage.ts` (`removeStoredImages`, `uploadPublicImage`). Covered: product photo delete, product delete, category photo replace/remove/delete, banner (wide and tall) replace/remove/delete. Verified by counting real objects in the `product-images` bucket. Keep this true for any new image field.
 - **Supabase project was migrated** to a new account by running `supabase/setup.sql` (all migrations combined). Keep `setup.sql` in sync with `supabase/migrations/` when adding migrations.
 - Windows `.next/cache` can go stale and break `next build` (font module errors); delete `.next` and rebuild.
+
+- **Never run `npm run build` (or delete `.next`) while `next dev` is running.** It overwrites the dev server's folder and every button silently stops working (links still work). For automated builds use `NEXT_DIST_DIR=.next-prod npm run build` and `NEXT_DIST_DIR=.next-prod npx next start -p 3100`.
+- `allowedDevOrigins` in `next.config.ts` lets the dev server be opened by IP or from a phone. On plain http `crypto.randomUUID` does not exist, so client code must use `uuid()` from `lib/utils`.
+- Do not mutate React-owned DOM (classes, styles, attributes) from effects that can run before hydration finishes; it causes "tree hydrated but some attributes ... didn't match". Use the Web Animations API or React state instead.

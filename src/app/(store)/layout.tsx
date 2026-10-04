@@ -3,6 +3,7 @@ import { CartDrawer } from "@/components/cart/cart-drawer";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
+import { ScrollReveal } from "@/components/layout/scroll-reveal";
 import { SmoothScroll } from "@/components/layout/smooth-scroll";
 import { QuickViewDialog } from "@/components/store/quick-view-dialog";
 import { StoreProvider } from "@/components/store/store-provider";
@@ -35,6 +36,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         <CartDrawer />
         <QuickViewDialog />
         <SmoothScroll />
+        <ScrollReveal />
         <MetaPixel />
       </div>
     </StoreProvider>

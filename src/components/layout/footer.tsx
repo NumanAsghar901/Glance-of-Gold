@@ -10,14 +10,14 @@ export function Footer() {
     <footer className="mt-28 bg-sand">
       <div className="wrap py-16 lg:py-24">
         <div className="grid gap-14 lg:grid-cols-12">
-          <div className="lg:col-span-5">
+          <div className="reveal lg:col-span-5">
             <Logo />
             <p className="mt-8 max-w-sm font-heading text-3xl leading-snug">
               Jewellery chosen to catch the light, delivered across Pakistan.
             </p>
           </div>
 
-          <nav aria-label="Shop" className="lg:col-span-2 lg:col-start-7">
+          <nav aria-label="Shop" className="reveal lg:col-span-2 lg:col-start-7">
             <h2 className="font-heading text-xl">Shop</h2>
             <ul className="mt-5 flex flex-col items-start gap-2">
               {mainNav.map((item) => (
@@ -30,7 +30,7 @@ export function Footer() {
             </ul>
           </nav>
 
-          <nav aria-label="Help" className="lg:col-span-2">
+          <nav aria-label="Help" className="reveal lg:col-span-2">
             <h2 className="font-heading text-xl">Help</h2>
             <ul className="mt-5 flex flex-col items-start gap-2">
               {helpNav.map((item) => (
@@ -43,7 +43,7 @@ export function Footer() {
             </ul>
           </nav>
 
-          <div className="lg:col-span-2">
+          <div className="reveal lg:col-span-2">
             <h2 className="font-heading text-xl">Contact</h2>
             <ul className="mt-5 flex flex-col items-start gap-3 text-[0.9375rem] text-muted-foreground">
               <li>

@@ -5,6 +5,10 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
   : undefined;
 
 const nextConfig: NextConfig = {
+  // Automated builds use their own folder (NEXT_DIST_DIR) so they never overwrite a running `next dev`.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
+  // Lets the dev server be opened by IP (127.0.0.1, or a phone on the same Wi-Fi) without dead buttons.
+  allowedDevOrigins: ["127.0.0.1", "192.168.*.*", "10.*.*.*", "172.*.*.*"],
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],

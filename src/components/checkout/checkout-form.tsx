@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 import { PROVINCES } from "@/lib/validators";
-import { cn, formatPKR } from "@/lib/utils";
+import { cn, formatPKR, uuid } from "@/lib/utils";
 
 type Method = "cod" | "jazzcash" | "easypaisa" | "bank_transfer";
 
@@ -118,7 +118,7 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
       <form
         id="checkout-form"
         action={(formData) => {
-          submissionId.current ??= crypto.randomUUID();
+          submissionId.current ??= uuid();
           formData.set("submissionId", submissionId.current);
           formAction(formData);
         }} className="order-2 space-y-10 lg:order-1" noValidate>
