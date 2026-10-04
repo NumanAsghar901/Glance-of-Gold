@@ -1,13 +1,34 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-label="Sample rings image">
-  <defs>
-    <radialGradient id="g" cx="50%" cy="42%" r="60%">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.65"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="800" height="1000" fill="#F3ECE1"/>
-  <rect width="800" height="1000" fill="url(#g)"/>
-  <rect x="36" y="36" width="728" height="928" fill="none" stroke="#B8935A" stroke-opacity="0.45" stroke-width="1.5"/>
-  <g fill="none" stroke="#B8935A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="400" cy="590" r="150"/><circle cx="400" cy="590" r="132" stroke-width="1.5"/><path d="M400 366 L430 400 L400 446 L370 400 Z"/><path d="M370 400h60M400 366 L388 400 L400 446 L412 400" stroke-width="2"/></g>
-  <text x="400" y="930" text-anchor="middle" font-family="Georgia, serif" font-size="22" letter-spacing="6" fill="#7A7066">SAMPLE IMAGE</text>
+<defs>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#F7E6B8"/><stop offset=".28" stop-color="#D6B06E"/>
+    <stop offset=".62" stop-color="#A57C3E"/><stop offset="1" stop-color="#E2C184"/>
+  </linearGradient>
+  <linearGradient id="goldV" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#F3DCA0"/><stop offset=".5" stop-color="#B98F50"/><stop offset="1" stop-color="#8F6E3B"/>
+  </linearGradient>
+  <radialGradient id="gem" cx=".32" cy=".28" r=".85">
+    <stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#F5E7EC"/><stop offset="1" stop-color="#CDB6C0"/>
+  </radialGradient>
+  <radialGradient id="light" cx=".5" cy=".3" r=".8">
+    <stop offset="0" stop-color="#fff" stop-opacity=".8"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#5A4630" stop-opacity="0"/><stop offset="1" stop-color="#5A4630" stop-opacity=".2"/>
+  </linearGradient>
+  <filter id="blur" x="-40%" y="-60%" width="180%" height="220%"><feGaussianBlur stdDeviation="16"/></filter>
+  <filter id="blur5" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter>
+</defs>
+<rect width="800" height="1000" fill="#F3ECE1"/>
+<rect width="800" height="1000" fill="url(#light)"/>
+<rect y="610" width="800" height="390" fill="url(#table)"/>
+<ellipse cx="400" cy="850" rx="220" ry="26" fill="#4A3826" opacity="0.32" filter="url(#blur)"/><g>
+    <ellipse cx="400" cy="662" rx="190" ry="168" fill="none" stroke="#4A3826" stroke-opacity=".25" stroke-width="28" filter="url(#blur5)"/>
+    <ellipse cx="400" cy="650" rx="190" ry="168" fill="none" stroke="url(#gold)" stroke-width="28"/>
+    <path d="M226.7 594.5 A184.4 162.4 0 0 1 374.3 489.2" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="3.5" stroke-linecap="round"/>
+    <ellipse cx="400" cy="650" rx="176" ry="154" fill="none" stroke="#5A4630" stroke-opacity=".28" stroke-width="3"/>
+  </g>
+      <g stroke="url(#goldV)" stroke-width="7" stroke-linecap="round"><path d="M360 486 L378 456M440 486 L422 456M400 490 V454"/></g>
+      <g><circle cx="400" cy="440" r="68" fill="url(#goldV)"/><circle cx="400" cy="440" r="68" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><circle cx="400" cy="440" r="58" fill="url(#gem)"/><line x1="423.2" y1="440" x2="458" y2="440" stroke="#fff" stroke-opacity=".75" stroke-width="1.6"/><line x1="416.4048773235279" y1="456.4048773235279" x2="441.01219330881975" y2="481.01219330881975" stroke="#fff" stroke-opacity=".75" stroke-width="1.6"/><line x1="400" y1="463.2" x2="400" y2="498" stroke="#fff" stroke-opacity=".75" stroke-width="1.6"/><line x1="383.5951226764721" y1="456.4048773235279" x2="358.98780669118025" y2="481.01219330881975" stroke="#fff" stroke-opacity=".75" stroke-width="1.6"/><line x1="376.8" y1="440" x2="342" y2="440" stroke="#fff" stroke-opacity=".75" stroke-width="1.6"/><line x1="383.5951226764721" y1="423.5951226764721" x2="358.98780669118025" y2="398.98780669118025" stroke="#fff" stroke-opacity=".75" stroke-width="1.6"/><line x1="400" y1="416.8" x2="400" y2="382" stroke="#fff" stroke-opacity=".75" stroke-width="1.6"/><line x1="416.4048773235279" y1="423.5951226764721" x2="441.01219330881975" y2="398.98780669118025" stroke="#fff" stroke-opacity=".75" stroke-width="1.6"/><polygon points="422.50570541197493,449.3221684124136 409.3221684124136,462.50570541197493 390.6778315875864,462.50570541197493 377.49429458802507,449.3221684124136 377.49429458802507,430.6778315875864 390.6778315875864,417.49429458802507 409.3221684124136,417.49429458802507 422.50570541197493,430.6778315875864" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.8"/><ellipse cx="381.44" cy="417.96" rx="11.600000000000001" ry="6.96" fill="#fff" opacity=".85" transform="rotate(-30 381.44 417.96)"/></g>
+<text x="768" y="976" text-anchor="end" font-family="Georgia,serif" font-size="17" fill="#7A7066" opacity=".6">Sample image</text>
 </svg>

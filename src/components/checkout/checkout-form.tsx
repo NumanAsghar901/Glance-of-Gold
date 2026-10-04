@@ -67,7 +67,7 @@ function SubmitButton({ total }: { total: number }) {
   return (
     <Button type="submit" size="lg" className="w-full" disabled={pending} aria-live="polite">
       <Lock />
-      {pending ? "Placing your order..." : `Place order · ${formatPKR(total)}`}
+      {pending ? "Placing your order..." : `Place order, ${formatPKR(total)}`}
     </Button>
   );
 }
@@ -76,14 +76,14 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
   const cart = useCartTotals();
   useCartSync(true);
 
-  const [state, action] = useActionState<CheckoutState, FormData>(placeOrder, {});
+  const [state, formAction] = useActionState<CheckoutState, FormData>(placeOrder, {});
   const [method, setMethod] = useState<Method>("cod");
-  // One id per checkout visit. The server uses it to ignore accidental double submits.
-  const submissionRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (submissionRef.current) submissionRef.current.value = crypto.randomUUID();
-  }, []);
+  // Controlled: React cannot restore a <select> default after the form resets post-submit.
+  const [province, setProvince] = useState("");
+  // One id per checkout visit, added when the form is submitted. The server uses it to
+  // ignore accidental double submits (React resets form fields after each action, so it
+  // cannot live in a hidden input).
+  const submissionId = useRef<string | null>(null);
 
   const methods = useMemo<Method[]>(() => ["cod", ...transferMethods], [transferMethods]);
   const fe = state.fieldErrors ?? {};
@@ -115,7 +115,13 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1.25fr_1fr] lg:gap-16">
-      <form id="checkout-form" action={action} className="order-2 space-y-10 lg:order-1" noValidate>
+      <form
+        id="checkout-form"
+        action={(formData) => {
+          submissionId.current ??= crypto.randomUUID();
+          formData.set("submissionId", submissionId.current);
+          formAction(formData);
+        }} className="order-2 space-y-10 lg:order-1" noValidate>
         {/* Honeypot */}
         <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
           <label>
@@ -124,8 +130,7 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
           </label>
         </div>
         <input type="hidden" name="cart" value={cartPayload} />
-        <input ref={submissionRef} type="hidden" name="submissionId" defaultValue="" />
-        <input type="hidden" name="paymentMethod" value={method} />
+                <input type="hidden" name="paymentMethod" value={method} />
 
         {state.error && (
           <p role="alert" className="border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
@@ -152,7 +157,7 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
           <legend className="font-heading text-2xl">Delivery address</legend>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field id="province" label="Province" error={fe.province}>
-              <select id="province" name="province" autoComplete="address-level1" required defaultValue={v.province ?? ""} aria-invalid={!!fe.province} aria-describedby={fe.province ? "province-error" : undefined} className={inputClass(fe.province)}>
+              <select id="province" name="province" autoComplete="address-level1" required value={province} onChange={(e) => setProvince(e.target.value)} aria-invalid={!!fe.province} aria-describedby={fe.province ? "province-error" : undefined} className={inputClass(fe.province)}>
                 <option value="" disabled>
                   Select province
                 </option>

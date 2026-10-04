@@ -35,14 +35,14 @@ export function Logo({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-3",
+        "inline-flex items-center gap-2 sm:gap-3",
         stacked && "flex-col gap-2 text-center",
         className,
       )}
     >
-      <LogoMark className={stacked ? "h-10" : "h-8"} />
+      <LogoMark className={stacked ? "h-10" : "h-7 sm:h-8"} />
       <span className="flex flex-col leading-none">
-        <span className="font-heading text-[1.15rem] font-medium uppercase tracking-[0.28em] text-foreground sm:text-[1.3rem]">
+        <span className="whitespace-nowrap font-heading text-base font-medium uppercase tracking-[0.2em] text-foreground sm:text-[1.3rem] sm:tracking-[0.28em]">
           Glance of Gold
         </span>
         <span className="mt-1.5 text-[0.55rem] font-medium uppercase tracking-[0.5em] text-muted-foreground">

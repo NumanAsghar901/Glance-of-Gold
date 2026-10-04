@@ -29,10 +29,6 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   // Honeypot: real people never fill this hidden field.
   if (formData.get("website")) return fail("We could not place your order. Please try again.");
 
-  if (!(await rateLimit("order", 8, 10 * 60_000))) {
-    return fail("Too many orders from this connection. Please wait a few minutes or order on WhatsApp.");
-  }
-
   const parsed = checkoutSchema.safeParse({
     name: formData.get("name"),
     phone: formData.get("phone"),
@@ -62,6 +58,11 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   }
   const cart = cartPayloadSchema.safeParse(cartJson);
   if (!cart.success) return fail(cart.error.issues[0]?.message ?? "Your bag is empty.");
+
+  // Only real order attempts count toward the limit, not typos in the form.
+  if (!(await rateLimit("order", 8, 10 * 60_000))) {
+    return fail("Too many orders from this connection. Please wait a few minutes or order on WhatsApp.");
+  }
 
   const input = parsed.data;
   const supabase = createServiceClient();

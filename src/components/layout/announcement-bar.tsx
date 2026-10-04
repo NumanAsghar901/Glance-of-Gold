@@ -43,7 +43,7 @@ export function AnnouncementBar({ items }: { items: Announcement[] }) {
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
-      <div className="wrap grid h-9 place-items-center text-[0.6875rem] uppercase tracking-[0.16em] sm:text-xs">
+      <div className="wrap grid h-9 place-items-center text-[0.8125rem]">
         {items.map((item, i) => (
           <p
             key={item.id}
@@ -65,7 +65,7 @@ export function AnnouncementBar({ items }: { items: Announcement[] }) {
                 type="button"
                 tabIndex={i === index ? 0 : -1}
                 onClick={() => copy(item.code!)}
-                className="rounded-sm border border-gold px-2 py-0.5 font-medium tracking-[0.2em] text-gold transition-colors duration-200 hover:bg-gold hover:text-foreground"
+                className="rounded-sm border border-gold px-2 py-0.5 font-medium tracking-[0.12em] text-gold transition-colors duration-200 hover:bg-gold hover:text-foreground"
                 aria-label={`Copy coupon code ${item.code}`}
               >
                 {copied === item.code ? "Copied" : item.code}

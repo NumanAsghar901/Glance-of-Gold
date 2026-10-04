@@ -11,11 +11,11 @@ const iconButton =
 export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background">
-      <div className="wrap grid h-16 grid-cols-[1fr_auto_1fr] items-center lg:h-20">
+      <div className="wrap grid h-16 grid-cols-[auto_1fr_auto] items-center lg:h-20 lg:grid-cols-[1fr_auto_1fr]">
         <div className="flex items-center">
           <MobileNav />
           <nav aria-label="Primary" className="hidden lg:block">
-            <ul className="flex items-center gap-9 text-[0.8125rem] uppercase tracking-[0.14em]">
+            <ul className="flex items-center gap-10 text-[0.9375rem]">
               {mainNav.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href} className="link-draw py-2">

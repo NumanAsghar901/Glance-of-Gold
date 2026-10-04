@@ -1,13 +1,53 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-label="Sample sets image">
-  <defs>
-    <radialGradient id="g" cx="50%" cy="42%" r="60%">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.65"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="800" height="1000" fill="#F3ECE1"/>
-  <rect width="800" height="1000" fill="url(#g)"/>
-  <rect x="36" y="36" width="728" height="928" fill="none" stroke="#B8935A" stroke-opacity="0.45" stroke-width="1.5"/>
-  <g fill="none" stroke="#B8935A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M230 330 Q400 700 570 330"/><path d="M400 582.8 L424 610 L400 646.8 L376 610 Z"/><path d="M376 610h48M400 582.8 L390.4 610 L400 646.8 L409.6 610" stroke-width="2"/><g transform="scale(.55) translate(300 820)"><circle cx="320" cy="340" r="14"/><path d="M320 354v70"/><path d="M320 424 c46 56 46 120 0 150 c-46 -30 -46 -94 0 -150z"/><circle cx="480" cy="340" r="14"/><path d="M480 354v70"/><path d="M480 424 c46 56 46 120 0 150 c-46 -30 -46 -94 0 -150z"/></g></g>
-  <text x="400" y="930" text-anchor="middle" font-family="Georgia, serif" font-size="22" letter-spacing="6" fill="#7A7066">SAMPLE IMAGE</text>
+<defs>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#F7E6B8"/><stop offset=".28" stop-color="#D6B06E"/>
+    <stop offset=".62" stop-color="#A57C3E"/><stop offset="1" stop-color="#E2C184"/>
+  </linearGradient>
+  <linearGradient id="goldV" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#F3DCA0"/><stop offset=".5" stop-color="#B98F50"/><stop offset="1" stop-color="#8F6E3B"/>
+  </linearGradient>
+  <radialGradient id="gem" cx=".32" cy=".28" r=".85">
+    <stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#F5E7EC"/><stop offset="1" stop-color="#CDB6C0"/>
+  </radialGradient>
+  <radialGradient id="light" cx=".5" cy=".3" r=".8">
+    <stop offset="0" stop-color="#fff" stop-opacity=".8"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#5A4630" stop-opacity="0"/><stop offset="1" stop-color="#5A4630" stop-opacity=".2"/>
+  </linearGradient>
+  <filter id="blur" x="-40%" y="-60%" width="180%" height="220%"><feGaussianBlur stdDeviation="16"/></filter>
+  <filter id="blur5" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter>
+</defs>
+<rect width="800" height="1000" fill="#F3ECE1"/>
+<rect width="800" height="1000" fill="url(#light)"/>
+<rect y="610" width="800" height="390" fill="url(#table)"/>
+<ellipse cx="400" cy="900" rx="240" ry="26" fill="#4A3826" opacity="0.32" filter="url(#blur)"/><path d="M190 200 Q400 700 610 200" fill="none" stroke="#4A3826" stroke-opacity=".28" stroke-width="7" transform="translate(0 12)" filter="url(#blur5)"/>
+  <path d="M190 200 Q400 700 610 200" fill="none" stroke="url(#gold)" stroke-width="2.5"/>
+  <path d="M190 200 Q400 700 610 200" fill="none" stroke="url(#gold)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0.1 11"/>
+      <circle cx="400" cy="451" r="10" fill="none" stroke="url(#gold)" stroke-width="5"/><g transform="translate(400 532) scale(1.1)">
+    <path d="M0 -70 C52 -18 54 46 0 74 C-54 46 -52 -18 0 -70Z" fill="url(#gem)" stroke="url(#goldV)" stroke-width="8.181818181818182"/>
+    <path d="M0 -70V74M-38 -2H38M0 -70L-38 -2L0 74M0 -70L38 -2L0 74" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="1.4545454545454546"/>
+    <ellipse cx="-16" cy="-24" rx="9" ry="16" fill="#fff" opacity=".75" transform="rotate(18 -16 -24)"/>
+  </g>
+      <g transform="translate(290 690) scale(0.8) translate(-290 -690)">
+    <circle cx="290" cy="664" r="13" fill="none" stroke="url(#gold)" stroke-width="5"/>
+    <path d="M226 764 C226 668 354 668 354 764Z" fill="url(#goldV)"/>
+    <path d="M226 764 C226 668 354 668 354 764" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>
+    <path d="M246 756 C246 696 334 696 334 756" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.1 9"/>
+    <path d="M266 756 C266 718 314 718 314 756" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.1 8"/>
+    <ellipse cx="290" cy="766" rx="68" ry="11" fill="url(#gold)"/>
+    <circle cx="290" cy="720" r="8" fill="url(#gem)"/>
+    <line x1="230" y1="766" x2="230" y2="780" stroke="#A57C3E" stroke-width="1.5"/><circle cx="230" cy="788" r="8" fill="url(#gold)"/><circle cx="228" cy="785" r="2.4" fill="#fff" opacity=".7"/><line x1="250" y1="766" x2="250" y2="790" stroke="#A57C3E" stroke-width="1.5"/><circle cx="250" cy="798" r="8" fill="url(#gold)"/><circle cx="248" cy="795" r="2.4" fill="#fff" opacity=".7"/><line x1="270" y1="766" x2="270" y2="784" stroke="#A57C3E" stroke-width="1.5"/><circle cx="270" cy="792" r="8" fill="url(#gold)"/><circle cx="268" cy="789" r="2.4" fill="#fff" opacity=".7"/><line x1="290" y1="766" x2="290" y2="794" stroke="#A57C3E" stroke-width="1.5"/><circle cx="290" cy="802" r="10" fill="url(#gold)"/><circle cx="288" cy="799" r="2.4" fill="#fff" opacity=".7"/><line x1="310" y1="766" x2="310" y2="784" stroke="#A57C3E" stroke-width="1.5"/><circle cx="310" cy="792" r="8" fill="url(#gold)"/><circle cx="308" cy="789" r="2.4" fill="#fff" opacity=".7"/><line x1="330" y1="766" x2="330" y2="790" stroke="#A57C3E" stroke-width="1.5"/><circle cx="330" cy="798" r="8" fill="url(#gold)"/><circle cx="328" cy="795" r="2.4" fill="#fff" opacity=".7"/><line x1="350" y1="766" x2="350" y2="780" stroke="#A57C3E" stroke-width="1.5"/><circle cx="350" cy="788" r="8" fill="url(#gold)"/><circle cx="348" cy="785" r="2.4" fill="#fff" opacity=".7"/>
+  </g><g transform="translate(510 690) scale(0.8) translate(-510 -690)">
+    <circle cx="510" cy="664" r="13" fill="none" stroke="url(#gold)" stroke-width="5"/>
+    <path d="M446 764 C446 668 574 668 574 764Z" fill="url(#goldV)"/>
+    <path d="M446 764 C446 668 574 668 574 764" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>
+    <path d="M466 756 C466 696 554 696 554 756" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.1 9"/>
+    <path d="M486 756 C486 718 534 718 534 756" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.1 8"/>
+    <ellipse cx="510" cy="766" rx="68" ry="11" fill="url(#gold)"/>
+    <circle cx="510" cy="720" r="8" fill="url(#gem)"/>
+    <line x1="450" y1="766" x2="450" y2="780" stroke="#A57C3E" stroke-width="1.5"/><circle cx="450" cy="788" r="8" fill="url(#gold)"/><circle cx="448" cy="785" r="2.4" fill="#fff" opacity=".7"/><line x1="470" y1="766" x2="470" y2="790" stroke="#A57C3E" stroke-width="1.5"/><circle cx="470" cy="798" r="8" fill="url(#gold)"/><circle cx="468" cy="795" r="2.4" fill="#fff" opacity=".7"/><line x1="490" y1="766" x2="490" y2="784" stroke="#A57C3E" stroke-width="1.5"/><circle cx="490" cy="792" r="8" fill="url(#gold)"/><circle cx="488" cy="789" r="2.4" fill="#fff" opacity=".7"/><line x1="510" y1="766" x2="510" y2="794" stroke="#A57C3E" stroke-width="1.5"/><circle cx="510" cy="802" r="10" fill="url(#gold)"/><circle cx="508" cy="799" r="2.4" fill="#fff" opacity=".7"/><line x1="530" y1="766" x2="530" y2="784" stroke="#A57C3E" stroke-width="1.5"/><circle cx="530" cy="792" r="8" fill="url(#gold)"/><circle cx="528" cy="789" r="2.4" fill="#fff" opacity=".7"/><line x1="550" y1="766" x2="550" y2="790" stroke="#A57C3E" stroke-width="1.5"/><circle cx="550" cy="798" r="8" fill="url(#gold)"/><circle cx="548" cy="795" r="2.4" fill="#fff" opacity=".7"/><line x1="570" y1="766" x2="570" y2="780" stroke="#A57C3E" stroke-width="1.5"/><circle cx="570" cy="788" r="8" fill="url(#gold)"/><circle cx="568" cy="785" r="2.4" fill="#fff" opacity=".7"/>
+  </g>
+<text x="768" y="976" text-anchor="end" font-family="Georgia,serif" font-size="17" fill="#7A7066" opacity=".6">Sample image</text>
 </svg>

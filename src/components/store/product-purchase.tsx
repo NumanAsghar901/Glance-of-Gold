@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 import { cartActions } from "@/lib/cart-store";
 import type { ProductDetail } from "@/lib/data/types";
-import { whatsappLink } from "@/lib/site";
+import { site, whatsappLink } from "@/lib/site";
 import { cn, formatPKR } from "@/lib/utils";
 
 export function ProductPurchase({ product }: { product: ProductDetail }) {
@@ -65,7 +65,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
     window.setTimeout(() => setAdded(false), 1800);
   }
 
-  const waText = `Hello Glance of Gold, I would like to order:\n${product.name}${hasChoice && variant ? ` (${variant.name})` : ""}\nPrice: ${formatPKR(price)}\n${typeof window !== "undefined" ? window.location.href : ""}`;
+  const waText = `Hello Glance of Gold, I would like to order:\n${product.name}${hasChoice && variant ? ` (${variant.name})` : ""}\nPrice: ${formatPKR(price)}\n${site.url}/product/${product.slug}`;
 
   return (
     <div>

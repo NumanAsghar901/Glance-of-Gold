@@ -62,7 +62,7 @@ export function TrackView() {
         <section aria-label="Order status" className="mx-auto max-w-2xl space-y-8 border border-border bg-surface p-5 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Order</p>
+              <p className="text-sm text-muted-foreground">Order</p>
               <p className="font-heading text-3xl">{order.order_number}</p>
             </div>
             <StatusBadge status={order.order_status} />
@@ -83,7 +83,7 @@ export function TrackView() {
           <OrderTotalsList order={order} />
 
           <div>
-            <h2 className="mb-4 text-xs uppercase tracking-[0.14em] text-muted-foreground">History</h2>
+            <h2 className="mb-4 font-heading text-xl">History</h2>
             <EventHistory events={order.events} />
           </div>
         </section>

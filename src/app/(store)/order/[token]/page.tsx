@@ -84,7 +84,7 @@ export default async function OrderPage({ params }: { params: Promise<{ token: s
             <section className="border border-border bg-surface p-5 sm:p-7">
               <h2 className="font-heading text-2xl">Pay by {PAYMENT_LABEL[order.payment_method]}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {PAYMENT_STATUS_LABEL[order.payment_status]} &middot; Amount to send: <strong className="font-medium text-foreground">{formatPKR(order.total)}</strong>
+                {PAYMENT_STATUS_LABEL[order.payment_status]}. Amount to send: <strong className="font-medium text-foreground">{formatPKR(order.total)}</strong>
               </p>
 
               {account ? (
@@ -160,7 +160,7 @@ export default async function OrderPage({ params }: { params: Promise<{ token: s
           <OrderTotalsList order={order} />
           {order.events.length > 1 && (
             <div>
-              <h3 className="mb-4 text-xs uppercase tracking-[0.14em] text-muted-foreground">History</h3>
+              <h3 className="mb-4 font-heading text-xl">History</h3>
               <EventHistory events={order.events} />
             </div>
           )}

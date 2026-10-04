@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 function Detail({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
   return (
     <details open={defaultOpen} className="group border-b border-border">
-      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-4 text-sm font-medium uppercase tracking-[0.12em] [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-4 font-heading text-xl [&::-webkit-details-marker]:hidden">
         {title}
         <ChevronDown className="size-4 transition-transform duration-300 ease-(--ease-out) group-open:rotate-180" strokeWidth={1.5} />
       </summary>
@@ -103,10 +103,7 @@ export default async function ProductPage({ params }: Props) {
         <ProductGallery images={product.images} name={product.name} />
 
         <div className="lg:py-4">
-          {product.category && (
-            <p className="text-eyebrow text-gold-hover">{product.category.name}</p>
-          )}
-          <h1 className="text-title mt-2">{product.name}</h1>
+          <h1 className="text-title">{product.name}</h1>
           <Price price={product.price} compareAt={product.compareAtPrice} className="mt-4 text-lg" />
           <p className="mt-1 text-xs text-muted-foreground">
             {settings.freeShippingThreshold > 0 &&
@@ -175,7 +172,7 @@ export default async function ProductPage({ params }: Props) {
 
       {related.length > 0 && (
         <section className="pt-20 lg:pt-28">
-          <SectionHeading eyebrow="You may also like" title="Related pieces" />
+          <SectionHeading title="You may also like" />
           <ProductGrid products={related} className="mt-10" />
         </section>
       )}

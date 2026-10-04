@@ -28,7 +28,7 @@ export function StatusBadge({ status }: { status: OrderView["order_status"] }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center px-3 py-1 text-[0.6875rem] uppercase tracking-[0.14em]",
+        "inline-flex items-center px-3 py-1 text-sm",
         bad ? "bg-danger/10 text-danger" : "bg-blush text-foreground",
       )}
     >
@@ -79,8 +79,8 @@ export function OrderLines({ order }: { order: Pick<OrderView, "items"> }) {
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm">{i.name}</p>
             <p className="text-xs text-muted-foreground">
-              {i.variant_name && i.variant_name !== "Standard" ? `${i.variant_name} · ` : ""}Qty {i.qty}
-              {i.is_gift && <span className="text-gold-hover"> · Free gift</span>}
+              {i.variant_name && i.variant_name !== "Standard" ? `${i.variant_name}, ` : ""}Qty {i.qty}
+              {i.is_gift && <span className="text-gold-hover">, free gift</span>}
             </p>
           </div>
           <p className="text-sm">{i.is_gift ? "Free" : formatPKR(i.unit_price * i.qty)}</p>
@@ -133,7 +133,7 @@ export function EventHistory({ events }: { events: OrderView["events"] }) {
           <p>{STATUS_LABEL[e.status as OrderView["order_status"]] ?? e.status}</p>
           <p className="text-xs text-muted-foreground">
             {new Date(e.created_at).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" })}
-            {e.note && e.note !== "Order placed" ? ` · ${e.note}` : ""}
+            {e.note && e.note !== "Order placed" ? `. ${e.note}` : ""}
           </p>
         </li>
       ))}

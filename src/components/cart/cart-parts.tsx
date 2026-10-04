@@ -206,7 +206,7 @@ export function GiftPicker({ className }: { className?: string }) {
                 {o.image && <Image src={o.image} alt="" fill sizes="120px" quality={60} className="object-cover" />}
               </span>
               <span className="mt-2 block text-xs leading-snug">{o.productName}</span>
-              <span className={cn("mt-1 block text-[0.6875rem] uppercase tracking-[0.12em]", selected ? "text-gold-hover" : "text-muted-foreground")}>
+              <span className={cn("mt-1 block text-xs", selected ? "text-gold-hover" : "text-muted-foreground")}>
                 {selected ? "Selected" : "Free"}
               </span>
             </label>
@@ -250,9 +250,9 @@ export function CouponBox({ enabled = true }: { enabled?: boolean }) {
     return (
       <div className="flex items-center justify-between gap-3 border border-border bg-sand/60 px-4 py-3 text-sm">
         <p>
-          <span className="font-medium tracking-[0.12em]">{coupon.code}</span> applied
-          {coupon.discount > 0 && <> &middot; you save {formatPKR(coupon.discount)}</>}
-          {coupon.freeShipping && <> &middot; free delivery</>}
+          <span className="font-medium tracking-[0.12em]">{coupon.code}</span> applied.
+          {coupon.discount > 0 && <> You save {formatPKR(coupon.discount)}.</>}
+          {coupon.freeShipping && <> Delivery is free.</>}
         </p>
         <button type="button" onClick={() => { cartActions.setCoupon(null); setMessage(null); }} className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground">
           Remove
@@ -276,7 +276,7 @@ export function CouponBox({ enabled = true }: { enabled?: boolean }) {
         });
       }}
     >
-      <label htmlFor="coupon" className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+      <label htmlFor="coupon" className="text-sm text-muted-foreground">
         Coupon code
       </label>
       <div className="mt-2 flex gap-2">

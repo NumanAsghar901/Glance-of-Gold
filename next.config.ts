@@ -15,8 +15,8 @@ const nextConfig: NextConfig = {
       : [],
   },
   experimental: {
-    // Payment proof screenshots are uploaded through a server action.
-    serverActions: { bodySizeLimit: "6mb" },
+    // Product photos (admin) and payment screenshots are uploaded through server actions.
+    serverActions: { bodySizeLimit: "25mb" },
   },
   async headers() {
     return [

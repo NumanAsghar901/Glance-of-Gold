@@ -60,7 +60,7 @@ export default async function ContactPage() {
               <Icon className="size-8 text-gold" strokeWidth={1.25} />
               <h2 className="font-heading text-2xl">{title}</h2>
               <p className="break-all text-sm text-muted-foreground">{text}</p>
-              <span className="link-draw mt-2 text-[0.8125rem] uppercase tracking-[0.14em] group-hover:after:scale-x-100">{label}</span>
+              <span className="link-draw mt-2 text-[0.9375rem] group-hover:after:scale-x-100">{label}</span>
             </a>
           </li>
         ))}

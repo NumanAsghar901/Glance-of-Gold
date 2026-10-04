@@ -60,12 +60,12 @@ export function ProductCard({
 
         <div className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-1.5">
           {!product.inStock && (
-            <span className="bg-surface px-2.5 py-1 text-[0.6875rem] uppercase tracking-[0.14em] text-muted-foreground">
+            <span className="bg-surface px-2.5 py-1 text-xs text-muted-foreground">
               Sold out
             </span>
           )}
           {product.inStock && off > 0 && (
-            <span className="bg-blush px-2.5 py-1 text-[0.6875rem] uppercase tracking-[0.14em] text-foreground">
+            <span className="bg-blush px-2.5 py-1 text-xs text-foreground">
               {off}% off
             </span>
           )}
@@ -78,7 +78,7 @@ export function ProductCard({
 
       <Link href={href} className="mt-4 block space-y-1">
         {product.category && (
-          <p className="text-[0.6875rem] uppercase tracking-[0.18em] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {product.category.name}
           </p>
         )}

@@ -109,21 +109,15 @@
 /* Fluid type scale */
 @utility text-display {
   font-family: var(--font-heading);
-  font-size: clamp(2.5rem, 1.6rem + 4.5vw, 5.5rem);
-  line-height: 1.02;
+  font-size: clamp(2.875rem, 1.4rem + 6.4vw, 6.75rem);
+  line-height: 0.96;
+  letter-spacing: -0.02em;
 }
 
 @utility text-title {
   font-family: var(--font-heading);
   font-size: clamp(1.875rem, 1.4rem + 2.2vw, 3.25rem);
   line-height: 1.08;
-}
-
-@utility text-eyebrow {
-  font-size: 0.75rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  font-weight: 500;
 }
 
 /* Page gutter + max width */
@@ -273,5 +267,28 @@ dialog.sheet-right[open]::backdrop {
   from {
     opacity: 0;
     transform: translateY(12px);
+  }
+}
+
+/* Hero: headline and arch enter once on load (CSS only, so first paint is never delayed) */
+.arch-in {
+  animation: arch-in 1100ms var(--ease-out) 80ms both;
+}
+
+.arch-echo {
+  animation: echo-in 1200ms var(--ease-out) 400ms both;
+}
+
+@keyframes arch-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.985);
+  }
+}
+
+@keyframes echo-in {
+  from {
+    opacity: 0;
+    transform: translate(0, 0);
   }
 }

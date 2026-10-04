@@ -1,14 +1,15 @@
-import { ArrowRight, MessageCircle, PackageCheck, RotateCcw, Truck, Wallet } from "lucide-react";
+import { MessageCircle, RotateCcw, Truck, Wallet } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { ProductGrid } from "@/components/store/product-grid";
+import { ArchFrame } from "@/components/ui/arch";
 import { Button } from "@/components/ui/button";
-import { Reveal } from "@/components/ui/reveal";
+import { RevealCover } from "@/components/ui/reveal-cover";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { getCategories, getProducts } from "@/lib/data/catalog";
 import { getBanners, getGiftOffer, getSettings } from "@/lib/data/site";
 import { whatsappLink } from "@/lib/site";
-import { formatPKR } from "@/lib/utils";
+import { cn, formatPKR } from "@/lib/utils";
 
 export default async function Home() {
   const [banners, categories, newest, featured, giftOffer, settings] = await Promise.all([
@@ -21,14 +22,12 @@ export default async function Home() {
   ]);
 
   const banner = banners[0];
-  const heroImage = banner?.imageUrl ?? "/placeholders/sets-a.svg";
+  const spotlight = featured.items[0] ?? newest.items[0];
+  const spotlightImage = spotlight?.images[0];
+
   const trust = [
     { icon: Wallet, title: "Cash on delivery", text: "Pay when your order arrives" },
-    {
-      icon: Truck,
-      title: "Free delivery",
-      text: `On orders over ${formatPKR(settings.freeShippingThreshold)}`,
-    },
+    { icon: Truck, title: "Free delivery", text: `On orders over ${formatPKR(settings.freeShippingThreshold)}` },
     { icon: RotateCcw, title: "Easy returns", text: "14 days to return or exchange" },
     { icon: MessageCircle, title: "WhatsApp support", text: `Helpline ${settings.helpline}` },
   ];
@@ -36,195 +35,204 @@ export default async function Home() {
   return (
     <>
       {/* Hero ------------------------------------------------------------------ */}
-      <section className="relative overflow-hidden bg-sand">
-        <div className="wrap grid items-center gap-10 py-10 md:grid-cols-2 md:gap-6 md:py-0 lg:min-h-[min(46rem,82dvh)]">
-          <div className="order-2 md:order-1 md:py-20">
-            <p className="hero-in text-eyebrow text-gold-hover">
-              {banner?.subheading ? banner.subheading : "New season, new sparkle"}
-            </p>
-            <h1 className="hero-in hero-in-delay-1 text-display mt-5 max-w-xl">
+      <section className="overflow-hidden">
+        <div className="wrap grid items-center gap-14 pb-20 pt-8 lg:grid-cols-12 lg:gap-10 lg:pb-28 lg:pt-16">
+          <div className="order-2 lg:order-1 lg:col-span-7">
+            <h1 className="text-display hero-in max-w-[12ch]">
               {banner?.heading ?? "Jewellery made to be noticed"}
             </h1>
-            <p className="hero-in hero-in-delay-2 mt-6 max-w-md text-muted-foreground">
-              Fine, wearable pieces for every day and every occasion, delivered to your door across
-              Pakistan.
+            <p className="hero-in hero-in-delay-1 mt-8 max-w-md text-lg leading-relaxed text-muted-foreground">
+              {banner?.subheading ??
+                "Fine, wearable pieces for every day and every occasion, delivered to your door across Pakistan."}
             </p>
-            <div className="hero-in hero-in-delay-2 mt-9 flex flex-wrap items-center gap-4">
+            <div className="hero-in hero-in-delay-2 mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
               <Button href={banner?.ctaUrl ?? "/shop"} size="lg">
-                {banner?.ctaLabel ?? "Shop the collection"} <ArrowRight />
+                {banner?.ctaLabel ?? "Shop the collection"}
               </Button>
-              <Button href="/shop?sort=newest" variant="outline" size="lg">
-                New arrivals
-              </Button>
+              <Link href="/shop?sort=newest" className="link-draw text-base">
+                See what is new
+              </Link>
             </div>
           </div>
 
-          <div className="order-1 md:order-2 md:self-stretch">
-            <div className="relative mx-auto aspect-[4/5] w-full max-w-md md:absolute md:inset-y-0 md:right-0 md:mx-0 md:aspect-auto md:max-w-none md:w-[48%]">
-              <Image
-                src={heroImage}
-                alt={banner?.heading ?? "Glance of Gold jewellery"}
-                fill
-                priority
-                sizes="(min-width: 768px) 48vw, 90vw"
-                quality={75}
-                className="object-cover"
-              />
+          <div className="arch-in order-1 mx-auto w-full max-w-[24rem] pr-3 sm:pr-5 lg:order-2 lg:col-span-5 lg:max-w-none">
+            <div className="relative">
+              <ArchFrame>
+                <Image
+                  src={banner?.imageUrl ?? "/placeholders/hero.svg"}
+                  alt={banner?.heading ?? "A layered gold necklace and jhumka earrings"}
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 40vw, 90vw"
+                  quality={75}
+                  className="object-cover"
+                />
+              </ArchFrame>
+
+              {spotlight && (
+                <Link
+                  href={`/product/${spotlight.slug}`}
+                  className="group absolute -bottom-5 left-3 flex items-center gap-3 bg-surface p-2.5 pr-5 shadow-[0_10px_30px_-12px_rgba(42,38,34,0.35)] transition-transform duration-300 ease-(--ease-out) hover:-translate-y-0.5 sm:-left-6 lg:-left-12"
+                >
+                  <span className="relative size-14 shrink-0 overflow-hidden bg-sand">
+                    {spotlightImage && (
+                      <Image src={spotlightImage.url} alt="" fill sizes="56px" quality={60} className="object-cover" />
+                    )}
+                  </span>
+                  <span>
+                    <span className="block font-heading text-lg leading-tight transition-colors duration-200 group-hover:text-gold-hover">
+                      {spotlight.name}
+                    </span>
+                    <span className="block text-sm text-muted-foreground">{formatPKR(spotlight.price)}</span>
+                  </span>
+                </Link>
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Trust row --------------------------------------------------------------- */}
-      <section aria-label="Why shop with us" className="border-b border-border bg-background">
-        <ul className="wrap grid grid-cols-2 gap-x-4 gap-y-6 py-8 lg:grid-cols-4">
+      {/* Trust ----------------------------------------------------------------- */}
+      <section aria-label="Why shop with us" className="border-y border-border">
+        <ul className="wrap grid grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-border">
           {trust.map(({ icon: Icon, title, text }) => (
-            <li key={title} className="flex items-start gap-3">
+            <li key={title} className="flex items-start gap-3 py-6 lg:px-8 lg:first:pl-0 lg:last:pr-0">
               <Icon className="mt-0.5 size-6 shrink-0 text-gold" strokeWidth={1.25} />
               <div>
                 <p className="text-sm font-medium">{title}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{text}</p>
+                <p className="mt-0.5 text-sm text-muted-foreground">{text}</p>
               </div>
             </li>
           ))}
         </ul>
       </section>
 
-      {/* Categories -------------------------------------------------------------- */}
+      {/* Categories: one large tile, the rest smaller, so the grid has a focal point -------- */}
       {categories.length > 0 && (
-        <section className="wrap pt-20 lg:pt-28">
-          <Reveal>
-            <SectionHeading eyebrow="Collections" title="Shop by category" />
-          </Reveal>
-          <ul className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 lg:gap-5">
+        <section className="wrap pt-24 lg:pt-32">
+          <SectionHeading title="Shop by category" />
+          <ul className="mt-10 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
             {categories.map((c, i) => (
-              <li key={c.id}>
-                <Reveal delay={i * 0.05}>
-                  <Link
-                    href={`/collections/${c.slug}`}
-                    className="group relative block aspect-[3/4] overflow-hidden bg-sand"
-                  >
-                    <Image
-                      src={c.image_url ?? `/placeholders/${c.slug}-a.svg`}
-                      alt=""
-                      fill
-                      sizes="(min-width: 1024px) 18vw, (min-width: 768px) 30vw, 48vw"
-                      quality={75}
-                      className="object-cover transition-transform duration-700 ease-(--ease-out) group-hover:scale-[1.04]"
-                    />
-                    <span className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-[#2a2622]/55 to-transparent p-4 pt-14 text-white">
-                      <span className="font-heading text-2xl leading-none">{c.name}</span>
-                      <ArrowRight className="size-5 transition-transform duration-300 ease-(--ease-out) group-hover:translate-x-1" strokeWidth={1.5} />
+              <li key={c.id} className={cn(i === 0 && "col-span-2 lg:row-span-2")}>
+                <Link
+                  href={`/collections/${c.slug}`}
+                  className={cn(
+                    "group relative block h-full overflow-hidden bg-sand",
+                    i === 0 ? "aspect-[16/11] lg:aspect-auto lg:min-h-full" : "aspect-[4/5]",
+                  )}
+                >
+                  <Image
+                    src={c.image_url ?? `/placeholders/${c.slug}-${i % 2 ? "b" : "a"}.svg`}
+                    alt=""
+                    fill
+                    sizes={i === 0 ? "(min-width: 1024px) 50vw, 100vw" : "(min-width: 1024px) 25vw, 50vw"}
+                    quality={75}
+                    className="object-cover transition-transform duration-700 ease-(--ease-out) group-hover:scale-[1.04]"
+                  />
+                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2a2622]/60 via-[#2a2622]/20 to-transparent p-4 pt-20 text-white sm:p-6">
+                    <span className={cn("block font-heading leading-none", i === 0 ? "text-4xl sm:text-5xl" : "text-2xl sm:text-3xl")}>
+                      {c.name}
                     </span>
-                  </Link>
-                </Reveal>
+                    <span className="mt-2 block h-px w-8 bg-gold transition-[width] duration-500 ease-(--ease-out) group-hover:w-16" aria-hidden="true" />
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
         </section>
       )}
 
-      {/* New arrivals -------------------------------------------------------------- */}
-      <section className="wrap pt-20 lg:pt-28">
-        <Reveal>
-          <SectionHeading
-            eyebrow="Just in"
-            title="New arrivals"
-            linkLabel="View all"
-            href="/shop?sort=newest"
-          />
-        </Reveal>
-        <ProductGrid products={newest.items} className="mt-10" />
+      {/* New arrivals ---------------------------------------------------------- */}
+      <section className="wrap pt-24 lg:pt-32">
+        <SectionHeading title="New arrivals" linkLabel="View all" href="/shop?sort=newest" />
+        <ProductGrid products={newest.items} priorityCount={0} className="mt-10" />
       </section>
 
-      {/* Gift offer ---------------------------------------------------------------- */}
+      {/* Gift offer: the gifts are shown as round stones ------------------------------ */}
       {giftOffer && (
-        <section className="mt-20 bg-blush lg:mt-28">
-          <div className="wrap grid items-center gap-10 py-14 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:py-20">
-            <Reveal>
-              <p className="text-eyebrow text-gold-hover">Limited offer</p>
-              <h2 className="text-title mt-3 max-w-md">
-                Buy {giftOffer.minItems}, choose 1 free gift
-              </h2>
-              <p className="mt-5 max-w-md text-foreground/80">
-                Add {giftOffer.minItems} pieces to your bag and pick a complimentary gift from our
-                selection. No code needed.
+        <section className="mt-24 bg-blush lg:mt-32">
+          <div className="wrap grid items-center gap-12 py-16 lg:grid-cols-2 lg:gap-20 lg:py-24">
+            <div>
+              <h2 className="text-title max-w-md">Buy {giftOffer.minItems}, choose 1 free gift</h2>
+              <p className="mt-5 max-w-md leading-relaxed text-foreground/80">
+                Put {giftOffer.minItems} pieces in your bag and pick a gift from the selection. It is added to your
+                order at no cost, and no code is needed.
               </p>
-              <Button href="/shop" className="mt-8" size="lg">
-                Start shopping <ArrowRight />
+              <Button href="/shop" size="lg" variant="dark" className="mt-9">
+                Start shopping
               </Button>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <ul className="grid grid-cols-3 gap-3 sm:gap-5">
-                {giftOffer.options.slice(0, 3).map((o) => (
-                  <li key={o.variantId}>
-                    <div className="relative aspect-[4/5] overflow-hidden bg-sand">
-                      {o.image && (
-                        <Image src={o.image} alt="" fill sizes="(min-width: 1024px) 14vw, 30vw" quality={60} className="object-cover" />
-                      )}
-                    </div>
-                    <p className="mt-2 text-xs leading-snug sm:text-sm">{o.productName}</p>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
+            </div>
+            <ul className="flex flex-wrap justify-center gap-6 lg:justify-end">
+              {giftOffer.options.slice(0, 3).map((o) => (
+                <li key={o.variantId} className="w-28 text-center sm:w-36">
+                  <div className="relative aspect-square overflow-hidden rounded-full bg-sand ring-1 ring-gold ring-offset-4 ring-offset-blush">
+                    {o.image && (
+                      <Image src={o.image} alt="" fill sizes="150px" quality={60} className="object-cover" />
+                    )}
+                  </div>
+                  <p className="mt-4 text-sm leading-snug">{o.productName}</p>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       )}
 
-      {/* Featured -------------------------------------------------------------------- */}
+      {/* Favourites ------------------------------------------------------------------ */}
       {featured.items.length > 0 && (
-        <section className="wrap pt-20 lg:pt-28">
-          <Reveal>
-            <SectionHeading eyebrow="Our picks" title="Customer favourites" linkLabel="Shop all" href="/shop" />
-          </Reveal>
+        <section className="wrap pt-24 lg:pt-32">
+          <SectionHeading title="Customer favourites" linkLabel="Shop all" href="/shop" />
           <ProductGrid products={featured.items} className="mt-10" />
         </section>
       )}
 
-      {/* Brand story ----------------------------------------------------------------- */}
-      <section className="wrap grid items-center gap-10 pt-20 md:grid-cols-2 md:gap-16 lg:pt-28">
-        <Reveal>
-          <div className="relative aspect-[4/5] overflow-hidden bg-sand">
+      {/* Story ------------------------------------------------------------------------ */}
+      <section className="wrap grid items-center gap-14 pt-28 lg:grid-cols-12 lg:gap-10 lg:pt-36">
+        <div className="mx-auto w-full max-w-[24rem] pr-3 sm:pr-5 lg:col-span-5 lg:max-w-none">
+          <ArchFrame>
             <Image
               src="/placeholders/necklaces-b.svg"
-              alt="A Glance of Gold necklace"
+              alt="A layered gold necklace with a coin pendant"
               fill
-              sizes="(min-width: 768px) 45vw, 90vw"
+              sizes="(min-width: 1024px) 38vw, 90vw"
               quality={75}
               className="object-cover"
             />
-          </div>
-        </Reveal>
-        <Reveal delay={0.1}>
-          <p className="text-eyebrow text-gold-hover">Our story</p>
-          <h2 className="text-title mt-3 max-w-md">A glance is all it takes</h2>
-          <div className="mt-5 h-px w-16 bg-gold" aria-hidden="true" />
-          <p className="mt-6 max-w-md text-muted-foreground">
-            Glance of Gold began with a simple idea: beautiful jewellery should feel effortless to
-            wear and easy to buy. Each piece is chosen for its finish, comfort and the way it
-            catches the light, from everyday studs to statement bridal sets.
+            <RevealCover />
+          </ArchFrame>
+        </div>
+        <div className="lg:col-span-6 lg:col-start-7">
+          <h2 className="text-title">A glance is all it takes</h2>
+          <p className="mt-8 max-w-lg font-heading text-3xl leading-snug sm:text-4xl">
+            Beautiful jewellery should feel effortless to wear and easy to buy.
           </p>
-          <Link href="/about" className="link-draw mt-8 inline-block text-[0.8125rem] uppercase tracking-[0.14em]">
-            Read more about us
+          <p className="mt-8 max-w-md leading-relaxed text-muted-foreground">
+            Every piece is chosen for its finish, its comfort and the way it catches the light, from everyday studs to
+            statement bridal sets.
+          </p>
+          <Link href="/about" className="link-draw mt-8 inline-block">
+            Read our story
           </Link>
-        </Reveal>
+        </div>
       </section>
 
-      {/* WhatsApp band ----------------------------------------------------------------- */}
-      <section className="wrap pt-20 lg:pt-28">
-        <Reveal>
-          <div className="flex flex-col items-center gap-6 border border-border bg-surface px-6 py-12 text-center sm:py-16">
-            <PackageCheck className="size-8 text-gold" strokeWidth={1.25} />
-            <h2 className="text-title max-w-xl">Need help choosing?</h2>
-            <p className="max-w-md text-muted-foreground">
-              Message us on WhatsApp and we will help you find the right piece, or confirm your order in minutes.
-            </p>
-            <Button href={whatsappLink("Hello Glance of Gold, I need some help.")} target="_blank" rel="noopener noreferrer" variant="dark" size="lg">
-              Chat on WhatsApp <ArrowRight />
-            </Button>
+      {/* Help -------------------------------------------------------------------------- */}
+      <section className="wrap pt-28 lg:pt-36">
+        <div className="flex flex-col items-start justify-between gap-6 border-y border-border py-10 sm:flex-row sm:items-center">
+          <div>
+            <h2 className="font-heading text-3xl">Need help choosing?</h2>
+            <p className="mt-2 text-muted-foreground">Message us and we will help you find the right piece.</p>
           </div>
-        </Reveal>
+          <Button
+            href={whatsappLink("Hello Glance of Gold, I need some help.", settings.whatsapp)}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="outline"
+            size="lg"
+          >
+            <MessageCircle /> Chat on WhatsApp
+          </Button>
+        </div>
       </section>
     </>
   );
