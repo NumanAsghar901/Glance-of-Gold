@@ -5,9 +5,12 @@ import { notFound } from "next/navigation";
 import { ProductGallery } from "@/components/store/product-gallery";
 import { ProductGrid } from "@/components/store/product-grid";
 import { ProductPurchase } from "@/components/store/product-purchase";
+import { ProductReviews } from "@/components/store/product-reviews";
 import { Price } from "@/components/ui/price";
+import { StarRating } from "@/components/ui/star-rating";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { getAllProductSlugs, getProduct, getRelatedProducts } from "@/lib/data/catalog";
+import { getProductReviews } from "@/lib/data/reviews";
 import { getPaymentAccounts, getSettings } from "@/lib/data/site";
 import { site } from "@/lib/site";
 import { formatPKR } from "@/lib/utils";
@@ -59,10 +62,11 @@ export default async function ProductPage({ params }: Props) {
   const product = await getProduct(slug);
   if (!product) notFound();
 
-  const [related, settings, accounts] = await Promise.all([
+  const [related, settings, accounts, reviewData] = await Promise.all([
     getRelatedProducts(product.category?.slug ?? null, product.id),
     getSettings(),
     getPaymentAccounts(),
+    getProductReviews(product.id),
   ]);
 
   const jsonLd = {
@@ -80,6 +84,9 @@ export default async function ProductPage({ params }: Props) {
       price: product.price,
       availability: product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
     },
+    ...(product.ratingCount > 0
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating, reviewCount: product.ratingCount } }
+      : {}),
   };
 
   const transfers = accounts.length > 0;
@@ -116,6 +123,20 @@ export default async function ProductPage({ params }: Props) {
 
         <div className="lg:py-4">
           <h1 className="text-title">{product.name}</h1>
+          {(product.ratingCount > 0 || product.soldCount > 0) && (
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+              {product.ratingCount > 0 && (
+                <a href="#reviews" className="inline-flex items-center gap-2 transition-colors hover:text-gold-hover">
+                  <StarRating rating={product.rating} />
+                  <span className="font-medium">{product.rating.toFixed(1)}</span>
+                  <span className="text-muted-foreground underline underline-offset-4">
+                    {product.ratingCount} {product.ratingCount === 1 ? "review" : "reviews"}
+                  </span>
+                </a>
+              )}
+              {product.soldCount > 0 && <span className="text-muted-foreground">{product.soldCount} sold</span>}
+            </div>
+          )}
           <Price price={product.price} compareAt={product.compareAtPrice} className="mt-4 text-lg" />
           <p className="mt-1 text-xs text-muted-foreground">
             {settings.freeShippingThreshold > 0 &&
@@ -181,6 +202,8 @@ export default async function ProductPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      <ProductReviews product={product} data={reviewData} />
 
       {related.length > 0 && (
         <section className="pt-20 lg:pt-28">

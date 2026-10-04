@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, MessageCircle } from "lucide-react";
+import { ArrowLeft, Check as CheckIcon, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,7 +10,7 @@ import {
   updateOrder,
 } from "@/app/actions/admin-orders";
 import { ActionButton, ActionForm } from "@/components/admin/action-form";
-import { Field, Input, orderTone, paymentTone, Panel, Pill, Select } from "@/components/admin/ui";
+import { Check, Field, Input, orderTone, paymentTone, Panel, Pill, Select } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin/auth";
 import { PAYMENT_LABEL } from "@/lib/email/templates";
 import { whatsappLink } from "@/lib/site";
@@ -121,7 +121,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               </a>
               <ActionButton action={toggleWhatsappConfirmed} fields={{ id, confirmed: order.whatsapp_confirmed_at ? 1 : 0 }}>
                 {order.whatsapp_confirmed_at ? (
-                  <><Check className="size-4" /> Confirmed on WhatsApp (undo)</>
+                  <><CheckIcon className="size-4" /> Confirmed on WhatsApp (undo)</>
                 ) : (
                   "Mark confirmed on WhatsApp"
                 )}
@@ -166,6 +166,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <Field label="Cancellation reason" htmlFor="cancelReason" hint="Only used when the status is Cancelled. Cancelling returns the stock and cannot be undone.">
                 <Input id="cancelReason" name="cancelReason" defaultValue={order.cancel_reason ?? ""} />
               </Field>
+              <Check
+                name="notifyCustomer"
+                label="Email the customer about this change"
+                defaultChecked
+                hint={order.email ? `Sends the new status, items and tracking to ${order.email}.` : "This customer did not give an email, so no message can be sent."}
+              />
             </ActionForm>
           </Panel>
 

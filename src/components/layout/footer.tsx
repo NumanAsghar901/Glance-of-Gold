@@ -69,9 +69,20 @@ export function Footer() {
       </div>
 
       <div className="border-t border-border">
-        <div className="wrap flex flex-col gap-2 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} {site.name}</p>
-          <p>Cash on delivery across Pakistan</p>
+        <div className="wrap grid gap-2 py-6 text-center text-sm text-muted-foreground sm:grid-cols-3 sm:items-center">
+          <p className="sm:text-left">&copy; {new Date().getFullYear()} {site.name}</p>
+          <p>
+            Developed by{" "}
+            <a
+              href="https://portfolio-numanasghar.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="link-draw text-foreground"
+            >
+              Numan Asghar
+            </a>
+          </p>
+          <p className="sm:text-right">Cash on delivery across Pakistan</p>
         </div>
       </div>
     </footer>

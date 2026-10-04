@@ -5,7 +5,7 @@ import type { EmailOrder } from "@/lib/email/templates";
 /** Server-only order reads. Orders are never public; they are looked up with the service role. */
 
 const ORDER_COLUMNS =
-  "id, order_number, access_token, customer_name, phone, email, province, city, address, landmark, notes, subtotal, discount, shipping_fee, total, coupon_code, payment_method, payment_status, order_status, courier, tracking_number, meta_event_id, created_at";
+  "id, order_number, access_token, customer_name, phone, email, province, city, address, landmark, notes, subtotal, discount, shipping_fee, total, coupon_code, payment_method, payment_status, order_status, courier, tracking_number, cancel_reason, meta_event_id, created_at";
 
 export type OrderView = EmailOrder & {
   payment_status: "unpaid" | "awaiting_verification" | "paid" | "failed" | "refunded";

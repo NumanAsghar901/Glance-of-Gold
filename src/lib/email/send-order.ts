@@ -1,23 +1,50 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 import { getSettings } from "@/lib/data/site";
-import { customerEmail, ownerEmail } from "@/lib/email/templates";
+import { customerEmail, ownerEmail, statusEmail, type StatusKind } from "@/lib/email/templates";
 import { getOrder } from "@/lib/orders";
 import { site, whatsappLink } from "@/lib/site";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 let transporter: Transporter | null | undefined;
 
+/**
+ * Gmail with an app password by default. For the best inbox placement, use a mail provider and a
+ * domain you own (SPF + DKIM + DMARC), then set SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_APP_PASSWORD
+ * and MAIL_FROM_EMAIL in the environment. No code change is needed.
+ */
 function getTransporter() {
   if (transporter !== undefined) return transporter;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_APP_PASSWORD;
-  transporter =
-    user && pass ? nodemailer.createTransport({ service: "gmail", auth: { user, pass } }) : null;
+  const host = process.env.SMTP_HOST;
+  if (!user || !pass) {
+    transporter = null;
+  } else if (host) {
+    const port = Number(process.env.SMTP_PORT || 465);
+    transporter = nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass } });
+  } else {
+    transporter = nodemailer.createTransport({ service: "gmail", auth: { user, pass } });
+  }
   return transporter;
 }
 
+const fromAddress = () => process.env.MAIL_FROM_EMAIL || process.env.SMTP_USER;
+
 type Mail = { subject: string; html: string; text: string };
+
+/**
+ * Headers that mark these as one-to-one transactional messages. Together with a plain-text part,
+ * a real reply-to and a subject without sales language, they help mailbox providers file the
+ * message as an order notification rather than as promotion.
+ */
+function transactionalHeaders(orderId: number | null) {
+  return {
+    "Auto-Submitted": "auto-generated",
+    "X-Auto-Response-Suppress": "OOF, AutoReply",
+    "X-Entity-Ref-ID": `gog-${orderId ?? "msg"}-${Date.now()}`,
+  };
+}
 
 async function deliver(orderId: number, kind: string, to: string, mail: Mail) {
   const supabase = createServiceClient();
@@ -31,12 +58,13 @@ async function deliver(orderId: number, kind: string, to: string, mail: Mail) {
   try {
     if (!mailer) throw new Error("Email is not configured (SMTP_USER / SMTP_APP_PASSWORD)");
     await mailer.sendMail({
-      from: `"${site.name}" <${process.env.SMTP_USER}>`,
+      from: { name: site.name, address: fromAddress()! },
       to,
-      replyTo: site.email,
+      replyTo: { name: site.name, address: site.email },
       subject: mail.subject,
       html: mail.html,
       text: mail.text,
+      headers: transactionalHeaders(orderId),
     });
     if (log) await supabase.from("email_log").update({ status: "sent" }).eq("id", log.id);
     return true;
@@ -126,7 +154,7 @@ export async function sendContactMessage(input: { name: string; phone?: string; 
   const lines = [`From: ${input.name}`, input.phone && `Phone: ${input.phone}`, input.email && `Email: ${input.email}`].filter(Boolean) as string[];
   try {
     await mailer.sendMail({
-      from: `"${site.name} website" <${process.env.SMTP_USER}>`,
+      from: { name: `${site.name} website`, address: fromAddress()! },
       to,
       replyTo: input.email || undefined,
       subject: `Website message from ${input.name}`,
@@ -136,6 +164,32 @@ export async function sendContactMessage(input: { name: string; phone?: string; 
     return true;
   } catch (err) {
     console.error("[email] contact message failed:", err instanceof Error ? err.message : err);
+    return false;
+  }
+}
+
+/**
+ * Tells the customer their order moved to a new stage (confirmed, shipped, delivered, ...), with the
+ * order's items and totals. Skipped when the customer did not give an email. Never throws.
+ */
+export async function sendStatusEmail(orderId: number, kind: StatusKind) {
+  try {
+    const order = await getOrder({ id: orderId });
+    if (!order?.email) return false;
+    const settings = await getSettings();
+    return await deliver(
+      orderId,
+      `status_${kind}`,
+      order.email,
+      statusEmail(order, kind, {
+        siteUrl: site.url,
+        helpline: settings.helpline,
+        contactEmail: settings.email,
+        whatsappUrl: whatsappLink(`Hello Glance of Gold, I have a question about order ${order.order_number}.`, settings.whatsapp),
+      }),
+    );
+  } catch (err) {
+    console.error("[email] sendStatusEmail failed:", err);
     return false;
   }
 }

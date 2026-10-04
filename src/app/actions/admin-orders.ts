@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { z } from "zod";
 import { requireAdmin, type ActionState } from "@/lib/admin/auth";
-import { sendOrderEmails } from "@/lib/email/send-order";
+import { sendOrderEmails, sendStatusEmail } from "@/lib/email/send-order";
+import type { StatusKind } from "@/lib/email/templates";
 
 const idSchema = z.coerce.number().int().positive();
 
@@ -32,6 +34,9 @@ export async function updateOrder(_prev: ActionState, formData: FormData): Promi
   });
   if (!parsed.success) return { error: "Please check the order details." };
   const v = parsed.data;
+  const notify = formData.get("notifyCustomer") === "on";
+
+  const { data: before } = await supabase.from("orders").select("order_status, email").eq("id", v.id).maybeSingle();
 
   const { error } = await supabase
     .from("orders")
@@ -46,7 +51,17 @@ export async function updateOrder(_prev: ActionState, formData: FormData): Promi
   // The database refuses to reopen a cancelled order; surface its message.
   if (error) return { error: error.message };
   refresh(v.id);
-  return { ok: v.orderStatus === "cancelled" ? "Order cancelled. Stock has been returned." : "Order updated." };
+
+  // Tell the customer when the order moves to a new stage (pending is the starting point, never emailed).
+  const changed = before && before.order_status !== v.orderStatus && v.orderStatus !== "pending";
+  const willEmail = !!(changed && notify && before?.email);
+  if (willEmail) {
+    after(() => sendStatusEmail(v.id, v.orderStatus as StatusKind));
+  }
+
+  const base = v.orderStatus === "cancelled" ? "Order cancelled. Stock has been returned." : "Order updated.";
+  if (changed && notify && !before?.email) return { ok: `${base} The customer did not give an email, so no message was sent.` };
+  return { ok: willEmail ? `${base} The customer is being emailed.` : base };
 }
 
 export async function setPaymentStatus(formData: FormData) {
@@ -68,6 +83,12 @@ export async function setPaymentStatus(formData: FormData) {
     note: status === "paid" ? "Payment verified" : `Payment marked ${status}`,
   });
   refresh(id);
+
+  // A verified transfer deserves a receipt. Cash on delivery orders are paid at the door, so no email there.
+  if (status === "paid") {
+    const { data: o } = await supabase.from("orders").select("payment_method, email").eq("id", id).maybeSingle();
+    if (o?.email && o.payment_method !== "cod") after(() => sendStatusEmail(id, "payment_received"));
+  }
 }
 
 export async function toggleWhatsappConfirmed(formData: FormData) {

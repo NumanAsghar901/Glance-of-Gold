@@ -32,6 +32,9 @@ export type EmailOrder = {
   total: number;
   coupon_code: string | null;
   payment_method: "cod" | "jazzcash" | "easypaisa" | "bank_transfer";
+  courier?: string | null;
+  tracking_number?: string | null;
+  cancel_reason?: string | null;
   items: { name: string; variant_name: string | null; qty: number; unit_price: number; is_gift: boolean }[];
 };
 
@@ -162,5 +165,105 @@ ${button(adminUrl, "Open in admin")}
       ...o.items.map((i) => `- ${i.name} x${i.qty}${i.is_gift ? " (gift)" : ""}`),
       `Admin: ${adminUrl}`,
     ].join("\n"),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Status updates: sent to the customer whenever the admin moves their order along.
+// ---------------------------------------------------------------------------------------------
+
+export type StatusKind =
+  | "confirmed"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled"
+  | "returned"
+  | "payment_received";
+
+type StatusCopy = { subject: (n: string) => string; heading: string; lead: (o: EmailOrder) => string };
+
+const STATUS_COPY: Record<StatusKind, StatusCopy> = {
+  confirmed: {
+    subject: (n) => `Your Glance of Gold order ${n} is confirmed`,
+    heading: "Your order is confirmed",
+    lead: (o) => `Thank you for confirming. We have confirmed order ${o.order_number} and will start preparing it now.`,
+  },
+  processing: {
+    subject: (n) => `We are preparing your order ${n}`,
+    heading: "We are preparing your order",
+    lead: (o) => `Your order ${o.order_number} is being packed with care and will be handed to the courier soon.`,
+  },
+  shipped: {
+    subject: (n) => `Your order ${n} is on its way`,
+    heading: "Your order is on its way",
+    lead: (o) =>
+      `Good news, order ${o.order_number} has been handed to ${o.courier || "the courier"}. ${
+        o.payment_method === "cod" ? `Please keep ${formatPKR(o.total)} ready to pay on delivery.` : "Delivery is already paid for."
+      }`,
+  },
+  delivered: {
+    subject: (n) => `Your order ${n} has been delivered`,
+    heading: "Your order has been delivered",
+    lead: (o) => `Order ${o.order_number} was delivered. We hope you love your jewellery. If anything is not right, reply to this email and we will help.`,
+  },
+  cancelled: {
+    subject: (n) => `Your order ${n} has been cancelled`,
+    heading: "Your order has been cancelled",
+    lead: (o) =>
+      `Order ${o.order_number} has been cancelled.${o.cancel_reason ? ` Reason: ${o.cancel_reason}.` : ""} If you did not expect this, please contact us and we will sort it out.`,
+  },
+  returned: {
+    subject: (n) => `Your return for order ${n}`,
+    heading: "Your return has been recorded",
+    lead: (o) => `We have recorded order ${o.order_number} as returned. We will contact you about your refund or exchange.`,
+  },
+  payment_received: {
+    subject: (n) => `Payment received for order ${n}`,
+    heading: "We received your payment",
+    lead: (o) => `Thank you. We have verified your payment of ${formatPKR(o.total)} for order ${o.order_number}.`,
+  },
+};
+
+export function statusEmail(
+  o: EmailOrder,
+  kind: StatusKind,
+  ctx: { siteUrl: string; helpline: string; contactEmail: string; whatsappUrl: string },
+) {
+  const copy = STATUS_COPY[kind];
+  const orderUrl = `${ctx.siteUrl}/order/${o.access_token}`;
+  const tracking =
+    kind === "shipped" && o.tracking_number
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:${C.sand};"><tr><td style="padding:14px 16px;font-size:14px;line-height:1.6;">${esc(o.courier || "Courier")} tracking number<br><strong style="font-size:16px;">${esc(o.tracking_number)}</strong></td></tr></table>`
+      : "";
+
+  const body = `
+<h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;font-weight:normal;font-size:28px;">${esc(copy.heading)}</h1>
+<p style="margin:0 0 6px;font-size:14px;line-height:1.7;">Hello ${esc(o.customer_name.split(" ")[0])},</p>
+<p style="margin:0 0 20px;font-size:14px;line-height:1.7;color:${C.muted};">${esc(copy.lead(o))}</p>
+${tracking}
+${itemsTable(o)}
+<h2 style="margin:28px 0 8px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${C.muted};">Delivering to</h2>
+${addressBlock(o)}
+${button(orderUrl, "View your order")}
+<p style="margin:20px 0 0;font-size:13px;line-height:1.7;color:${C.muted};">Questions? Reply to this email, message us on <a href="${ctx.whatsappUrl}" style="color:${C.goldHover};">WhatsApp</a> or call ${esc(ctx.helpline)}.</p>`;
+
+  const lines = [
+    `Hello ${o.customer_name.split(" ")[0]},`,
+    "",
+    copy.lead(o),
+    ...(kind === "shipped" && o.tracking_number ? [`${o.courier || "Courier"} tracking number: ${o.tracking_number}`] : []),
+    "",
+    ...o.items.map((i) => `- ${i.name}${i.variant_name && i.variant_name !== "Standard" ? ` (${i.variant_name})` : ""} x${i.qty}${i.is_gift ? " (free gift)" : ""}`),
+    `Total: ${formatPKR(o.total)} (${PAYMENT_LABEL[o.payment_method]})`,
+    "",
+    `View your order: ${orderUrl}`,
+    `Helpline: ${ctx.helpline}`,
+  ];
+
+  return {
+    subject: copy.subject(o.order_number),
+    html: shell(`${copy.heading}: order ${o.order_number}`, body, ctx.helpline, ctx.contactEmail),
+    text: lines.join("\n"),
   };
 }

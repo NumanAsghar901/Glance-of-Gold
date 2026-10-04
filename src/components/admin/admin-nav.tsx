@@ -10,6 +10,7 @@ import {
   Megaphone,
   Settings,
   ShoppingBag,
+  Star,
   Tags,
 } from "lucide-react";
 import Link from "next/link";
@@ -30,6 +31,7 @@ const groups: { label?: string; items: Item[] }[] = [
     items: [
       { href: "/admin/products", label: "Products", icon: Gem },
       { href: "/admin/categories", label: "Categories", icon: Tags },
+      { href: "/admin/reviews", label: "Reviews", icon: Star },
     ],
   },
   {

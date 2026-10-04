@@ -27,16 +27,35 @@ type RawProduct = {
   description?: string | null;
   material?: string | null;
   tags?: string[];
+  rating_avg?: number | null;
+  rating_count?: number | null;
+  sold_count?: number | null;
   category: { name: string; slug: string } | null;
   images: (ProductImage & { sort: number })[];
   variants: { id: number; name: string; stock: number; price_override: number | null; sort: number }[];
 };
 
-const SUMMARY_SELECT =
-  "id, slug, name, price, compare_at_price, is_featured, category:categories(name, slug), images:product_images(url, alt, sort, blur_data_url), variants:product_variants(id, name, stock, price_override, sort)";
-const SUMMARY_SELECT_INNER =
-  "id, slug, name, price, compare_at_price, is_featured, category:categories!inner(name, slug), images:product_images(url, alt, sort, blur_data_url), variants:product_variants(id, name, stock, price_override, sort)";
-const DETAIL_SELECT = `${SUMMARY_SELECT}, description, material, tags`;
+const BASE_COLUMNS = "id, slug, name, price, compare_at_price, is_featured";
+const RELATIONS =
+  "images:product_images(url, alt, sort, blur_data_url), variants:product_variants(id, name, stock, price_override, sort)";
+const STATS = "rating_avg, rating_count, sold_count";
+
+/**
+ * Ratings and sold counts come from columns added by the reviews migration. Until that migration has
+ * been run on the database, the shop must keep working, so the queries leave those columns out.
+ * The check is repeated at most every 30 seconds while the columns are missing.
+ */
+let statsCheck: { ok: boolean; at: number } | null = null;
+async function statsAvailable(): Promise<boolean> {
+  if (statsCheck && (statsCheck.ok || Date.now() - statsCheck.at < 30_000)) return statsCheck.ok;
+  const { error } = await createPublicClient().from("products").select("sold_count").limit(1);
+  statsCheck = { ok: !error, at: Date.now() };
+  return statsCheck.ok;
+}
+
+const summarySelect = (inner: boolean, stats: boolean) =>
+  `${BASE_COLUMNS}${stats ? `, ${STATS}` : ""}, category:categories${inner ? "!inner" : ""}(name, slug), ${RELATIONS}`;
+const detailSelect = (stats: boolean) => `${summarySelect(false, stats)}, description, material, tags`;
 
 function toSummary(r: RawProduct): ProductSummary {
   const images = [...r.images]
@@ -52,6 +71,9 @@ function toSummary(r: RawProduct): ProductSummary {
     category: r.category,
     images,
     inStock: r.variants.some((v) => v.stock > 0),
+    rating: Number(r.rating_avg ?? 0),
+    ratingCount: r.rating_count ?? 0,
+    soldCount: r.sold_count ?? 0,
     quickAdd:
       r.variants.length === 1
         ? { variantId: r.variants[0].id, variantName: r.variants[0].name, stock: r.variants[0].stock }
@@ -97,9 +119,8 @@ export const getProducts = unstable_cache(
     const pageSize = query.pageSize ?? PAGE_SIZE;
     const page = Math.max(1, query.page ?? 1);
 
-    let q = supabase
-      .from("products")
-      .select(query.category ? SUMMARY_SELECT_INNER : SUMMARY_SELECT, { count: "exact" });
+    const stats = await statsAvailable();
+    let q = supabase.from("products").select(summarySelect(!!query.category, stats), { count: "exact" });
 
     if (query.category) q = q.eq("categories.slug", query.category);
     if (query.featuredOnly) q = q.eq("is_featured", true);
@@ -141,7 +162,7 @@ export const getProduct = unstable_cache(
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("products")
-      .select(DETAIL_SELECT)
+      .select(detailSelect(await statsAvailable()))
       .eq("slug", slug)
       .maybeSingle();
     if (error) throw new Error(`getProduct: ${error.message}`);
@@ -156,7 +177,7 @@ export const getRelatedProducts = unstable_cache(
     const supabase = createPublicClient();
     let q = supabase
       .from("products")
-      .select(categorySlug ? SUMMARY_SELECT_INNER : SUMMARY_SELECT)
+      .select(summarySelect(!!categorySlug, await statsAvailable()))
       .neq("id", excludeId)
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -191,7 +212,7 @@ export const searchProducts = unstable_cache(
     if (!hits.length) return [];
 
     const ids = hits.map((h) => h.id);
-    const { data, error: e2 } = await supabase.from("products").select(SUMMARY_SELECT).in("id", ids);
+    const { data, error: e2 } = await supabase.from("products").select(summarySelect(false, await statsAvailable())).in("id", ids);
     if (e2) throw new Error(`searchProducts: ${e2.message}`);
 
     const byId = new Map((data as unknown as RawProduct[]).map((p) => [p.id, toSummary(p)]));

@@ -1,5 +1,6 @@
 import { CheckCircle2, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { EventHistory, OrderLines, OrderProgress, OrderTotalsList, PAYMENT_STATUS_LABEL, StatusBadge } from "@/components/order/order-parts";
@@ -57,6 +58,14 @@ export default async function OrderPage({ params }: { params: Promise<{ token: s
         </p>
         <div className="mt-4 flex justify-center">
           <StatusBadge status={order.order_status} />
+        </div>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+          <Button href="/shop" size="lg">
+            Continue shopping
+          </Button>
+          <Link href="/track" className="link-draw text-base">
+            Track another order
+          </Link>
         </div>
       </header>
 

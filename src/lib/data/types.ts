@@ -21,6 +21,10 @@ export type ProductSummary = {
   category: { name: string; slug: string } | null;
   images: ProductImage[];
   inStock: boolean;
+  /** Average star rating (0 when there are no reviews yet), review count and units sold. */
+  rating: number;
+  ratingCount: number;
+  soldCount: number;
   /** Set when the product has exactly one variant, so cards can offer quick add. */
   quickAdd: { variantId: number; variantName: string; stock: number } | null;
 };
@@ -30,6 +34,16 @@ export type ProductDetail = ProductSummary & {
   material: string | null;
   tags: string[];
   variants: ProductVariant[];
+};
+
+export type Review = {
+  id: number;
+  authorName: string;
+  city: string | null;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  product?: { name: string; slug: string } | null;
 };
 
 export type Category = {

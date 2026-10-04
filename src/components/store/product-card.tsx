@@ -3,6 +3,7 @@ import Link from "next/link";
 import { LogoMark } from "@/components/brand/logo";
 import { CardActions } from "@/components/store/card-actions";
 import { discountPercent, Price } from "@/components/ui/price";
+import { StarRating } from "@/components/ui/star-rating";
 import type { ProductSummary } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
 
@@ -84,6 +85,17 @@ export function ProductCard({
           {product.name}
         </h3>
         <Price price={product.price} compareAt={product.compareAtPrice} />
+        {(product.ratingCount > 0 || product.soldCount > 0) && (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 pt-0.5 text-xs text-muted-foreground">
+            {product.ratingCount > 0 && (
+              <span className="inline-flex items-center gap-1.5">
+                <StarRating rating={product.rating} size="sm" />
+                <span>({product.ratingCount})</span>
+              </span>
+            )}
+            {product.soldCount > 0 && <span>{product.soldCount} sold</span>}
+          </p>
+        )}
       </Link>
     </article>
   );

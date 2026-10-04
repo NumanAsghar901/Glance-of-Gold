@@ -2,25 +2,28 @@ import { MessageCircle, RotateCcw, Truck, Wallet } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { HeroBanner } from "@/components/store/hero-banner";
+import { ReviewsMarquee } from "@/components/store/reviews-marquee";
 import { ProductGrid } from "@/components/store/product-grid";
 import { ArchFrame } from "@/components/ui/arch";
 import { Button } from "@/components/ui/button";
 import { RevealCover } from "@/components/ui/reveal-cover-lazy";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { getCategories, getProducts } from "@/lib/data/catalog";
+import { getFeaturedReviews } from "@/lib/data/reviews";
 import { getBanners, getGiftOffer, getSettings } from "@/lib/data/site";
 import { defaultSlides, type HeroSlide } from "@/lib/hero-defaults";
 import { whatsappLink } from "@/lib/site";
 import { cn, formatPKR } from "@/lib/utils";
 
 export default async function Home() {
-  const [banners, categories, newest, featured, giftOffer, settings] = await Promise.all([
+  const [banners, categories, newest, featured, giftOffer, settings, reviews] = await Promise.all([
     getBanners(),
     getCategories(),
     getProducts({ sort: "newest", pageSize: 8 }),
     getProducts({ featuredOnly: true, sort: "featured", pageSize: 4 }),
     getGiftOffer(),
     getSettings(),
+    getFeaturedReviews(),
   ]);
 
   // Banners added in the admin replace the built-in slides.
@@ -140,6 +143,22 @@ export default async function Home() {
         <section className="wrap pt-24 lg:pt-32">
           <SectionHeading title="Customer favourites" linkLabel="Shop all" href="/shop" />
           <ProductGrid products={featured.items} className="mt-10" />
+        </section>
+      )}
+
+      {/* Customer reviews ------------------------------------------------------------ */}
+      {reviews.length > 0 && (
+        <section className="pt-24 lg:pt-32" aria-labelledby="reviews-title">
+          <div className="wrap">
+            <div className="reveal flex items-end justify-between gap-6 border-b border-border pb-5">
+              <h2 id="reviews-title" className="text-title">
+                What our customers say
+              </h2>
+            </div>
+          </div>
+          <div className="mt-10">
+            <ReviewsMarquee reviews={reviews} />
+          </div>
         </section>
       )}
 

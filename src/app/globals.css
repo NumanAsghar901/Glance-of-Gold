@@ -391,3 +391,29 @@ html.lenis body {
 }
 
 /* .reveal marks elements animated by components/layout/scroll-reveal.tsx (Web Animations API; no CSS needed). */
+
+/* Customer reviews marquee: right to left, seamless loop of two identical lists */
+.marquee-track {
+  animation: marquee linear infinite;
+  will-change: transform;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-mask {
+  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}

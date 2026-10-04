@@ -657,8 +657,11 @@ export type Database = {
           material: string | null
           name: string
           price: number
+          rating_avg: number
+          rating_count: number
           search: unknown
           slug: string
+          sold_count: number
           tags: string[]
           updated_at: string
         }
@@ -674,8 +677,11 @@ export type Database = {
           material?: string | null
           name: string
           price: number
+          rating_avg?: number
+          rating_count?: number
           search?: unknown
           slug: string
+          sold_count?: number
           tags?: string[]
           updated_at?: string
         }
@@ -691,8 +697,11 @@ export type Database = {
           material?: string | null
           name?: string
           price?: number
+          rating_avg?: number
+          rating_count?: number
           search?: unknown
           slug?: string
+          sold_count?: number
           tags?: string[]
           updated_at?: string
         }
@@ -726,6 +735,50 @@ export type Database = {
           role?: string
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          author_name: string
+          city: string | null
+          comment: string
+          created_at: string
+          id: number
+          is_sample: boolean
+          is_visible: boolean
+          product_id: number
+          rating: number
+        }
+        Insert: {
+          author_name: string
+          city?: string | null
+          comment: string
+          created_at?: string
+          id?: never
+          is_sample?: boolean
+          is_visible?: boolean
+          product_id: number
+          rating: number
+        }
+        Update: {
+          author_name?: string
+          city?: string | null
+          comment?: string
+          created_at?: string
+          id?: never
+          is_sample?: boolean
+          is_visible?: boolean
+          product_id?: number
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       settings: {
         Row: {
@@ -765,8 +818,11 @@ export type Database = {
           material: string | null
           name: string
           price: number
+          rating_avg: number
+          rating_count: number
           search: unknown
           slug: string
+          sold_count: number
           tags: string[]
           updated_at: string
         }[]
