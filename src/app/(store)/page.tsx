@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ProductGrid } from "@/components/store/product-grid";
 import { ArchFrame } from "@/components/ui/arch";
 import { Button } from "@/components/ui/button";
-import { RevealCover } from "@/components/ui/reveal-cover";
+import { RevealCover } from "@/components/ui/reveal-cover-lazy";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { getCategories, getProducts } from "@/lib/data/catalog";
 import { getBanners, getGiftOffer, getSettings } from "@/lib/data/site";
