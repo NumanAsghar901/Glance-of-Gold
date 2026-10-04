@@ -45,6 +45,10 @@ export const PAYMENT_LABEL: Record<EmailOrder["payment_method"], string> = {
   bank_transfer: "Bank transfer",
 };
 
+/** Public parcel tracking page of Leopards Courier. The customer enters the tracking number there. */
+export const LEOPARDS_TRACKING_URL = "https://pk.leopardscourier.com/tracking";
+const isLeopards = (courier?: string | null) => !courier || /leopard/i.test(courier);
+
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -232,9 +236,14 @@ export function statusEmail(
 ) {
   const copy = STATUS_COPY[kind];
   const orderUrl = `${ctx.siteUrl}/order/${o.access_token}`;
+  const trackUrl = isLeopards(o.courier) ? LEOPARDS_TRACKING_URL : null;
   const tracking =
     kind === "shipped" && o.tracking_number
-      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:${C.sand};"><tr><td style="padding:14px 16px;font-size:14px;line-height:1.6;">${esc(o.courier || "Courier")} tracking number<br><strong style="font-size:16px;">${esc(o.tracking_number)}</strong></td></tr></table>`
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:${C.sand};"><tr><td style="padding:14px 16px;font-size:14px;line-height:1.6;">${esc(o.courier || "Courier")} tracking number<br><strong style="font-size:16px;">${esc(o.tracking_number)}</strong>${
+          trackUrl
+            ? `<br><span style="color:${C.muted};">Follow your parcel: open <a href="${trackUrl}" style="color:${C.goldHover};">${trackUrl.replace("https://", "")}</a> and enter this number.</span>`
+            : ""
+        }</td></tr></table>`
       : "";
 
   const body = `
@@ -252,7 +261,12 @@ ${button(orderUrl, "View your order")}
     `Hello ${o.customer_name.split(" ")[0]},`,
     "",
     copy.lead(o),
-    ...(kind === "shipped" && o.tracking_number ? [`${o.courier || "Courier"} tracking number: ${o.tracking_number}`] : []),
+    ...(kind === "shipped" && o.tracking_number
+      ? [
+          `${o.courier || "Courier"} tracking number: ${o.tracking_number}`,
+          ...(trackUrl ? [`Track your parcel: ${trackUrl} (enter the number above)`] : []),
+        ]
+      : []),
     "",
     ...o.items.map((i) => `- ${i.name}${i.variant_name && i.variant_name !== "Standard" ? ` (${i.variant_name})` : ""} x${i.qty}${i.is_gift ? " (free gift)" : ""}`),
     `Total: ${formatPKR(o.total)} (${PAYMENT_LABEL[o.payment_method]})`,
