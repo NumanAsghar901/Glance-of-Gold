@@ -115,3 +115,27 @@ export async function sendOwnerNote(orderId: number, subject: string, text: stri
   await deliver(orderId, "owner_note", to, { subject, html, text: `${text}
 ${site.url}/admin/orders/${orderId}` });
 }
+
+/** Email from the contact form to the shop owner. Replies go straight to the customer. Returns true when sent. */
+export async function sendContactMessage(input: { name: string; phone?: string; email?: string; message: string }) {
+  const to = process.env.ORDER_NOTIFY_EMAIL || process.env.SMTP_USER;
+  const mailer = getTransporter();
+  if (!to || !mailer) return false;
+
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const lines = [`From: ${input.name}`, input.phone && `Phone: ${input.phone}`, input.email && `Email: ${input.email}`].filter(Boolean) as string[];
+  try {
+    await mailer.sendMail({
+      from: `"${site.name} website" <${process.env.SMTP_USER}>`,
+      to,
+      replyTo: input.email || undefined,
+      subject: `Website message from ${input.name}`,
+      text: `${lines.join("\n")}\n\n${input.message}`,
+      html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#2A2622"><p>${lines.map(esc).join("<br>")}</p><p style="white-space:pre-wrap;border-left:3px solid #B8935A;padding-left:12px">${esc(input.message)}</p></div>`,
+    });
+    return true;
+  } catch (err) {
+    console.error("[email] contact message failed:", err instanceof Error ? err.message : err);
+    return false;
+  }
+}

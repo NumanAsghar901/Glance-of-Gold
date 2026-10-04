@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { LogoMark } from "@/components/brand/logo";
-import { QuickAdd } from "@/components/store/quick-add";
+import { CardActions } from "@/components/store/card-actions";
 import { discountPercent, Price } from "@/components/ui/price";
 import type { ProductSummary } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
@@ -71,9 +71,7 @@ export function ProductCard({
           )}
         </div>
 
-        {product.quickAdd && product.inStock && (
-          <QuickAdd product={product} className="absolute bottom-3 right-3" />
-        )}
+        <CardActions product={product} />
       </div>
 
       <Link href={href} className="mt-4 block space-y-1">

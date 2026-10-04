@@ -14,7 +14,7 @@ Light, elegant, modern, professional. **Never dark mode.** No `dark:` variants, 
 
 - Generous whitespace, large photography, thin gold hairlines (1px), subtle motion only.
 - Never use: purple gradients, generic AI-looking layouts (centered hero + three identical feature cards), emoji as icons.
-- Signature motif: the **arch** (a mehrab niche) with an offset gold hairline arch behind it, via `ArchFrame` in `components/ui/arch.tsx`. Used for the hero, the home story and the About page only, so it stays recognisable. Do not scatter it.
+- Signature motif: the **arch** (a mehrab niche) with an offset gold hairline arch behind it, via `ArchFrame` in `components/ui/arch.tsx`. Used for the home story and the About page only, so it stays recognisable. The home hero is now a full-bleed banner carousel (below), not an arch. Do not scatter the arch.
 - Typography rules: sentence case for buttons, nav, labels and badges. No tracked all-caps labels (the logo wordmark is the only exception), no eyebrow label above every heading, no arrow appended to buttons, no `a · b · c` meta strings (use commas or separate elements). Section headings are a title plus a full-width hairline (`SectionHeading`).
 - Icons: `lucide-react` with a thin stroke (1.25-1.5), or custom SVG.
 - Corners: small radius (2-4px) on buttons and cards, so it reads as refined jewellery rather than a SaaS dashboard.
@@ -81,13 +81,14 @@ Elegant, restrained hover states. Every interactive element has distinct `hover`
 
 ### Motion in practice
 
-- One orchestrated moment: the home/About hero enters with CSS keyframes (`hero-in`, `arch-in`), so first paint is never delayed. The story arch is unveiled once by `RevealCover` (Framer Motion, transform only, mounted after hydration so the image is visible without JS).
+- Home hero: `HeroBanner` (client) crossfades slides (opacity only), drifts the photo (transform only), autoplays every 6.5s and pauses on hover/focus/hidden tab/reduced motion; swipe, arrows and progress lines to control it. Slides come from Admin > Home banners (wide + optional tall phone photo); until any exist, `src/lib/hero-defaults.ts` supplies three built-in slides using generated artwork in `public/banners/`. About hero enters with CSS keyframes; the story arch is unveiled once by `RevealCover` (Framer Motion, lazy-loaded, transform only).
+- Scroll: `.reveal` is CSS-only scroll-driven animation (no JS, falls back to visible). `SmoothScroll` (Lenis) runs only on desktop mouse/trackpad, never for reduced motion, and ignores dialogs and `[data-lenis-prevent]`.
 - Everything else answers an action: hover image swap, quick add, drawer slide, gift picker, button hover states. No fade-up on every section.
 - Framer Motion is used sparingly on purpose (low-end phones). Prefer CSS; reach for it only for state-driven or scroll-triggered effects.
 
 ### Interactive patterns to use (keep light)
 
-Product card with second-image crossfade on hover; quick-view; animated cart drawer; wishlist heart toggle; image gallery with swipe and zoom; sticky add-to-cart bar on mobile; filter drawer; skeleton loading in `sand`; toast confirmations; animated order-progress steps; marquee-free, calm hero.
+Product card with second-image crossfade on hover, heart (wishlist) and eye (quick view) top-right, and a full-width Add to bag bar that slides up on hover (always visible on touch); one shared quick-view dialog; animated cart drawer; wishlist heart toggle; image gallery with swipe and zoom; sticky add-to-cart bar on mobile; filter drawer; skeleton loading in `sand`; toast confirmations; animated order-progress steps; marquee-free, calm hero.
 
 ## Performance
 
@@ -187,3 +188,12 @@ Flow:
 - Admin dates are entered and shown in Pakistan time (`lib/datetime.ts`). Admin links use `prefetch={false}`.
 - Placeholder artwork is generated, not photographed: `public/placeholders/*.svg`. Replace through the admin panel; delete sample products with one click on the Products page.
 - Owner-supplied policy text (Returns, Terms, Privacy) is rebranded; the Privacy page also mentions Meta advertising tools because the pixel is used.
+
+## Added in the second build pass
+- **Header:** logo left, main menu centre, search / wishlist / bag / three-line menu right. `SiteMenu` is the slide-over with search, categories (from the DB) and help links; there is no separate mobile nav.
+- **Wishlist:** `lib/wishlist-store.ts` (localStorage slugs), heart on cards, quick view and product page, `/wishlist` page fetches fresh data via `actions/catalog.ts`.
+- **Quick view:** `lib/quick-view-store.ts` + one `QuickViewDialog` mounted in the store layout.
+- **Contact form:** `/contact` emails the owner (`sendContactMessage`), honeypot + rate limit, no database table needed.
+- **Image storage sync rule:** every admin path that replaces, removes or deletes an image must also delete the stored file, using `lib/admin/storage.ts` (`removeStoredImages`, `uploadPublicImage`). Covered: product photo delete, product delete, category photo replace/remove/delete, banner (wide and tall) replace/remove/delete. Verified by counting real objects in the `product-images` bucket. Keep this true for any new image field.
+- **Supabase project was migrated** to a new account by running `supabase/setup.sql` (all migrations combined). Keep `setup.sql` in sync with `supabase/migrations/` when adding migrations.
+- Windows `.next/cache` can go stale and break `next build` (font module errors); delete `.next` and rebuild.

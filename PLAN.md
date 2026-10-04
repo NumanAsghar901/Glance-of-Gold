@@ -117,3 +117,6 @@ The admin account is created by `scripts/create-admin.ts` from env values, never
 - Deploy to Vercel: copy every variable from `.env.local` into the project settings, set `NEXT_PUBLIC_SITE_URL` to the real domain, then add the domain.
 - In Supabase Auth settings, add the production URL and turn off public sign-ups. Change the admin password.
 - Have the policy pages reviewed before launch.
+
+## Second build pass (done)
+Banner carousel with admin-managed slides, redesigned header and three-line menu, wishlist, quick view, hover add-to-bag, smooth scrolling and scroll reveals, contact form, and full image-storage sync in admin.

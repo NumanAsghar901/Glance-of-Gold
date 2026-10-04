@@ -1,9 +1,9 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
 import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { requireAdmin, type ActionState } from "@/lib/admin/auth";
+import { removeStoredImages, uploadPublicImage } from "@/lib/admin/storage";
 import { fromPktInput } from "@/lib/datetime";
 
 const idSchema = z.coerce.number().int().positive();
@@ -202,8 +202,6 @@ const bannerSchema = z.object({
   isActive: z.boolean(),
 });
 
-const BANNER_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif" };
-
 export async function saveBanner(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const { supabase } = await requireAdmin();
   const parsed = bannerSchema.safeParse({
@@ -219,16 +217,29 @@ export async function saveBanner(_prev: ActionState, formData: FormData): Promis
   const v = parsed.data;
   if (v.ctaUrl && !/^(\/|https?:\/\/)/.test(v.ctaUrl)) return { error: "The button link must start with / or https://" };
 
+  const { data: existing } = v.id
+    ? await supabase.from("banners").select("image_url, mobile_image_url").eq("id", v.id).maybeSingle()
+    : { data: null };
+
+  const desktopFile = formData.get("image");
+  const mobileFile = formData.get("mobileImage");
+  const removeMobile = formData.get("removeMobileImage") === "on";
+
+  const uploaded: string[] = [];
   let imageUrl: string | undefined;
-  const file = formData.get("image");
-  if (file instanceof File && file.size > 0) {
-    const ext = BANNER_TYPES[file.type];
-    if (!ext) return { error: "The image must be JPG, PNG, WebP or AVIF." };
-    if (file.size > 5 * 1024 * 1024) return { error: "The image must be under 5 MB." };
-    const path = `banners/${randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
-    if (error) return { error: `Image upload failed: ${error.message}` };
-    imageUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+  let mobileUrl: string | undefined;
+  try {
+    if (desktopFile instanceof File && desktopFile.size > 0) {
+      imageUrl = await uploadPublicImage(supabase, "banners", desktopFile);
+      uploaded.push(imageUrl);
+    }
+    if (mobileFile instanceof File && mobileFile.size > 0) {
+      mobileUrl = await uploadPublicImage(supabase, "banners", mobileFile);
+      uploaded.push(mobileUrl);
+    }
+  } catch (e) {
+    await removeStoredImages(supabase, ...uploaded);
+    return { error: e instanceof Error ? e.message : "Image upload failed." };
   }
   if (!v.id && !imageUrl) return { error: "Upload an image for the banner." };
 
@@ -240,11 +251,21 @@ export async function saveBanner(_prev: ActionState, formData: FormData): Promis
     sort: v.sort,
     is_active: v.isActive,
     ...(imageUrl ? { image_url: imageUrl } : {}),
+    ...(mobileUrl ? { mobile_image_url: mobileUrl } : removeMobile ? { mobile_image_url: null } : {}),
   };
   const { error } = v.id
     ? await supabase.from("banners").update(row).eq("id", v.id)
     : await supabase.from("banners").insert({ ...row, image_url: imageUrl! });
-  if (error) return { error: error.message };
+  if (error) {
+    await removeStoredImages(supabase, ...uploaded);
+    return { error: error.message };
+  }
+
+  // Files that were replaced or removed are no longer used anywhere, so delete them from storage.
+  if (existing) {
+    if (imageUrl) await removeStoredImages(supabase, existing.image_url);
+    if (mobileUrl || removeMobile) await removeStoredImages(supabase, existing.mobile_image_url);
+  }
 
   refreshMarketing("/admin/banners");
   return { ok: v.id ? "Banner saved." : "Banner added." };
@@ -252,6 +273,9 @@ export async function saveBanner(_prev: ActionState, formData: FormData): Promis
 
 export async function deleteBanner(formData: FormData) {
   const { supabase } = await requireAdmin();
-  await supabase.from("banners").delete().eq("id", idSchema.parse(formData.get("id")));
+  const id = idSchema.parse(formData.get("id"));
+  const { data: banner } = await supabase.from("banners").select("image_url, mobile_image_url").eq("id", id).maybeSingle();
+  await supabase.from("banners").delete().eq("id", id);
+  await removeStoredImages(supabase, banner?.image_url, banner?.mobile_image_url);
   refreshMarketing("/admin/banners");
 }

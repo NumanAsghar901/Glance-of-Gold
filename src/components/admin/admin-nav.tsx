@@ -38,7 +38,7 @@ const groups: { label?: string; items: Item[] }[] = [
       { href: "/admin/coupons", label: "Coupons", icon: BadgePercent },
       { href: "/admin/gifts", label: "Free gift offer", icon: Gift },
       { href: "/admin/announcements", label: "Announcement bar", icon: Megaphone },
-      { href: "/admin/banners", label: "Home banner", icon: ImageIcon },
+      { href: "/admin/banners", label: "Home banners", icon: ImageIcon },
     ],
   },
   {

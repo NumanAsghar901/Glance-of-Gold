@@ -2,6 +2,7 @@
 
 import { Check, MessageCircle, ShoppingBag } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { WishlistButton } from "@/components/store/card-actions";
 import { useStore } from "@/components/store/store-provider";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
@@ -112,19 +113,22 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
       )}
 
       <div ref={cta} className="mt-6 flex flex-col gap-3">
-        <Button size="lg" onClick={addToBag} disabled={soldOut} className="w-full" aria-live="polite">
-          {soldOut ? (
-            "Sold out"
-          ) : added ? (
-            <>
-              <Check /> Added to bag
-            </>
-          ) : (
-            <>
-              <ShoppingBag /> Add to bag
-            </>
-          )}
-        </Button>
+        <div className="flex gap-3">
+          <Button size="lg" onClick={addToBag} disabled={soldOut} className="flex-1" aria-live="polite">
+            {soldOut ? (
+              "Sold out"
+            ) : added ? (
+              <>
+                <Check /> Added to bag
+              </>
+            ) : (
+              <>
+                <ShoppingBag /> Add to bag
+              </>
+            )}
+          </Button>
+          <WishlistButton slug={product.slug} name={product.name} className="size-14 border border-border bg-surface" />
+        </div>
         <Button
           href={whatsappLink(waText, settings.whatsapp)}
           target="_blank"

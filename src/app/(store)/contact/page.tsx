@@ -1,6 +1,7 @@
 import { Mail, MessageCircle, Phone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ContactForm } from "@/components/store/contact-form";
 import { getSettings } from "@/lib/data/site";
 import { whatsappLink } from "@/lib/site";
 
@@ -14,61 +15,59 @@ export default async function ContactPage() {
   const settings = await getSettings();
   const tel = `+${settings.whatsapp.replace(/\D/g, "")}`;
 
-  const cards = [
+  const ways = [
     {
       icon: MessageCircle,
       title: "WhatsApp",
-      text: "The fastest way to reach us.",
-      label: "Chat with us",
+      text: "The fastest way to reach us",
       href: whatsappLink("Hello Glance of Gold, I need some help.", settings.whatsapp),
       external: true,
     },
-    {
-      icon: Phone,
-      title: "Helpline",
-      text: settings.helpline,
-      label: "Call now",
-      href: `tel:${tel}`,
-    },
-    {
-      icon: Mail,
-      title: "Email",
-      text: settings.email,
-      label: "Send an email",
-      href: `mailto:${settings.email}`,
-    },
+    { icon: Phone, title: "Call the helpline", text: settings.helpline, href: `tel:${tel}` },
+    { icon: Mail, title: "Email", text: settings.email, href: `mailto:${settings.email}` },
   ];
 
   return (
-    <div className="wrap py-10 lg:py-16">
-      <header className="text-center">
-        <h1 className="text-title">Contact us</h1>
-        <div className="mx-auto mt-4 h-px w-16 bg-gold" aria-hidden="true" />
-        <p className="mx-auto mt-4 max-w-md text-sm text-muted-foreground">
-          Questions about an order, a piece or a return? We are happy to help.
-        </p>
-      </header>
+    <div className="wrap py-10 lg:py-20">
+      <div className="grid gap-14 lg:grid-cols-12 lg:gap-10">
+        <header className="lg:col-span-5">
+          <h1 className="text-display text-[clamp(2.5rem,1.5rem+4vw,4.5rem)]">Talk to us</h1>
+          <p className="mt-6 max-w-sm text-lg leading-relaxed text-muted-foreground">
+            Questions about an order, a piece or a return? Message us and we will reply as soon as we can.
+          </p>
 
-      <ul className="mx-auto mt-12 grid max-w-4xl gap-5 md:grid-cols-3">
-        {cards.map(({ icon: Icon, title, text, label, href, external }) => (
-          <li key={title}>
-            <a
-              href={href}
-              {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              className="group flex h-full flex-col items-center gap-3 border border-border bg-surface p-8 text-center transition-[border-color,transform] duration-300 ease-(--ease-out) hover:-translate-y-0.5 hover:border-gold"
-            >
-              <Icon className="size-8 text-gold" strokeWidth={1.25} />
-              <h2 className="font-heading text-2xl">{title}</h2>
-              <p className="break-all text-sm text-muted-foreground">{text}</p>
-              <span className="link-draw mt-2 text-[0.9375rem] group-hover:after:scale-x-100">{label}</span>
-            </a>
-          </li>
-        ))}
-      </ul>
+          <ul className="mt-10 divide-y divide-border border-y border-border">
+            {ways.map(({ icon: Icon, title, text, href, external }) => (
+              <li key={title}>
+                <a
+                  href={href}
+                  {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  className="group flex items-center gap-4 py-5 transition-colors duration-200"
+                >
+                  <Icon className="size-6 shrink-0 text-gold" strokeWidth={1.25} />
+                  <span className="min-w-0">
+                    <span className="block font-heading text-2xl leading-tight transition-colors duration-200 group-hover:text-gold-hover">{title}</span>
+                    <span className="block break-all text-sm text-muted-foreground">{text}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
 
-      <p className="mx-auto mt-12 max-w-md text-center text-sm text-muted-foreground">
-        Looking for an order? <Link href="/track" className="text-foreground underline underline-offset-4">Track it here</Link>.
-      </p>
+          <p className="mt-8 text-sm text-muted-foreground">
+            Looking for an order? <Link href="/track" className="text-foreground underline underline-offset-4">Track it here</Link>.
+          </p>
+        </header>
+
+        <section aria-labelledby="message-heading" className="lg:col-span-6 lg:col-start-7">
+          <h2 id="message-heading" className="font-heading text-3xl">
+            Send a message
+          </h2>
+          <div className="mt-6 border border-border bg-surface p-5 sm:p-8">
+            <ContactForm />
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

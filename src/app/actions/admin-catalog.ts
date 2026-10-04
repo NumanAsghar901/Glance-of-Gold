@@ -5,6 +5,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin, type ActionState } from "@/lib/admin/auth";
+import { removeStoredImages } from "@/lib/admin/storage";
 import { randomSuffix, slugify } from "@/lib/slug";
 
 const BUCKET = "product-images";
@@ -279,6 +280,11 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
   };
   if (!row.slug) return { error: "Enter a valid name." };
 
+  const { data: existing } = v.id
+    ? await supabase.from("categories").select("image_url").eq("id", v.id).maybeSingle()
+    : { data: null };
+  const removeImage = formData.get("removeImage") === "on";
+
   let imageUrl: string | undefined;
   const file = filesFrom(formData, "image")[0];
   if (file) {
@@ -289,10 +295,18 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
     }
   }
 
+  // New photo wins; otherwise "remove" clears it; otherwise leave the current one untouched.
+  const imagePatch = imageUrl ? { image_url: imageUrl } : removeImage ? { image_url: null } : {};
   const { error } = v.id
-    ? await supabase.from("categories").update({ ...row, ...(imageUrl ? { image_url: imageUrl } : {}) }).eq("id", v.id)
+    ? await supabase.from("categories").update({ ...row, ...imagePatch }).eq("id", v.id)
     : await supabase.from("categories").insert({ ...row, image_url: imageUrl ?? null });
-  if (error) return { error: error.code === "23505" ? "A category with that URL name already exists." : error.message };
+  if (error) {
+    // The row was not saved, so the freshly uploaded file would be an orphan.
+    if (imageUrl) await removeStoredImages(supabase, imageUrl);
+    return { error: error.code === "23505" ? "A category with that URL name already exists." : error.message };
+  }
+  // The row now points elsewhere, so the old file is no longer used anywhere.
+  if (existing?.image_url && (imageUrl || removeImage)) await removeStoredImages(supabase, existing.image_url);
 
   refreshCatalog();
   return { ok: v.id ? "Category saved." : "Category added." };
@@ -300,6 +314,9 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
 
 export async function deleteCategory(formData: FormData) {
   const { supabase } = await requireAdmin();
-  await supabase.from("categories").delete().eq("id", idSchema.parse(formData.get("id")));
+  const id = idSchema.parse(formData.get("id"));
+  const { data: cat } = await supabase.from("categories").select("image_url").eq("id", id).maybeSingle();
+  await supabase.from("categories").delete().eq("id", id);
+  await removeStoredImages(supabase, cat?.image_url);
   refreshCatalog();
 }

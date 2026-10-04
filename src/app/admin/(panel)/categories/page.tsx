@@ -32,6 +32,18 @@ function Fields({ c, prefix }: { c: Cat; prefix: string }) {
           <input id={`${prefix}-image`} name="image" type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="w-full border border-border bg-surface px-3 py-2.5 text-sm file:mr-4 file:border-0 file:bg-sand file:px-4 file:py-1.5 file:text-sm" />
         </Field>
       </div>
+      {c.image_url && (
+        <div className="flex items-center gap-4 border border-border p-3">
+          <span className="relative h-20 w-16 shrink-0 overflow-hidden bg-sand">
+            <Image src={c.image_url} alt="" fill sizes="64px" quality={60} className="object-cover" />
+          </span>
+          <Check
+            name="removeImage"
+            label="Remove this photo"
+            hint="It is deleted from storage and the home page falls back to the default picture. Upload a new one above to replace it instead."
+          />
+        </div>
+      )}
       <Check name="isActive" label="Visible in the store" defaultChecked={c.is_active} />
     </>
   );

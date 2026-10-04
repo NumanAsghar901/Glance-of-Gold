@@ -292,3 +292,127 @@ dialog.sheet-right[open]::backdrop {
     transform: translate(0, 0);
   }
 }
+
+/* Hero carousel ---------------------------------------------------------------------- */
+.hero-drift {
+  transform: scale(1);
+}
+
+.hero-drift-on {
+  animation: hero-drift 9s var(--ease-out) forwards;
+}
+
+@keyframes hero-drift {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Slide copy eases in each time its slide becomes active */
+.slide-text > * {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 700ms var(--ease-out),
+    transform 700ms var(--ease-out);
+}
+
+.slide-text-on > * {
+  opacity: 1;
+  transform: none;
+}
+
+.slide-text-on > *:nth-child(1) {
+  transition-delay: 250ms;
+}
+.slide-text-on > *:nth-child(2) {
+  transition-delay: 380ms;
+}
+.slide-text-on > *:nth-child(3) {
+  transition-delay: 510ms;
+}
+
+.progress-run {
+  animation: progress-fill linear forwards;
+}
+
+@keyframes progress-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide-text > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Quick view: centred modal that eases in */
+dialog.quick-view[open] {
+  animation: modal-in 260ms var(--ease-out);
+}
+
+dialog.quick-view::backdrop {
+  background: rgb(42 38 34 / 0.5);
+}
+
+dialog.quick-view[open]::backdrop {
+  animation: fade-in 260ms var(--ease-out);
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+}
+
+/* Lenis smooth scroll: it takes over scrolling, so native smooth-scroll must be off */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Scroll reveal: CSS only (no JavaScript), runs on the compositor, and falls back to
+   plain visible content in browsers without scroll-driven animations. */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal-up linear both;
+    animation-timeline: view();
+    animation-range: entry 4% entry 38%;
+  }
+
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(22px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none;
+  }
+}

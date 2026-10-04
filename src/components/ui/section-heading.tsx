@@ -14,7 +14,7 @@ export function SectionHeading({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-end justify-between gap-6 border-b border-border pb-5", className)}>
+    <div className={cn("reveal flex items-end justify-between gap-6 border-b border-border pb-5", className)}>
       <h2 className="text-title">{title}</h2>
       {linkLabel && href && (
         <Link href={href} className="link-draw shrink-0 pb-1 text-[0.9375rem]">

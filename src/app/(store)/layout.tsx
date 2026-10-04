@@ -3,14 +3,18 @@ import { CartDrawer } from "@/components/cart/cart-drawer";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
+import { SmoothScroll } from "@/components/layout/smooth-scroll";
+import { QuickViewDialog } from "@/components/store/quick-view-dialog";
 import { StoreProvider } from "@/components/store/store-provider";
+import { getCategories } from "@/lib/data/catalog";
 import { getAnnouncements, getGiftOffer, getSettings } from "@/lib/data/site";
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
-  const [settings, giftOffer, announcements] = await Promise.all([
+  const [settings, giftOffer, announcements, categories] = await Promise.all([
     getSettings(),
     getGiftOffer(),
     getAnnouncements(),
+    getCategories(),
   ]);
 
   return (
@@ -23,12 +27,14 @@ export default async function StoreLayout({ children }: { children: React.ReactN
           Skip to content
         </a>
         <AnnouncementBar items={announcements} />
-        <Header />
+        <Header categories={categories} />
         <main id="main" className="flex-1">
           {children}
         </main>
         <Footer />
         <CartDrawer />
+        <QuickViewDialog />
+        <SmoothScroll />
         <MetaPixel />
       </div>
     </StoreProvider>
