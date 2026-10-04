@@ -30,7 +30,7 @@ export function Header({ categories }: { categories: { id: number; slug: string;
         </nav>
 
         <div className="flex items-center justify-end">
-          <Link href="/search" aria-label="Search" className={iconButton}>
+          <Link href="/search" aria-label="Search" className={`${iconButton} max-[359px]:hidden`}>
             <Search className="size-5" strokeWidth={1.5} />
           </Link>
           <WishlistLink />

@@ -43,9 +43,9 @@ export function Logo({
         className,
       )}
     >
-      <LogoMark className={stacked ? "h-10" : compact ? "h-6" : "h-7 sm:h-8"} />
+      <LogoMark className={stacked ? "h-10" : compact ? "h-6" : "h-6 min-[360px]:h-7 sm:h-8"} />
       <span className="flex flex-col leading-none">
-        <span className={cn("whitespace-nowrap font-heading font-medium uppercase text-foreground", compact ? "text-[0.95rem] tracking-[0.16em]" : "text-base tracking-[0.2em] sm:text-[1.3rem] sm:tracking-[0.28em]")}>
+        <span className={cn("whitespace-nowrap font-heading font-medium uppercase text-foreground", compact ? "text-[0.95rem] tracking-[0.16em]" : "text-[0.875rem] tracking-[0.14em] min-[360px]:text-base min-[360px]:tracking-[0.2em] sm:text-[1.3rem] sm:tracking-[0.28em]")}>
           Glance of Gold
         </span>
         <span className="mt-1.5 text-[0.55rem] font-medium uppercase tracking-[0.5em] text-muted-foreground">

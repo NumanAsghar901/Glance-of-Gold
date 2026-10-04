@@ -85,7 +85,7 @@ export async function sendOrderEmails(orderId: number, only?: "customer" | "owne
     const order = await getOrder({ id: orderId });
     if (!order) return;
     const settings = await getSettings();
-    const base = { siteUrl: site.url, helpline: settings.helpline, contactEmail: settings.email };
+    const base = { siteUrl: site.emailUrl, helpline: settings.helpline, contactEmail: settings.email };
 
     const jobs: Promise<boolean>[] = [];
 
@@ -139,9 +139,9 @@ export async function sendOwnerNote(orderId: number, subject: string, text: stri
   if (!to) return;
   const html = `<p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;">${text
     .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")}</p><p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;"><a href="${site.url}/admin/orders/${orderId}">Open in admin</a></p>`;
+    .replace(/</g, "&lt;")}</p><p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;"><a href="${site.emailUrl}/admin/orders/${orderId}">Open in admin</a></p>`;
   await deliver(orderId, "owner_note", to, { subject, html, text: `${text}
-${site.url}/admin/orders/${orderId}` });
+${site.emailUrl}/admin/orders/${orderId}` });
 }
 
 /** Email from the contact form to the shop owner. Replies go straight to the customer. Returns true when sent. */
@@ -182,7 +182,7 @@ export async function sendStatusEmail(orderId: number, kind: StatusKind) {
       `status_${kind}`,
       order.email,
       statusEmail(order, kind, {
-        siteUrl: site.url,
+        siteUrl: site.emailUrl,
         helpline: settings.helpline,
         contactEmail: settings.email,
         whatsappUrl: whatsappLink(`Hello Glance of Gold, I have a question about order ${order.order_number}.`, settings.whatsapp),

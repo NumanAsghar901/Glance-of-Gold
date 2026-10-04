@@ -47,7 +47,7 @@ export default async function ContactPage() {
                   <Icon className="size-6 shrink-0 text-gold" strokeWidth={1.25} />
                   <span className="min-w-0">
                     <span className="block font-heading text-2xl leading-tight transition-colors duration-200 group-hover:text-gold-hover">{title}</span>
-                    <span className="block break-all text-sm text-muted-foreground">{text}</span>
+                    <span className="block text-sm text-muted-foreground [overflow-wrap:anywhere]">{text}</span>
                   </span>
                 </a>
               </li>

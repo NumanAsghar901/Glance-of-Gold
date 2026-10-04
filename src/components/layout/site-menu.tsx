@@ -128,7 +128,7 @@ export function SiteMenu({ categories }: { categories: Category[] }) {
             <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 transition-colors hover:text-gold-hover">
               <MessageCircle className="size-4 text-gold" strokeWidth={1.5} /> Chat on WhatsApp
             </a>
-            <a href={`mailto:${site.email}`} className="flex items-center gap-3 break-all py-2 transition-colors hover:text-gold-hover">
+            <a href={`mailto:${site.email}`} className="flex items-center gap-3 whitespace-nowrap py-2 transition-colors hover:text-gold-hover">
               <Mail className="size-4 shrink-0 text-gold" strokeWidth={1.5} /> {site.email}
             </a>
           </div>

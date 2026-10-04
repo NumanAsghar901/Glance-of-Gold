@@ -52,7 +52,7 @@ const isLeopards = (courier?: string | null) => !courier || /leopard/i.test(cour
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-function shell(preheader: string, body: string, helpline: string, contactEmail: string) {
+function shell(preheader: string, body: string, helpline: string, contactEmail: string, siteUrl: string) {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Glance of Gold</title></head>
 <body style="margin:0;padding:0;background:${C.bg};font-family:Arial,Helvetica,sans-serif;color:${C.text};">
@@ -60,12 +60,13 @@ function shell(preheader: string, body: string, helpline: string, contactEmail: 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg};"><tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${C.surface};border:1px solid ${C.gold};">
 <tr><td align="center" style="padding:32px 24px 20px;border-bottom:1px solid ${C.gold};">
-<div style="font-family:Georgia,'Times New Roman',serif;font-size:24px;letter-spacing:6px;text-transform:uppercase;color:${C.text};">Glance of Gold</div>
-<div style="font-size:10px;letter-spacing:5px;text-transform:uppercase;color:${C.muted};margin-top:6px;">Jewellery</div>
+<a href="${siteUrl}" style="text-decoration:none;color:${C.text};"><div style="font-family:Georgia,'Times New Roman',serif;font-size:24px;letter-spacing:6px;text-transform:uppercase;color:${C.text};">Glance of Gold</div>
+<div style="font-size:10px;letter-spacing:5px;text-transform:uppercase;color:${C.muted};margin-top:6px;">Jewellery</div></a>
 </td></tr>
 <tr><td style="padding:28px 24px;">${body}</td></tr>
 <tr><td align="center" style="background:${C.sand};padding:20px 24px;font-size:12px;color:${C.muted};line-height:1.6;">
-Questions? Call or WhatsApp ${esc(helpline)}<br>or email <a href="mailto:${esc(contactEmail)}" style="color:${C.goldHover};">${esc(contactEmail)}</a>
+Questions? Call or WhatsApp ${esc(helpline)}<br>or email <a href="mailto:${esc(contactEmail)}" style="color:${C.goldHover};">${esc(contactEmail)}</a><br>
+<a href="${siteUrl}" style="color:${C.goldHover};">${esc(siteUrl.replace(/^https?:\/\//, ""))}</a>
 </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -134,7 +135,7 @@ ${button(confirmUrl, transfer ? "Complete payment" : "View your order")}
 <p style="margin:20px 0 0;font-size:13px;"><a href="${ctx.whatsappUrl}" style="color:${C.goldHover};">Confirm this order on WhatsApp</a></p>`;
   return {
     subject: `Order ${o.order_number} received | Glance of Gold`,
-    html: shell(`Your order ${o.order_number} has been received`, body, ctx.helpline, ctx.contactEmail),
+    html: shell(`Your order ${o.order_number} has been received`, body, ctx.helpline, ctx.contactEmail, ctx.siteUrl),
     text: [
       `Thank you, ${o.customer_name}.`,
       `We have received your order ${o.order_number}.`,
@@ -161,7 +162,7 @@ ${button(adminUrl, "Open in admin")}
 <p style="margin:20px 0 0;font-size:13px;"><a href="${ctx.whatsappCustomerUrl}" style="color:${C.goldHover};">Message the customer on WhatsApp</a></p>`;
   return {
     subject: `New order ${o.order_number} - ${formatPKR(o.total)} (${PAYMENT_LABEL[o.payment_method]})`,
-    html: shell(`New order ${o.order_number}`, body, ctx.helpline, ctx.contactEmail),
+    html: shell(`New order ${o.order_number}`, body, ctx.helpline, ctx.contactEmail, ctx.siteUrl),
     text: [
       `New order ${o.order_number} - ${formatPKR(o.total)} (${PAYMENT_LABEL[o.payment_method]})`,
       `${o.customer_name}, ${o.phone}`,
@@ -277,7 +278,7 @@ ${button(orderUrl, "View your order")}
 
   return {
     subject: copy.subject(o.order_number),
-    html: shell(`${copy.heading}: order ${o.order_number}`, body, ctx.helpline, ctx.contactEmail),
+    html: shell(`${copy.heading}: order ${o.order_number}`, body, ctx.helpline, ctx.contactEmail, ctx.siteUrl),
     text: lines.join("\n"),
   };
 }

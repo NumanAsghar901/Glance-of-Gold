@@ -209,3 +209,5 @@ Flow:
 - **Home marquee:** `ReviewsMarquee` scrolls right to left, pauses on pointer enter / touch / focus, resumes on leave. Hidden when there are no reviews.
 - Footer credit: "Developed by Numan Asghar" (centre) links to the developer portfolio.
 - Order confirmation page has Continue shopping.
+- **Site URLs:** `site.url` (canonical, sitemap) defaults to the live store `https://glance-of-gold.vercel.app`, never localhost. All links inside emails use `site.emailUrl` (`EMAIL_SITE_URL`, same default) so a customer clicking an email always lands on the hosted site, even for orders placed on a local dev copy. When a custom domain is connected, set `NEXT_PUBLIC_SITE_URL` and `EMAIL_SITE_URL` to it.
+- Header must fit 320px wide screens: below 360px the search icon is hidden (search lives in the menu) and the wordmark tightens.
