@@ -178,7 +178,7 @@ export function GiftPicker({ className }: { className?: string }) {
   }
 
   return (
-    <fieldset className={cn("border border-border bg-sand/60 p-4", className)}>
+    <fieldset className={cn("min-w-0 border border-border bg-sand/60 p-4", className)}>
       <legend className="flex items-center gap-2 px-2 text-sm font-medium">
         <Gift className="size-4 text-gold-hover" strokeWidth={1.5} />
         Choose your free gift

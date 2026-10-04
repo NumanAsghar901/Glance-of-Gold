@@ -49,7 +49,7 @@ export function QuickViewDialog() {
       onClick={(e) => {
         if (e.target === ref.current) quickView.close();
       }}
-      className="quick-view m-auto max-h-[92dvh] w-[min(58rem,94vw)] overflow-y-auto bg-background p-0 text-foreground"
+      className="quick-view m-auto max-h-[92dvh] w-[min(58rem,94vw)] overflow-y-auto overflow-x-hidden bg-background p-0 text-foreground"
       data-lenis-prevent
     >
       <button
@@ -117,7 +117,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
 
   return (
     <div className="grid md:grid-cols-2">
-      <div className="bg-sand">
+      <div className="min-w-0 bg-sand">
         <div className="relative aspect-[4/5]">
           {image && (
             <Image
@@ -153,7 +153,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
         )}
       </div>
 
-      <div className="flex flex-col p-6 md:p-8">
+      <div className="flex min-w-0 flex-col p-5 sm:p-6 md:p-8">
         {product.category && <p className="text-sm text-muted-foreground">{product.category.name}</p>}
         <h2 className="mt-1 pr-10 font-heading text-4xl leading-tight">{product.name}</h2>
         <Price price={price} compareAt={variant?.priceOverride ? null : product.compareAtPrice} className="mt-3 text-lg" />
@@ -163,7 +163,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
         )}
 
         {hasChoice && (
-          <fieldset className="mt-6">
+          <fieldset className="mt-6 min-w-0">
             <legend className="text-sm">
               Select option <span className="ml-1 text-muted-foreground">{variant?.name}</span>
             </legend>

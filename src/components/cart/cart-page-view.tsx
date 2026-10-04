@@ -29,7 +29,7 @@ export function CartPageView() {
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:gap-16">
-      <div>
+      <div className="min-w-0">
         <FreeShippingBar className="mb-2" />
         <ul className="divide-y divide-border border-y border-border" aria-label="Items in your bag">
           {cart.lines.map((l) => (
@@ -38,7 +38,7 @@ export function CartPageView() {
         </ul>
         <GiftPicker className="mt-6" />
       </div>
-      <aside className="h-fit space-y-6 border border-border bg-surface p-5 sm:p-7 lg:sticky lg:top-28">
+      <aside className="h-fit min-w-0 space-y-6 border border-border bg-surface p-5 sm:p-7 lg:sticky lg:top-28">
         <h2 className="font-heading text-2xl">Summary</h2>
         <CouponBox />
         <CartTotals />

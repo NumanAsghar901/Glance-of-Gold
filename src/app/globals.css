@@ -73,6 +73,13 @@
     min-height: 100dvh;
   }
 
+  /* Safety net: nothing can ever make the page swipe sideways. "clip" (unlike "hidden") keeps
+     the sticky header working. Real overflow is still fixed at its source. */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   h1,
   h2,
   h3,

@@ -121,7 +121,7 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
           submissionId.current ??= uuid();
           formData.set("submissionId", submissionId.current);
           formAction(formData);
-        }} className="order-2 space-y-10 lg:order-1" noValidate>
+        }} className="order-2 min-w-0 space-y-10 lg:order-1" noValidate>
         {/* Honeypot */}
         <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
           <label>
@@ -138,7 +138,7 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
           </p>
         )}
 
-        <fieldset className="space-y-5">
+        <fieldset className="min-w-0 space-y-5">
           <legend className="font-heading text-2xl">Contact</legend>
           <Field id="name" label="Full name" error={fe.name}>
             <input id="name" name="name" defaultValue={v.name} autoComplete="name" required aria-invalid={!!fe.name} aria-describedby={fe.name ? "name-error" : undefined} className={inputClass(fe.name)} />
@@ -153,7 +153,7 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
           </div>
         </fieldset>
 
-        <fieldset className="space-y-5">
+        <fieldset className="min-w-0 space-y-5">
           <legend className="font-heading text-2xl">Delivery address</legend>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field id="province" label="Province" error={fe.province}>
@@ -183,7 +183,7 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
           </Field>
         </fieldset>
 
-        <fieldset>
+        <fieldset className="min-w-0">
           <legend className="font-heading text-2xl">Payment</legend>
           <div className="mt-5 space-y-3">
             {methods.map((m) => {
@@ -238,7 +238,7 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
       </form>
 
       {/* Summary */}
-      <aside className="order-1 lg:order-2" aria-labelledby="summary-heading">
+      <aside className="order-1 min-w-0 lg:order-2" aria-labelledby="summary-heading">
         <div className="space-y-6 border border-border bg-surface p-5 sm:p-7 lg:sticky lg:top-28">
           <h2 id="summary-heading" className="font-heading text-2xl">
             Order summary
