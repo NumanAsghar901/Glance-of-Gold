@@ -1,3 +1,4 @@
+import { MetaPixel } from "@/components/analytics/meta-pixel";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Footer } from "@/components/layout/footer";
@@ -28,6 +29,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         </main>
         <Footer />
         <CartDrawer />
+        <MetaPixel />
       </div>
     </StoreProvider>
   );

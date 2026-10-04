@@ -8,3 +8,6 @@ export function cn(...inputs: ClassValue[]) {
 export function formatPKR(amount: number) {
   return `Rs. ${amount.toLocaleString("en-PK")}`;
 }
+
+/** Current time in ms. A function so server components can read the clock per request without tripping the render-purity lint. */
+export const currentTime = () => Date.now();

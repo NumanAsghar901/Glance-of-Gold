@@ -93,7 +93,7 @@ export default async function OrdersPage({
               {orders.map((o) => (
                 <tr key={o.id} className="transition-colors hover:bg-sand/40">
                   <td className={td}>
-                    <Link href={`/admin/orders/${o.id}`} className="font-medium underline-offset-4 hover:underline">
+                    <Link prefetch={false} href={`/admin/orders/${o.id}`} className="font-medium underline-offset-4 hover:underline">
                       {o.order_number}
                     </Link>
                   </td>
@@ -127,11 +127,11 @@ export default async function OrdersPage({
 
       {pageCount > 1 && (
         <nav aria-label="Pagination" className="mt-6 flex items-center justify-between text-sm">
-          {page > 1 ? <Link href={href({ page: String(page - 1) })} className="link-draw">Previous</Link> : <span />}
+          {page > 1 ? <Link prefetch={false} href={href({ page: String(page - 1) })} className="link-draw">Previous</Link> : <span />}
           <span className="text-muted-foreground">
             Page {page} of {pageCount}
           </span>
-          {page < pageCount ? <Link href={href({ page: String(page + 1) })} className="link-draw">Next</Link> : <span />}
+          {page < pageCount ? <Link prefetch={false} href={href({ page: String(page + 1) })} className="link-draw">Next</Link> : <span />}
         </nav>
       )}
     </>

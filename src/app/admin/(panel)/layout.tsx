@@ -18,8 +18,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="min-h-dvh lg:grid lg:grid-cols-[16rem_1fr]">
       <aside className="relative border-b border-border bg-surface lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between px-4 py-4 lg:block lg:px-5 lg:py-6">
-          <Link href="/admin" aria-label="Admin home">
-            <Logo />
+          <Link href="/admin" prefetch={false} aria-label="Admin home">
+            <Logo compact />
           </Link>
           <details className="group lg:hidden">
             <summary className="flex min-h-11 cursor-pointer list-none items-center px-3 text-sm [&::-webkit-details-marker]:hidden">
@@ -40,6 +40,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <div className="mt-8 space-y-1 border-t border-border px-1 pt-6">
             <Link
               href="/"
+              prefetch={false}
               target="_blank"
               className="flex min-h-11 items-center gap-3 px-2 text-sm text-muted-foreground hover:text-foreground"
             >

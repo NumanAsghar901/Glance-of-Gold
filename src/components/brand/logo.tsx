@@ -28,9 +28,12 @@ export function LogoMark({ className }: { className?: string }) {
 export function Logo({
   className,
   stacked = false,
+  compact = false,
 }: {
   className?: string;
   stacked?: boolean;
+  /** Smaller wordmark for narrow spaces such as the admin sidebar. */
+  compact?: boolean;
 }) {
   return (
     <span
@@ -40,9 +43,9 @@ export function Logo({
         className,
       )}
     >
-      <LogoMark className={stacked ? "h-10" : "h-7 sm:h-8"} />
+      <LogoMark className={stacked ? "h-10" : compact ? "h-6" : "h-7 sm:h-8"} />
       <span className="flex flex-col leading-none">
-        <span className="whitespace-nowrap font-heading text-base font-medium uppercase tracking-[0.2em] text-foreground sm:text-[1.3rem] sm:tracking-[0.28em]">
+        <span className={cn("whitespace-nowrap font-heading font-medium uppercase text-foreground", compact ? "text-[0.95rem] tracking-[0.16em]" : "text-base tracking-[0.2em] sm:text-[1.3rem] sm:tracking-[0.28em]")}>
           Glance of Gold
         </span>
         <span className="mt-1.5 text-[0.55rem] font-medium uppercase tracking-[0.5em] text-muted-foreground">

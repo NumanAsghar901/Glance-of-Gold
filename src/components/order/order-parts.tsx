@@ -130,7 +130,7 @@ export function EventHistory({ events }: { events: OrderView["events"] }) {
       {events.map((e, i) => (
         <li key={i} className="relative text-sm">
           <span className="absolute -left-[1.6rem] top-1.5 size-2 rounded-full bg-gold" aria-hidden="true" />
-          <p>{STATUS_LABEL[e.status as OrderView["order_status"]] ?? e.status}</p>
+          <p>{STATUS_LABEL[e.status as OrderView["order_status"]] ?? (e.status === "payment" ? "Payment update" : e.status)}</p>
           <p className="text-xs text-muted-foreground">
             {new Date(e.created_at).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" })}
             {e.note && e.note !== "Order placed" ? `. ${e.note}` : ""}

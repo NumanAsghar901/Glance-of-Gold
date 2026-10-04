@@ -7,12 +7,24 @@ import { ProductGrid } from "@/components/store/product-grid";
 import { ProductPurchase } from "@/components/store/product-purchase";
 import { Price } from "@/components/ui/price";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { getProduct, getRelatedProducts } from "@/lib/data/catalog";
+import { getAllProductSlugs, getProduct, getRelatedProducts } from "@/lib/data/catalog";
 import { getPaymentAccounts, getSettings } from "@/lib/data/site";
 import { site } from "@/lib/site";
 import { formatPKR } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
+
+// Pre-render every product at build time. New products are rendered on first visit,
+// and admin edits refresh the cached data through the "catalog" tag.
+export async function generateStaticParams() {
+  try {
+    const slugs = await getAllProductSlugs();
+    return slugs.map((p) => ({ slug: p.slug }));
+  } catch {
+    // A database hiccup at build time must not fail the build; pages render on first visit instead.
+    return [];
+  }
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

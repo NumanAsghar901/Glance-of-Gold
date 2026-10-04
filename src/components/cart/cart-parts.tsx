@@ -224,7 +224,7 @@ export function GiftPicker({ className }: { className?: string }) {
 
 // Coupon ----------------------------------------------------------------------
 
-export function CouponBox({ enabled = true }: { enabled?: boolean }) {
+export function CouponBox({ enabled = true, collapsible = false }: { enabled?: boolean; collapsible?: boolean }) {
   const { coupon, subtotal } = useCart();
   const [code, setCode] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -261,7 +261,7 @@ export function CouponBox({ enabled = true }: { enabled?: boolean }) {
     );
   }
 
-  return (
+  const form = (
     <form
       onSubmit={(e) => {
         e.preventDefault();
@@ -301,6 +301,16 @@ export function CouponBox({ enabled = true }: { enabled?: boolean }) {
         </p>
       )}
     </form>
+  );
+
+  if (!collapsible) return form;
+  return (
+    <details className="group">
+      <summary className="cursor-pointer list-none text-sm underline-offset-4 hover:underline [&::-webkit-details-marker]:hidden">
+        Have a coupon code?
+      </summary>
+      <div className="mt-3">{form}</div>
+    </details>
   );
 }
 

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Empty, orderTone, PageHeader, Panel, Pill } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin/auth";
-import { formatPKR } from "@/lib/utils";
+import { currentTime, formatPKR } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -10,7 +10,8 @@ const DAY = 24 * 60 * 60 * 1000;
 
 export default async function AdminDashboard() {
   const { supabase, name } = await requireAdmin();
-  const since30 = new Date(Date.now() - 30 * DAY).toISOString();
+  const nowMs = currentTime();
+  const since30 = new Date(nowMs - 30 * DAY).toISOString();
 
   const [pending, verifying, recentRows, lowStock, samples, accounts, recent] = await Promise.all([
     supabase.from("orders").select("id", { count: "exact", head: true }).eq("order_status", "pending"),
@@ -37,8 +38,8 @@ export default async function AdminDashboard() {
   ]);
 
   const live = (recentRows.data ?? []).filter((o) => o.order_status !== "cancelled" && o.order_status !== "returned");
-  const week = Date.now() - 7 * DAY;
-  const today = Date.now() - DAY;
+  const week = nowMs - 7 * DAY;
+  const today = nowMs - DAY;
   const sum = (rows: typeof live) => rows.reduce((n, o) => n + o.total, 0);
 
   const stats = [
@@ -95,7 +96,7 @@ export default async function AdminDashboard() {
             {todo.map((t) => (
               <li key={t.href} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                 <p className="max-w-xl text-sm">{t.text}</p>
-                <Link href={t.href} className="link-draw text-sm">
+                <Link prefetch={false} href={t.href} className="link-draw text-sm">
                   {t.cta}
                 </Link>
               </li>
@@ -105,13 +106,13 @@ export default async function AdminDashboard() {
       )}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <Panel title="Recent orders" actions={<Link href="/admin/orders" className="link-draw text-sm">View all</Link>}>
+        <Panel title="Recent orders" actions={<Link prefetch={false} href="/admin/orders" className="link-draw text-sm">View all</Link>}>
           {recent.data?.length ? (
             <ul className="divide-y divide-border">
               {recent.data.map((o) => (
                 <li key={o.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                   <div className="min-w-0">
-                    <Link href={`/admin/orders/${o.id}`} className="text-sm font-medium underline-offset-4 hover:underline">
+                    <Link prefetch={false} href={`/admin/orders/${o.id}`} className="text-sm font-medium underline-offset-4 hover:underline">
                       {o.order_number}
                     </Link>
                     <p className="truncate text-xs text-muted-foreground">
@@ -137,7 +138,7 @@ export default async function AdminDashboard() {
                 const p = v.product as unknown as { id: number; name: string } | null;
                 return (
                   <li key={v.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0 text-sm">
-                    <Link href={p ? `/admin/products/${p.id}` : "/admin/products"} className="min-w-0 truncate underline-offset-4 hover:underline">
+                    <Link prefetch={false} href={p ? `/admin/products/${p.id}` : "/admin/products"} className="min-w-0 truncate underline-offset-4 hover:underline">
                       {p?.name ?? "Product"}
                       {v.name !== "Standard" && <span className="text-muted-foreground">, {v.name}</span>}
                     </Link>

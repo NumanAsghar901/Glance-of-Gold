@@ -14,6 +14,8 @@ Light, elegant, modern, professional. **Never dark mode.** No `dark:` variants, 
 
 - Generous whitespace, large photography, thin gold hairlines (1px), subtle motion only.
 - Never use: purple gradients, generic AI-looking layouts (centered hero + three identical feature cards), emoji as icons.
+- Signature motif: the **arch** (a mehrab niche) with an offset gold hairline arch behind it, via `ArchFrame` in `components/ui/arch.tsx`. Used for the hero, the home story and the About page only, so it stays recognisable. Do not scatter it.
+- Typography rules: sentence case for buttons, nav, labels and badges. No tracked all-caps labels (the logo wordmark is the only exception), no eyebrow label above every heading, no arrow appended to buttons, no `a · b · c` meta strings (use commas or separate elements). Section headings are a title plus a full-width hairline (`SectionHeading`).
 - Icons: `lucide-react` with a thin stroke (1.25-1.5), or custom SVG.
 - Corners: small radius (2-4px) on buttons and cards, so it reads as refined jewellery rather than a SaaS dashboard.
 - Copy tone: warm, understated, confident. No exclamation marks, no hype.
@@ -76,6 +78,12 @@ Elegant, restrained hover states. Every interactive element has distinct `hover`
 - **Icon buttons:** soft `sand` circle fades in on hover.
 - Use `@media (hover: hover)` for hover effects so touch devices do not get stuck hover states; give touch a quick `active` scale (0.98).
 - Focus ring: 2px gold with 2px offset. Never remove outlines without a replacement.
+
+### Motion in practice
+
+- One orchestrated moment: the home/About hero enters with CSS keyframes (`hero-in`, `arch-in`), so first paint is never delayed. The story arch is unveiled once by `RevealCover` (Framer Motion, transform only, mounted after hydration so the image is visible without JS).
+- Everything else answers an action: hover image swap, quick add, drawer slide, gift picker, button hover states. No fade-up on every section.
+- Framer Motion is used sparingly on purpose (low-end phones). Prefer CSS; reach for it only for state-driven or scroll-triggered effects.
 
 ### Interactive patterns to use (keep light)
 
@@ -163,3 +171,19 @@ Flow:
 - Before calling a feature done: `npm run lint`, `npx tsc --noEmit`, and `npm run build` pass; the feature is checked at 375px and 1280px widths.
 - Plan before code for any new area; confirm assumptions with the owner rather than guessing (especially business details: prices, shipping, policies, bank account info).
 - Do not invent product data, testimonials, reviews, or policy text and present it as real. Use clearly marked placeholders.
+
+## Architecture notes and lessons
+
+- **Layout:** route groups. `src/app/(store)` has the storefront chrome (announcement bar, header, footer, cart drawer, Meta Pixel). `src/app/admin` has its own layout; `admin/login` is outside the `(panel)` group.
+- **Caching (previous model, no Cache Components):** all public reads live in `src/lib/data/*` wrapped in `unstable_cache` with tags `catalog`, `settings`, `marketing`. Admin server actions call `updateTag(...)` so edits show immediately. Product pages are pre-rendered with `generateStaticParams` (resilient: returns `[]` if the DB is unreachable at build).
+- **Supabase clients:** `createPublicClient` (anon, no cookies, cacheable), `createSessionClient` (admin session), `createServiceClient` (service role, server only). Admin pages and actions start with `requireAdmin()` (cached per request, verifies via `getClaims`). `src/proxy.ts` is only a first gate.
+- **Orders:** created only by the `create_order` RPC via the service client in `placeOrder`. Emails and the Meta CAPI event run in `after()`; request cookies and headers are captured before it.
+- **New tables:** Supabase does not auto-grant privileges. Every migration that adds a table must grant to `authenticated` (admins) and, if public, `anon`, explicitly. `service_role` gets access through default privileges (migration 6).
+- **React 19 resets uncontrolled form fields after every server action.** For forms that can fail validation: echo submitted values back and use them as `defaultValue`; keep `<select>` controlled (or `key` it); never keep per-attempt state in a hidden input (checkout builds `submissionId` inside the form action).
+- **Page files may only export Next's reserved names** (`default`, `metadata`, `generateStaticParams`, ...). Share helpers from `components/` or `lib/`.
+- **`Date.now()` in a server component trips the purity lint:** use `currentTime()` from `lib/utils`.
+- **Shell quoting:** very long bash heredocs with mixed quotes can fail to parse. Write files with the file tools instead.
+- **Rate limiter** (`lib/rate-limit.ts`) is in memory per instance. Restart the dev server to clear it while testing.
+- Admin dates are entered and shown in Pakistan time (`lib/datetime.ts`). Admin links use `prefetch={false}`.
+- Placeholder artwork is generated, not photographed: `public/placeholders/*.svg`. Replace through the admin panel; delete sample products with one click on the Products page.
+- Owner-supplied policy text (Returns, Terms, Privacy) is rebranded; the Privacy page also mentions Meta advertising tools because the pixel is used.

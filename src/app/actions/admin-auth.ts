@@ -5,7 +5,7 @@ import { z } from "zod";
 import { rateLimit } from "@/lib/rate-limit";
 import { createSessionClient } from "@/lib/supabase/server";
 
-export type LoginState = { error?: string };
+export type LoginState = { error?: string; email?: string };
 
 const loginSchema = z.object({
   email: z.string().trim().email().max(120),
@@ -14,21 +14,23 @@ const loginSchema = z.object({
 
 export async function signIn(_prev: LoginState, formData: FormData): Promise<LoginState> {
   if (!(await rateLimit("admin-login", 8, 10 * 60_000))) {
-    return { error: "Too many attempts. Please wait a few minutes and try again." };
+    return { error: "Too many attempts. Please wait a few minutes and try again.", email: String(formData.get("email") ?? "") };
   }
 
-  const parsed = loginSchema.safeParse({ email: formData.get("email"), password: formData.get("password") });
-  if (!parsed.success) return { error: "Enter your email and password." };
+  // Echo the email back on failure so React's post-submit form reset does not clear it.
+  const email = String(formData.get("email") ?? "");
+  const parsed = loginSchema.safeParse({ email, password: formData.get("password") });
+  if (!parsed.success) return { error: "Enter your email and password.", email };
 
   const supabase = await createSessionClient();
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
   // One message for every failure so the form cannot be used to discover accounts.
-  if (error || !data.user) return { error: "Email or password is incorrect." };
+  if (error || !data.user) return { error: "Email or password is incorrect.", email };
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
   if (profile?.role !== "admin") {
     await supabase.auth.signOut();
-    return { error: "Email or password is incorrect." };
+    return { error: "Email or password is incorrect.", email };
   }
 
   redirect("/admin");

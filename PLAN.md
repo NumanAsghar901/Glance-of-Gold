@@ -102,10 +102,18 @@ The admin account is created by `scripts/create-admin.ts` from env values, never
 ## Build order (commit after each)
 1. DONE - Scaffold: Next.js, Tailwind tokens, fonts, layout, header/footer, logo, announcement strip
 2. DONE - Supabase migrations (in `supabase/migrations/`), RLS, storage buckets, 15 sample products, generated types, `npm run create-admin` (needs the service-role key in `.env.local`)
-3. Home, shop, product detail, search
-4. Cart drawer, coupons, free-delivery bar, free-gift picker
-5. Checkout, `create_order`, order confirmation page, WhatsApp button, Nodemailer emails
-6. Payment proof upload, `/track`, static and policy pages
-7. Admin: orders and payment verification first, then products, coupons, gift offers, announcements, banners
-8. Meta Pixel + CAPI, SEO (metadata, sitemap, JSON-LD)
-9. Performance and accessibility pass, deploy to Vercel
+3. DONE - Home, shop, product detail, search
+4. DONE - Cart drawer, coupons, free-delivery bar, free-gift picker
+5. DONE - Checkout, `create_order`, order confirmation page, WhatsApp button, Nodemailer emails
+6. DONE - Payment proof upload, `/track`, static and policy pages
+7. DONE - Admin: orders and payment verification, products, categories, coupons, gift offer, announcements, banners, payment accounts, settings
+8. DONE (needs owner keys) - Meta Pixel + CAPI, SEO (metadata, sitemap, robots, JSON-LD)
+9. IN PROGRESS - performance and accessibility pass done locally; deploy to Vercel and connect the domain are next
+
+## Still to do (owner and deploy)
+- Add real products, photos, categories; delete the sample products from the Products page.
+- Enter JazzCash / Easypaisa / bank details under Payment accounts (transfer options stay hidden until then).
+- Set `NEXT_PUBLIC_META_PIXEL_ID` and `META_CAPI_TOKEN` to switch on Meta tracking.
+- Deploy to Vercel: copy every variable from `.env.local` into the project settings, set `NEXT_PUBLIC_SITE_URL` to the real domain, then add the domain.
+- In Supabase Auth settings, add the production URL and turn off public sign-ups. Change the admin password.
+- Have the policy pages reviewed before launch.

@@ -15,7 +15,7 @@ export function LoginForm() {
         </p>
       )}
       <Field label="Email" htmlFor="email">
-        <Input id="email" name="email" type="email" autoComplete="username" required />
+        <Input id="email" name="email" type="email" autoComplete="username" defaultValue={state.email} required />
       </Field>
       <Field label="Password" htmlFor="password">
         <Input id="password" name="password" type="password" autoComplete="current-password" required />

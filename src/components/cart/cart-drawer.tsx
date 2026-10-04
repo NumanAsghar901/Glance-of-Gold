@@ -102,7 +102,7 @@ export function CartDrawer() {
             </div>
 
             <div className="space-y-4 border-t border-border bg-surface px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">
-              <CouponBox enabled={open} />
+              <CouponBox enabled={open} collapsible />
               <CartTotals />
               <Button href="/checkout" size="lg" className="w-full">
                 Checkout

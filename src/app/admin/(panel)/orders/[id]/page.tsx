@@ -52,7 +52,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   return (
     <>
-      <Link href="/admin/orders" className="link-draw mb-6 inline-flex items-center gap-2 text-sm">
+      <Link prefetch={false} href="/admin/orders" className="link-draw mb-6 inline-flex items-center gap-2 text-sm">
         <ArrowLeft className="size-4" strokeWidth={1.5} /> All orders
       </Link>
 

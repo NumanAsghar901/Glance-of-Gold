@@ -64,6 +64,7 @@ export function AdminNav() {
                 <li key={href}>
                   <Link
                     href={href}
+                    prefetch={false}
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex min-h-11 items-center gap-3 px-3 text-sm transition-colors duration-200",
