@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Search, ShoppingBag } from "lucide-react";
+import { Search } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
+import { CartButton } from "@/components/cart/cart-drawer";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { mainNav, site } from "@/lib/site";
 
@@ -34,9 +35,7 @@ export function Header() {
           <Link href="/search" aria-label="Search" className={iconButton}>
             <Search className="size-5" strokeWidth={1.5} />
           </Link>
-          <Link href="/cart" aria-label="Shopping bag" className={iconButton}>
-            <ShoppingBag className="size-5" strokeWidth={1.5} />
-          </Link>
+          <CartButton />
         </div>
       </div>
     </header>

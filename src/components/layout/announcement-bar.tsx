@@ -1,9 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import type { Announcement } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
-
-export type Announcement = { id: string; text: string; code?: string };
 
 /**
  * Thin rotating strip above the header. Messages are stacked in one grid cell
@@ -53,7 +53,13 @@ export function AnnouncementBar({ items }: { items: Announcement[] }) {
               i === index ? "opacity-100" : "pointer-events-none opacity-0",
             )}
           >
-            <span>{item.text}</span>
+            {item.href ? (
+              <Link href={item.href} tabIndex={i === index ? 0 : -1} className="link-draw">
+                {item.text}
+              </Link>
+            ) : (
+              <span>{item.text}</span>
+            )}
             {item.code && (
               <button
                 type="button"

@@ -28,7 +28,8 @@ export const helpNav = [
   { label: "Privacy Policy", href: "/privacy" },
 ] as const;
 
-export function whatsappLink(message?: string) {
-  const base = `https://wa.me/${site.whatsapp}`;
+/** wa.me link for a number in international format without "+". Defaults to the business number. */
+export function whatsappLink(message?: string, number: string = site.whatsapp) {
+  const base = `https://wa.me/${number.replace(/\D/g, "")}`;
   return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }

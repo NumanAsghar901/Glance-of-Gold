@@ -219,3 +219,59 @@ dialog.sheet-left[open]::backdrop {
     opacity: 0;
   }
 }
+
+/* Cart drawer slides in from the right */
+dialog.sheet-right[open] {
+  animation: sheet-in-right 300ms var(--ease-out);
+}
+
+dialog.sheet-right::backdrop {
+  background: rgb(42 38 34 / 0.4);
+}
+
+dialog.sheet-right[open]::backdrop {
+  animation: fade-in 300ms var(--ease-out);
+}
+
+@keyframes sheet-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+/* Cart count pops once when it changes (key remounts the badge) */
+.cart-badge {
+  animation: badge-pop 320ms var(--ease-out);
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Hero entrance: CSS only so it never delays the first paint */
+.hero-in {
+  animation: hero-in 700ms var(--ease-out) both;
+}
+
+.hero-in-delay-1 {
+  animation-delay: 120ms;
+}
+
+.hero-in-delay-2 {
+  animation-delay: 240ms;
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
