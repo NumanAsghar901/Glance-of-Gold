@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useEffect, useRef, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import type { ActionState } from "@/lib/admin/auth";
@@ -43,20 +43,28 @@ export function ActionForm({
   hideSubmit?: boolean;
 }) {
   const [state, formAction] = useActionState(action, {});
+  const notice = useRef<HTMLParagraphElement>(null);
+
+  // The result appears right under the button that was pressed. If that is near the edge of the screen
+  // (long forms, phones), nudge it fully into view.
+  useEffect(() => {
+    notice.current?.scrollIntoView({ block: "nearest" });
+  }, [state]);
+
   return (
     <form action={formAction} className={cn("space-y-5", className)}>
+      {children}
+      {!hideSubmit && <SubmitButton>{submitLabel}</SubmitButton>}
       {state.error && (
-        <p role="alert" className="border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
+        <p ref={notice} role="alert" className="scroll-mb-6 border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
           {state.error}
         </p>
       )}
       {state.ok && (
-        <p role="status" className="border border-gold bg-sand/60 px-4 py-3 text-sm">
+        <p ref={notice} role="status" className="scroll-mb-6 border border-gold bg-sand/60 px-4 py-3 text-sm">
           {state.ok}
         </p>
       )}
-      {children}
-      {!hideSubmit && <SubmitButton>{submitLabel}</SubmitButton>}
     </form>
   );
 }
