@@ -2,6 +2,7 @@ import { ExternalLink, LogOut } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { signOut } from "@/app/actions/admin-auth";
+import { AdminMobileMenu } from "@/components/admin/admin-mobile-menu";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { Logo } from "@/components/brand/logo";
 import { requireAdmin } from "@/lib/admin/auth";
@@ -16,24 +17,29 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[16rem_1fr]">
-      <aside className="relative border-b border-border bg-surface lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r">
-        <div className="flex items-center justify-between px-4 py-4 lg:block lg:px-5 lg:py-6">
-          <Link href="/admin" prefetch={false} aria-label="Admin home">
+      <aside className="sticky top-0 z-30 border-b border-border bg-surface lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r">
+        <div className="flex items-center justify-between px-4 py-2 lg:block lg:px-5 lg:py-6">
+          <Link href="/admin" prefetch={false} aria-label="Admin home" className="py-1">
             <Logo compact />
           </Link>
-          <details className="group lg:hidden">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center px-3 text-sm [&::-webkit-details-marker]:hidden">
-              Menu
-            </summary>
-            <div className="absolute inset-x-0 top-full z-20 border-b border-border bg-surface p-4 shadow-sm">
-              <AdminNav />
-              <form action={signOut} className="mt-4 border-t border-border pt-3">
-                <button type="submit" className="flex min-h-11 items-center gap-3 px-3 text-sm text-muted-foreground">
+          <AdminMobileMenu>
+            <AdminNav />
+            <div className="mt-4 space-y-1 border-t border-border pt-3">
+              <Link
+                href="/"
+                prefetch={false}
+                target="_blank"
+                className="flex min-h-11 items-center gap-3 px-3 text-sm text-muted-foreground"
+              >
+                <ExternalLink className="size-4 text-gold" strokeWidth={1.5} /> View store
+              </Link>
+              <form action={signOut}>
+                <button type="submit" className="flex min-h-11 w-full items-center gap-3 px-3 text-left text-sm text-muted-foreground">
                   <LogOut className="size-4 text-gold" strokeWidth={1.5} /> Sign out
                 </button>
               </form>
             </div>
-          </details>
+          </AdminMobileMenu>
         </div>
         <div className="hidden px-2 pb-6 lg:block">
           <AdminNav />

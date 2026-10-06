@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ProductGrid } from "@/components/store/product-grid";
 import { SortSelect } from "@/components/store/sort-select";
 import { Button } from "@/components/ui/button";
+import { LinkPending } from "@/components/ui/link-pending";
 import { getCategories, getProducts } from "@/lib/data/catalog";
 import {
   PRICE_RANGES,
@@ -19,13 +20,14 @@ function Chip({ href, active, children }: { href: string; active: boolean; child
       href={href}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "inline-flex min-h-11 max-w-full items-center justify-center border px-4 py-2 text-center text-[0.8125rem] leading-tight transition-[background-color,border-color,color,transform] duration-200 ease-(--ease-out) active:scale-[0.97]",
+        "relative inline-flex min-h-11 max-w-full items-center justify-center border px-4 py-2 text-center text-[0.8125rem] leading-tight transition-[background-color,border-color,color,transform] duration-200 ease-(--ease-out) active:scale-[0.97]",
         active
           ? "border-foreground bg-foreground text-background"
           : "border-border bg-surface hover:border-gold hover:bg-sand",
       )}
     >
       {children}
+      <LinkPending />
     </Link>
   );
 }

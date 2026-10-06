@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -16,9 +17,9 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 className="font-heading text-4xl">{title}</h1>
+    <header className="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8">
+      <div className="min-w-0">
+        <h1 className="font-heading text-3xl sm:text-4xl">{title}</h1>
         {description && <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
@@ -38,9 +39,9 @@ export function Panel({
   actions?: ReactNode;
 }) {
   return (
-    <section className={cn("border border-border bg-surface p-5 sm:p-6", className)}>
+    <section className={cn("min-w-0 border border-border bg-surface p-4 sm:p-6", className)}>
       {(title || actions) && (
-        <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           {title && <h2 className="font-heading text-2xl">{title}</h2>}
           {actions}
         </div>
@@ -143,6 +144,33 @@ export function TableWrap({ children }: { children: ReactNode }) {
 
 export const th = "whitespace-nowrap border-b border-border px-4 py-3 text-left text-xs font-medium text-muted-foreground";
 export const td = "border-b border-border px-4 py-3 align-middle text-sm last:border-b-0";
+
+/** Previous / Next links with full-size tap targets. `hrefFor` builds the link for a page number. */
+export function Pager({ page, pageCount, hrefFor }: { page: number; pageCount: number; hrefFor: (page: number) => string }) {
+  if (pageCount <= 1) return null;
+  const link = "link-draw inline-flex min-h-11 items-center";
+  return (
+    <nav aria-label="Pagination" className="mt-6 flex items-center justify-between gap-3 text-sm">
+      {page > 1 ? (
+        <Link prefetch={false} href={hrefFor(page - 1)} className={link} rel="prev">
+          Previous
+        </Link>
+      ) : (
+        <span />
+      )}
+      <span className="text-muted-foreground">
+        Page {page} of {pageCount}
+      </span>
+      {page < pageCount ? (
+        <Link prefetch={false} href={hrefFor(page + 1)} className={link} rel="next">
+          Next
+        </Link>
+      ) : (
+        <span />
+      )}
+    </nav>
+  );
+}
 
 export function Empty({ children }: { children: ReactNode }) {
   return <p className="border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">{children}</p>;

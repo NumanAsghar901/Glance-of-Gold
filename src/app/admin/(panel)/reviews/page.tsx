@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { addSampleReviews, deleteReview, deleteSampleReviews, setReviewVisible } from "@/app/actions/admin-reviews";
 import { ActionButton } from "@/components/admin/action-form";
-import { Empty, PageHeader, Panel, Pill } from "@/components/admin/ui";
+import { Empty, PageHeader, Pager, Panel, Pill } from "@/components/admin/ui";
 import { StarRating } from "@/components/ui/star-rating";
 import { requireAdmin } from "@/lib/admin/auth";
 
@@ -19,15 +19,25 @@ type Row = {
   product: { name: string } | null;
 };
 
-export default async function ReviewsPage() {
-  const { supabase } = await requireAdmin();
-  const { data, error } = await supabase
-    .from("reviews")
-    .select("id, author_name, city, rating, comment, is_sample, is_visible, created_at, product:products(name)")
-    .order("created_at", { ascending: false })
-    .limit(150);
+const PAGE_SIZE = 25;
 
-  if (error) {
+export default async function ReviewsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { supabase } = await requireAdmin();
+  const sp = await searchParams;
+  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+
+  // The list and the sample count are independent, so they run together.
+  const [{ data, error, count }, { count: sampleCount }] = await Promise.all([
+    supabase
+      .from("reviews")
+      .select("id, author_name, city, rating, comment, is_sample, is_visible, created_at, product:products(name)", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
+    supabase.from("reviews").select("id", { count: "exact", head: true }).eq("is_sample", true),
+  ]);
+
+  // PGRST103 only means the page number is past the last page; anything else is the missing table.
+  if (error && error.code !== "PGRST103") {
     return (
       <>
         <PageHeader title="Reviews" />
@@ -44,19 +54,20 @@ export default async function ReviewsPage() {
   }
 
   const reviews = (data ?? []) as unknown as Row[];
-  const sampleCount = reviews.filter((r) => r.is_sample).length;
+  const total = count ?? reviews.length;
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <>
       <PageHeader
         title="Reviews"
-        description={`${reviews.length} ${reviews.length === 1 ? "review" : "reviews"} in the store. Customers can post reviews on product pages; you can hide or delete any of them here.`}
+        description={`${total} ${total === 1 ? "review" : "reviews"} in the store. Customers can post reviews on product pages; you can hide or delete any of them here.`}
         actions={
           <>
             <ActionButton action={addSampleReviews} size="md" confirm="Replace the sample reviews with a fresh set (1 to 10 per product) and give products a starting sold count?">
               Add sample reviews
             </ActionButton>
-            {sampleCount > 0 && (
+            {(sampleCount ?? 0) > 0 && (
               <ActionButton action={deleteSampleReviews} size="md" confirm="Delete all sample reviews? Real customer reviews are kept.">
                 Delete sample reviews
               </ActionButton>
@@ -105,6 +116,8 @@ export default async function ReviewsPage() {
           ))}
         </ul>
       )}
+
+      <Pager page={page} pageCount={pageCount} hrefFor={(n) => `/admin/reviews?page=${n}`} />
     </>
   );
 }

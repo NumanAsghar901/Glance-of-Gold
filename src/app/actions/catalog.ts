@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { getProduct, getProducts } from "@/lib/data/catalog";
 import type { ProductDetail, ProductSummary } from "@/lib/data/types";
-import { createPublicClient } from "@/lib/supabase/public";
 
 const slugSchema = z.string().trim().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/).max(80);
 
@@ -20,13 +19,8 @@ export async function getProductsBySlugs(slugs: string[]): Promise<ProductSummar
   if (!list.success || list.data.length === 0) return [];
 
   // The catalogue is small, so one cached page of everything is cheaper than many filtered queries.
-  const supabase = createPublicClient();
-  const { data } = await supabase.from("products").select("slug").in("slug", list.data);
-  const existing = new Set((data ?? []).map((p) => p.slug));
-  const wanted = list.data.filter((s) => existing.has(s));
-  if (wanted.length === 0) return [];
-
+  // It only holds active products, so slugs that no longer exist simply drop out.
   const all = await getProducts({ pageSize: 100 });
   const bySlug = new Map(all.items.map((p) => [p.slug, p]));
-  return wanted.flatMap((s) => bySlug.get(s) ?? []);
+  return list.data.flatMap((s) => bySlug.get(s) ?? []);
 }

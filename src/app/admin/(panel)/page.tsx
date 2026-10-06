@@ -70,7 +70,8 @@ export default async function AdminDashboard() {
     <>
       <PageHeader title={`Welcome${name ? `, ${name.split(" ")[0]}` : ""}`} description="What needs your attention today." />
 
-      <dl className="grid grid-cols-2 gap-px border border-border bg-border lg:grid-cols-5">
+      {/* An odd last tile spans both columns on phones so no empty filled cell is left behind. */}
+      <dl className="grid grid-cols-2 gap-px border border-border bg-border lg:grid-cols-5 [&>:last-child:nth-child(odd)]:col-span-2 lg:[&>:last-child:nth-child(odd)]:col-span-1">
         {stats.map((s) => {
           const body = (
             <>
@@ -105,13 +106,13 @@ export default async function AdminDashboard() {
         </Panel>
       )}
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Panel title="Recent orders" actions={<Link prefetch={false} href="/admin/orders" className="link-draw text-sm">View all</Link>}>
           {recent.data?.length ? (
             <ul className="divide-y divide-border">
               {recent.data.map((o) => (
-                <li key={o.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                  <div className="min-w-0">
+                <li key={o.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 py-3 first:pt-0 last:pb-0">
+                  <div className="min-w-0 max-w-full">
                     <Link prefetch={false} href={`/admin/orders/${o.id}`} className="text-sm font-medium underline-offset-4 hover:underline">
                       {o.order_number}
                     </Link>
@@ -120,7 +121,7 @@ export default async function AdminDashboard() {
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
-                    <span className="text-sm">{formatPKR(o.total)}</span>
+                    <span className="whitespace-nowrap text-sm">{formatPKR(o.total)}</span>
                     <Pill tone={orderTone(o.order_status)}>{o.order_status}</Pill>
                   </div>
                 </li>

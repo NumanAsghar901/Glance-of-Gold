@@ -15,7 +15,7 @@ import {
 } from "@/components/cart/cart-parts";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
-import { PROVINCES } from "@/lib/validators";
+import { PROVINCES } from "@/lib/pakistan";
 import { cn, formatPKR, uuid } from "@/lib/utils";
 
 type Method = "cod" | "jazzcash" | "easypaisa" | "bank_transfer";

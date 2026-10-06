@@ -67,23 +67,21 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const input = parsed.data;
   const supabase = createServiceClient();
 
-  // Double-submit guard: the browser generates one submissionId per checkout attempt.
-  const { data: existing } = await supabase
-    .from("orders")
-    .select("access_token")
-    .eq("meta_event_id", input.submissionId)
-    .maybeSingle();
+  // Both checks are independent, so they share one round trip to the database.
+  const [{ data: existing }, accounts] = await Promise.all([
+    // Double-submit guard: the browser generates one submissionId per checkout attempt.
+    supabase.from("orders").select("access_token").eq("meta_event_id", input.submissionId).maybeSingle(),
+    // Manual transfer methods are only offered once the owner has set up an account for them.
+    input.paymentMethod === "cod"
+      ? null
+      : supabase
+          .from("payment_accounts")
+          .select("id", { count: "exact", head: true })
+          .eq("method", input.paymentMethod)
+          .eq("is_active", true),
+  ]);
   if (existing) redirect(`/order/${existing.access_token}`);
-
-  // Manual transfer methods are only offered once the owner has set up an account for them.
-  if (input.paymentMethod !== "cod") {
-    const { count } = await supabase
-      .from("payment_accounts")
-      .select("id", { count: "exact", head: true })
-      .eq("method", input.paymentMethod)
-      .eq("is_active", true);
-    if (!count) return fail("That payment method is not available right now. Please choose another.");
-  }
+  if (accounts && !accounts.count) return fail("That payment method is not available right now. Please choose another.");
 
   const { data, error } = await supabase.rpc("create_order", {
     payload: {

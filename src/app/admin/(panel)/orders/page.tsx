@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Empty, Input, orderTone, PageHeader, Pill, TableWrap, td, th } from "@/components/admin/ui";
+import { Empty, Input, orderTone, PageHeader, Pager, Pill, TableWrap, td, th } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
+import { LinkPending } from "@/components/ui/link-pending";
 import { requireAdmin } from "@/lib/admin/auth";
 import { PAYMENT_LABEL } from "@/lib/email/templates";
 import { cn, formatPKR } from "@/lib/utils";
@@ -65,11 +66,12 @@ export default async function OrdersPage({
             href={href({ status: s })}
             aria-current={s === status ? "true" : undefined}
             className={cn(
-              "inline-flex h-9 items-center border px-3 text-sm capitalize transition-colors duration-200",
+              "relative inline-flex min-h-11 items-center border px-3.5 text-sm capitalize transition-colors duration-200",
               s === status ? "border-foreground bg-foreground text-background" : "border-border bg-surface hover:border-gold",
             )}
           >
             {s ?? "All"}
+            <LinkPending />
           </Link>
         ))}
       </nav>
@@ -78,7 +80,7 @@ export default async function OrdersPage({
         <Empty>No orders match. New orders appear here as soon as customers place them.</Empty>
       ) : (
         <TableWrap>
-          <table className="w-full min-w-[44rem] border-collapse">
+          <table className="stack-table w-full border-collapse md:min-w-[40rem]">
             <thead>
               <tr>
                 <th className={th}>Order</th>
@@ -97,14 +99,14 @@ export default async function OrdersPage({
                       {o.order_number}
                     </Link>
                   </td>
-                  <td className={td}>
+                  <td className={td} data-label="Customer">
                     {o.customer_name}
                     <span className="block text-xs text-muted-foreground">
                       {o.phone}, {o.city}
                     </span>
                   </td>
-                  <td className={td}>{formatPKR(o.total)}</td>
-                  <td className={td}>
+                  <td className={td} data-label="Total">{formatPKR(o.total)}</td>
+                  <td className={td} data-label="Payment">
                     {PAYMENT_LABEL[o.payment_method]}
                     <span className="mt-1 block">
                       <Pill tone={o.payment_status === "paid" ? "good" : o.payment_status === "awaiting_verification" ? "warn" : "neutral"}>
@@ -112,10 +114,10 @@ export default async function OrdersPage({
                       </Pill>
                     </span>
                   </td>
-                  <td className={td}>
+                  <td className={td} data-label="Status">
                     <Pill tone={orderTone(o.order_status)}>{o.order_status}</Pill>
                   </td>
-                  <td className={cn(td, "whitespace-nowrap text-muted-foreground")}>
+                  <td className={cn(td, "text-muted-foreground md:whitespace-nowrap")} data-label="Placed">
                     {new Date(o.created_at).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" })}
                   </td>
                 </tr>
@@ -125,15 +127,7 @@ export default async function OrdersPage({
         </TableWrap>
       )}
 
-      {pageCount > 1 && (
-        <nav aria-label="Pagination" className="mt-6 flex items-center justify-between text-sm">
-          {page > 1 ? <Link prefetch={false} href={href({ page: String(page - 1) })} className="link-draw">Previous</Link> : <span />}
-          <span className="text-muted-foreground">
-            Page {page} of {pageCount}
-          </span>
-          {page < pageCount ? <Link prefetch={false} href={href({ page: String(page + 1) })} className="link-draw">Next</Link> : <span />}
-        </nav>
-      )}
+      <Pager page={page} pageCount={pageCount} hrefFor={(n) => href({ page: String(n) })} />
     </>
   );
 }

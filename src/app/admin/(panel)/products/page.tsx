@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { deleteSampleProducts } from "@/app/actions/admin-catalog";
 import { ActionButton } from "@/components/admin/action-form";
-import { Empty, Input, PageHeader, Pill, TableWrap, td, th } from "@/components/admin/ui";
+import { Empty, Input, PageHeader, Pager, Pill, TableWrap, td, th } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/admin/auth";
 import { formatPKR } from "@/lib/utils";
@@ -76,7 +76,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         <Empty>No products found. Add your first product to start selling.</Empty>
       ) : (
         <TableWrap>
-          <table className="w-full min-w-[40rem] border-collapse">
+          <table className="stack-table w-full border-collapse md:min-w-[36rem]">
             <thead>
               <tr>
                 <th className={th}>Product</th>
@@ -100,12 +100,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                         <span className="font-medium underline-offset-4 hover:underline">{p.name}</span>
                       </Link>
                     </td>
-                    <td className={td}>{p.category?.name ?? "None"}</td>
-                    <td className={td}>{formatPKR(p.price)}</td>
-                    <td className={td}>
+                    <td className={td} data-label="Category">{p.category?.name ?? "None"}</td>
+                    <td className={td} data-label="Price">{formatPKR(p.price)}</td>
+                    <td className={td} data-label="Stock">
                       <Pill tone={stock === 0 ? "bad" : stock <= 3 ? "warn" : "neutral"}>{stock === 0 ? "Sold out" : stock}</Pill>
                     </td>
-                    <td className={td}>
+                    <td className={td} data-label="Status">
                       <div className="flex flex-wrap gap-1.5">
                         <Pill tone={p.is_active ? "good" : "neutral"}>{p.is_active ? "Visible" : "Hidden"}</Pill>
                         {p.is_featured && <Pill tone="warn">Featured</Pill>}
@@ -120,13 +120,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         </TableWrap>
       )}
 
-      {pageCount > 1 && (
-        <nav aria-label="Pagination" className="mt-6 flex items-center justify-between text-sm">
-          {page > 1 ? <Link prefetch={false} href={`/admin/products?${new URLSearchParams({ ...(q ? { q } : {}), page: String(page - 1) })}`} className="link-draw">Previous</Link> : <span />}
-          <span className="text-muted-foreground">Page {page} of {pageCount}</span>
-          {page < pageCount ? <Link prefetch={false} href={`/admin/products?${new URLSearchParams({ ...(q ? { q } : {}), page: String(page + 1) })}`} className="link-draw">Next</Link> : <span />}
-        </nav>
-      )}
+      <Pager
+        page={page}
+        pageCount={pageCount}
+        hrefFor={(n) => `/admin/products?${new URLSearchParams({ ...(q ? { q } : {}), page: String(n) })}`}
+      />
     </>
   );
 }

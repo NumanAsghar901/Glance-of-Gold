@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LinkPending } from "@/components/ui/link-pending";
 import { cn } from "@/lib/utils";
 
 type Item = { href: string; label: string; icon: typeof Gem; exact?: boolean };
@@ -69,12 +70,13 @@ export function AdminNav() {
                     prefetch={false}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex min-h-11 items-center gap-3 px-3 text-sm transition-colors duration-200",
+                      "relative flex min-h-11 items-center gap-3 px-3 text-sm transition-colors duration-200",
                       active ? "bg-sand text-foreground" : "text-muted-foreground hover:bg-sand/60 hover:text-foreground",
                     )}
                   >
                     <Icon className={cn("size-[1.125rem]", active ? "text-gold-hover" : "text-gold")} strokeWidth={1.5} />
                     {label}
+                    <LinkPending />
                   </Link>
                 </li>
               );

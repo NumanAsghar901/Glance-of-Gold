@@ -1,23 +1,8 @@
 import { z } from "zod";
+import { normalizePhone, PROVINCES } from "@/lib/pakistan";
 
-export const PROVINCES = [
-  "Punjab",
-  "Sindh",
-  "Khyber Pakhtunkhwa",
-  "Balochistan",
-  "Islamabad Capital Territory",
-  "Azad Jammu & Kashmir",
-  "Gilgit-Baltistan",
-] as const;
-
-/** Accepts 03XXXXXXXXX, 03XX-XXXXXXX, +923XXXXXXXXX, 923XXXXXXXXX. Returns 03XXXXXXXXX or null. */
-export function normalizePhone(input: string): string | null {
-  const digits = input.replace(/[\s()-]/g, "");
-  let local = digits;
-  if (/^\+92\d{10}$/.test(digits)) local = `0${digits.slice(3)}`;
-  else if (/^92\d{10}$/.test(digits)) local = `0${digits.slice(2)}`;
-  return /^03\d{9}$/.test(local) ? local : null;
-}
+// Server code keeps importing these from here; client code must import "@/lib/pakistan" directly.
+export { normalizePhone, PROVINCES };
 
 const phone = z
   .string()
