@@ -29,8 +29,8 @@ export default function AboutPage() {
         <div className="arch-in order-1 mx-auto w-full max-w-[24rem] pr-3 sm:pr-5 lg:order-2 lg:col-span-5 lg:max-w-none">
           <ArchFrame>
             <Image
-              src="/placeholders/sets-b.svg"
-              alt="A gold necklace with matching earrings"
+              src="/story/glance-story.jpg"
+              alt="Layered gold necklaces and stacked gold rings on a cream display stand, beside dried flowers"
               fill
               priority
               sizes="(min-width: 1024px) 40vw, 90vw"

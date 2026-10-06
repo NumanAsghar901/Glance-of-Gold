@@ -167,8 +167,8 @@ export default async function Home() {
         <div className="reveal mx-auto w-full max-w-[24rem] pr-3 sm:pr-5 lg:col-span-5 lg:max-w-none">
           <ArchFrame>
             <Image
-              src="/placeholders/necklaces-b.svg"
-              alt="A layered gold necklace with a coin pendant"
+              src="/story/glance-story.jpg"
+              alt="Layered gold necklaces and stacked gold rings on a cream display stand, beside dried flowers"
               fill
               sizes="(min-width: 1024px) 38vw, 90vw"
               quality={75}
