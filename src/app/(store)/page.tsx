@@ -127,7 +127,7 @@ export default async function Home() {
                 <li key={o.variantId} className="w-28 text-center sm:w-36">
                   <div className="relative aspect-square overflow-hidden rounded-full bg-sand ring-1 ring-gold ring-offset-4 ring-offset-blush">
                     {o.image && (
-                      <Image src={o.image} alt="" fill sizes="150px" quality={60} className="object-cover" />
+                      <Image src={o.image} alt="" fill sizes="(min-width: 640px) 144px, 112px" quality={75} className="object-cover" />
                     )}
                   </div>
                   <p className="mt-4 text-sm leading-snug">{o.productName}</p>

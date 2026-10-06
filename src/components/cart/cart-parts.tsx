@@ -208,7 +208,7 @@ export function GiftPicker({ className }: { className?: string }) {
               />
               <span className="absolute inset-0 border-2 border-transparent peer-focus-visible:border-gold" aria-hidden="true" />
               <span className="relative block aspect-[4/5] overflow-hidden bg-sand">
-                {o.image && <Image src={o.image} alt="" fill sizes="120px" quality={60} className="object-cover" />}
+                {o.image && <Image src={o.image} alt="" fill sizes="120px" quality={75} className="object-cover" />}
               </span>
               <span className="mt-2 block text-xs leading-snug">{o.productName}</span>
               <span className={cn("mt-1 block text-xs", selected ? "text-gold-hover" : "text-muted-foreground")}>
