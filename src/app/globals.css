@@ -14,6 +14,9 @@
   --gold-hover: #8f6e3b;
   --blush: #ebd9d0;
   --danger: #a1403a;
+  /* WhatsApp brand green, used only for the floating chat button so it is recognised at a glance. */
+  --whatsapp: #25d366;
+  --whatsapp-hover: #1ebe5b;
   --hairline: color-mix(in srgb, var(--gold) 45%, transparent);
 
   --radius: 0.25rem;
@@ -31,6 +34,8 @@
   --color-gold-hover: var(--gold-hover);
   --color-blush: var(--blush);
   --color-danger: var(--danger);
+  --color-whatsapp: var(--whatsapp);
+  --color-whatsapp-hover: var(--whatsapp-hover);
   --color-hairline: var(--hairline);
 
   /* shadcn semantic names, mapped onto the palette */

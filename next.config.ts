@@ -10,8 +10,6 @@ const nextConfig: NextConfig = {
   // Lets the dev server be opened by IP (127.0.0.1, or a phone on the same Wi-Fi) without dead buttons.
   allowedDevOrigins: ["127.0.0.1", "192.168.*.*", "10.*.*.*", "172.*.*.*"],
   poweredByHeader: false,
-  // Dev only: keep Next's route badge off the floating WhatsApp button (bottom left).
-  devIndicators: { position: "bottom-right" },
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [60, 75],
