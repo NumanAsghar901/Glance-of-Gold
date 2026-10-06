@@ -13,7 +13,8 @@ export const maxQty = (v: ProductVariant) => Math.max(1, Math.min(v.stock, MAX_Q
 
 /** The three things a variant can differ by. Each one with more than one value gets its own picker. */
 export type Dim = "colour" | "design" | "size";
-const ALL_DIMS: Dim[] = ["colour", "design", "size"];
+/** The order they are shown in, top to bottom: colour, then size, then design. */
+const ALL_DIMS: Dim[] = ["colour", "size", "design"];
 export const DIM_LABEL: Record<Dim, string> = { colour: "Colour", design: "Design", size: "Size" };
 
 export const attrOf = (v: ProductVariant, dim: Dim): string | null =>

@@ -68,18 +68,35 @@ export function ProductForm({
   const [allowMultiple, setAllowMultiple] = useState(product.allowMultiple);
   const [gen, setGen] = useState({ colours: "", designs: "", sizes: "", stock: "10", price: "" });
   const [genNote, setGenNote] = useState("");
+  // What this product comes in. Each one ticked gets its own box on every variant and its own picker on the
+  // product page. Sizes and designs are independent of each other.
+  const [uses, setUses] = useState(() => ({
+    color: rows.some((r) => r.color.trim()),
+    size: rows.some((r) => r.size.trim()),
+    design: rows.some((r) => r.design.trim()),
+  }));
 
   const update = (key: string, patch: Partial<Row>) =>
     setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   const nameOf = (r: Row) => (attrsAvailable ? composeVariantName({ color: r.color, design: r.design, size: r.size }) : r.name || "Standard");
 
-  /** Makes a variant for every mix of the colours, designs and sizes typed in, skipping ones already in the list. */
+  /** Ticks or unticks colours, sizes or designs. Unticking one clears it from every variant. */
+  function toggleUse(kind: "color" | "size" | "design", on: boolean) {
+    if (!on && rows.some((r) => r[kind].trim()) && !window.confirm(`Remove the ${kind === "color" ? "colour" : kind} from every variant of this product?`)) return;
+    setUses((u) => ({ ...u, [kind]: on }));
+    if (!on) {
+      setRows((rs) => rs.map((r) => ({ ...r, [kind]: "" })));
+      setGen((g) => ({ ...g, [kind === "color" ? "colours" : kind === "size" ? "sizes" : "designs"]: "" }));
+    }
+  }
+
+  /** Makes a variant for every mix of the colours, sizes and designs typed in, skipping ones already in the list. */
   function generate() {
-    const colours = splitList(gen.colours);
-    const designs = splitList(gen.designs);
-    const sizes = splitList(gen.sizes);
+    const colours = uses.color ? splitList(gen.colours) : [];
+    const designs = uses.design ? splitList(gen.designs) : [];
+    const sizes = uses.size ? splitList(gen.sizes) : [];
     if (!colours.length && !designs.length && !sizes.length) {
-      setGenNote("Type at least one colour, design or size first.");
+      setGenNote("Type at least one size, design or colour first.");
       return;
     }
     const stock = Math.max(0, Math.floor(Number(gen.stock) || 0));
@@ -199,46 +216,78 @@ export function ProductForm({
       >
         <p className="mb-4 text-sm text-muted-foreground">
           {attrsAvailable
-            ? "A variant is one thing a customer can buy, with its own stock. Give it a colour, a design, a size, or any mix. Designs and sizes each get their own picker on the product page. Leave all three empty for a simple piece."
+            ? "Choose what this product comes in. Sizes and designs are separate: each one you tick gets its own picker on the product page, sizes on top and designs below, and a customer can choose both. Each variant is one mix, with its own stock."
             : "Use one variant named Standard for simple pieces. Add a variant for each size, design or colour you sell, each with its own stock."}
         </p>
 
         {attrsAvailable ? (
           <div className="mb-5 space-y-5">
-            <div className="border border-border bg-sand/40 p-4">
-              <p className="text-sm font-medium">Add several at once</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Type the colours, designs and sizes you sell, separated by commas, and every mix is made for you. For example
-                designs &ldquo;Design A, Design B&rdquo; and sizes &ldquo;6, 7, 8&rdquo; make six variants.
-              </p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <Field label="Colours" htmlFor="gen-colours">
-                  <Input id="gen-colours" value={gen.colours} onChange={(e) => setGen({ ...gen, colours: e.target.value })} placeholder="Gold, Silver" />
-                </Field>
-                <Field label="Designs" htmlFor="gen-designs">
-                  <Input id="gen-designs" value={gen.designs} onChange={(e) => setGen({ ...gen, designs: e.target.value })} placeholder="Design A, Design B" />
-                </Field>
-                <Field label="Sizes" htmlFor="gen-sizes">
-                  <Input id="gen-sizes" value={gen.sizes} onChange={(e) => setGen({ ...gen, sizes: e.target.value })} placeholder="6, 7, 8, 9" />
-                </Field>
+            <fieldset className="border border-border p-4">
+              <legend className="px-1 text-sm font-medium">This product comes in</legend>
+              <div className="flex flex-wrap gap-x-8 gap-y-3">
+                {(
+                  [
+                    ["size", "Sizes"],
+                    ["design", "Designs"],
+                    ["color", "Colours"],
+                  ] as const
+                ).map(([kind, label]) => (
+                  <label key={kind} className="flex min-h-11 cursor-pointer items-center gap-3 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={uses[kind]}
+                      onChange={(e) => toggleUse(kind, e.target.checked)}
+                      className="size-4 shrink-0 accent-[var(--gold)]"
+                    />
+                    {label}
+                  </label>
+                ))}
               </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-                <Field label="Stock for each" htmlFor="gen-stock">
-                  <Input id="gen-stock" type="number" inputMode="numeric" min={0} value={gen.stock} onChange={(e) => setGen({ ...gen, stock: e.target.value })} />
-                </Field>
-                <Field label="Price for each (optional)" htmlFor="gen-price">
-                  <Input id="gen-price" type="number" inputMode="numeric" min={0} value={gen.price} onChange={(e) => setGen({ ...gen, price: e.target.value })} placeholder="Same as product" />
-                </Field>
-                <Button type="button" variant="outline" onClick={generate}>
-                  Make variants
-                </Button>
-              </div>
-              {genNote && (
-                <p role="status" className="mt-3 text-sm">
-                  {genNote}
+              <p className="mt-1 text-xs text-muted-foreground">Leave all three empty for a simple piece with one version.</p>
+            </fieldset>
+
+            {(uses.color || uses.size || uses.design) && (
+              <div className="border border-border bg-sand/40 p-4">
+                <p className="text-sm font-medium">Add several at once</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Type what you sell, separated by commas, and every mix is made for you. For example sizes &ldquo;6, 7, 8&rdquo; and designs
+                  &ldquo;1, 2, 3&rdquo; make nine variants.
                 </p>
-              )}
-            </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  {uses.color && (
+                    <Field label="Colours" htmlFor="gen-colours">
+                      <Input id="gen-colours" value={gen.colours} onChange={(e) => setGen({ ...gen, colours: e.target.value })} placeholder="Gold, Silver" />
+                    </Field>
+                  )}
+                  {uses.size && (
+                    <Field label="Sizes" htmlFor="gen-sizes">
+                      <Input id="gen-sizes" value={gen.sizes} onChange={(e) => setGen({ ...gen, sizes: e.target.value })} placeholder="6, 7, 8, 9" />
+                    </Field>
+                  )}
+                  {uses.design && (
+                    <Field label="Designs" htmlFor="gen-designs">
+                      <Input id="gen-designs" value={gen.designs} onChange={(e) => setGen({ ...gen, designs: e.target.value })} placeholder="1, 2, 3" />
+                    </Field>
+                  )}
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                  <Field label="Stock for each" htmlFor="gen-stock">
+                    <Input id="gen-stock" type="number" inputMode="numeric" min={0} value={gen.stock} onChange={(e) => setGen({ ...gen, stock: e.target.value })} />
+                  </Field>
+                  <Field label="Price for each (optional)" htmlFor="gen-price">
+                    <Input id="gen-price" type="number" inputMode="numeric" min={0} value={gen.price} onChange={(e) => setGen({ ...gen, price: e.target.value })} placeholder="Same as product" />
+                  </Field>
+                  <Button type="button" variant="outline" onClick={generate}>
+                    Make variants
+                  </Button>
+                </div>
+                {genNote && (
+                  <p role="status" className="mt-3 text-sm">
+                    {genNote}
+                  </p>
+                )}
+              </div>
+            )}
 
             <label className="flex cursor-pointer items-start gap-3 text-sm">
               <input
@@ -249,7 +298,7 @@ export function ProductForm({
                 className="mt-0.5 size-4 shrink-0 accent-[var(--gold)]"
               />
               <span>
-                Customers can choose several designs or sizes at once
+                Customers can choose several sizes or designs at once
                 <span className="mt-0.5 block text-xs text-muted-foreground">
                   For example two ring sizes, or three designs, in one order, each with its own quantity. The price adds up.
                 </span>
@@ -270,31 +319,37 @@ export function ProductForm({
               key={r.key}
               className={
                 attrsAvailable
-                  ? "grid gap-3 border border-border p-4 sm:grid-cols-3 lg:grid-cols-[1fr_1fr_1fr_0.7fr_0.9fr_auto] lg:items-end"
+                  ? "flex flex-wrap items-end gap-3 border border-border p-4"
                   : "grid gap-3 border border-border p-4 sm:grid-cols-[1.4fr_1fr_1fr_auto] sm:items-end"
               }
             >
               {attrsAvailable ? (
                 <>
-                  <Field label="Colour" htmlFor={`vc-${r.key}`}>
-                    <Input id={`vc-${r.key}`} value={r.color} maxLength={30} onChange={(e) => update(r.key, { color: e.target.value })} placeholder="e.g. Gold" />
-                  </Field>
-                  <Field label="Design" htmlFor={`vd-${r.key}`}>
-                    <Input id={`vd-${r.key}`} value={r.design} maxLength={30} onChange={(e) => update(r.key, { design: e.target.value })} placeholder="e.g. Design A" />
-                  </Field>
-                  <Field label="Size" htmlFor={`vz-${r.key}`}>
-                    <Input id={`vz-${r.key}`} value={r.size} maxLength={30} onChange={(e) => update(r.key, { size: e.target.value })} placeholder="e.g. Size 6" />
-                  </Field>
+                  {uses.color && (
+                    <Field label="Colour" htmlFor={`vc-${r.key}`} className="min-w-[8.5rem] flex-1">
+                      <Input id={`vc-${r.key}`} value={r.color} maxLength={30} onChange={(e) => update(r.key, { color: e.target.value })} placeholder="e.g. Gold" />
+                    </Field>
+                  )}
+                  {uses.size && (
+                    <Field label="Size" htmlFor={`vz-${r.key}`} className="min-w-[8.5rem] flex-1">
+                      <Input id={`vz-${r.key}`} value={r.size} maxLength={30} onChange={(e) => update(r.key, { size: e.target.value })} placeholder="e.g. 6" />
+                    </Field>
+                  )}
+                  {uses.design && (
+                    <Field label="Design" htmlFor={`vd-${r.key}`} className="min-w-[8.5rem] flex-1">
+                      <Input id={`vd-${r.key}`} value={r.design} maxLength={30} onChange={(e) => update(r.key, { design: e.target.value })} placeholder="e.g. 1" />
+                    </Field>
+                  )}
                 </>
               ) : (
                 <Field label="Variant name" htmlFor={`vn-${r.key}`}>
                   <Input id={`vn-${r.key}`} value={r.name} onChange={(e) => update(r.key, { name: e.target.value })} placeholder="Standard" />
                 </Field>
               )}
-              <Field label="In stock" htmlFor={`vs-${r.key}`}>
+              <Field label="In stock" htmlFor={`vs-${r.key}`} className={attrsAvailable ? "w-28" : undefined}>
                 <Input id={`vs-${r.key}`} type="number" inputMode="numeric" min={0} value={r.stock} onChange={(e) => update(r.key, { stock: Number(e.target.value) })} />
               </Field>
-              <Field label="Price (optional)" htmlFor={`vp-${r.key}`}>
+              <Field label="Price (optional)" htmlFor={`vp-${r.key}`} className={attrsAvailable ? "min-w-[9rem] flex-1" : undefined}>
                 <Input
                   id={`vp-${r.key}`}
                   type="number"
@@ -305,7 +360,7 @@ export function ProductForm({
                   onChange={(e) => update(r.key, { priceOverride: e.target.value === "" ? null : Number(e.target.value) })}
                 />
               </Field>
-              <div className={attrsAvailable ? "flex items-center justify-between gap-4 sm:col-span-3 sm:justify-end lg:col-span-1" : "flex items-center justify-between gap-4 sm:col-span-2 sm:justify-end lg:col-span-1"}>
+              <div className={attrsAvailable ? "ml-auto flex items-center gap-4" : "flex items-center justify-between gap-4 sm:col-span-2 sm:justify-end lg:col-span-1"}>
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={r.isActive} onChange={(e) => update(r.key, { isActive: e.target.checked })} className="size-4 accent-[var(--gold)]" />
                   Active
@@ -320,9 +375,7 @@ export function ProductForm({
                   <Trash2 className="size-4" strokeWidth={1.5} />
                 </button>
               </div>
-              {attrsAvailable && (
-                <p className="text-xs text-muted-foreground sm:col-span-3 lg:col-span-6">Shown to customers as {nameOf(r)}</p>
-              )}
+              {attrsAvailable && <p className="w-full text-xs text-muted-foreground">Shown to customers as {nameOf(r)}</p>}
             </li>
           ))}
         </ul>

@@ -132,9 +132,16 @@ export function VariantPicker({
 
   return (
     <div className="space-y-5">
-      {sel.dims.map((d) => (
-        <Group key={d.dim} d={d} sel={sel} idPrefix={idPrefix} />
-      ))}
+      {/* Colour, size and design each sit in their own block with a line between them: size on top, design below. */}
+      {sel.dims.length > 0 && (
+        <div className="divide-y divide-border">
+          {sel.dims.map((d) => (
+            <div key={d.dim} className="py-5 first:pt-0 last:pb-0">
+              <Group d={d} sel={sel} idPrefix={idPrefix} />
+            </div>
+          ))}
+        </div>
+      )}
 
       {anyMulti && (
         <p className="-mt-2 text-xs text-muted-foreground">

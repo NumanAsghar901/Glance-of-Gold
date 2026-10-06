@@ -1,25 +1,47 @@
 /**
- * A variant's `name` is the full label that appears in the bag, on orders and in emails, for example
- * "Gold, Design A, Size 6". The colour, design and size are also stored on their own so the store can
- * give each one its own picker. These helpers keep the naming rule in one place, for the admin (writing)
- * and the store (reading). No imports, so client components can use them.
+ * A variant's `name` is the full label that appears in the cart, on orders and in emails, for example
+ * "Gold, Size 6, Design 2". The colour, size and design are also stored on their own so the store can give
+ * each one its own picker. These helpers keep the naming rule in one place, for the admin (writing) and the
+ * store (reading). No imports, so client components can use them.
+ *
+ * The order is always colour, size, design, and a size or design is always labelled, so a bare "6" or "2"
+ * still reads as "Size 6" or "Design 2" in the cart and on the order.
  */
 
 export type VariantParts = { color?: string | null; design?: string | null; size?: string | null };
 
 const isStandard = (label: string) => label.toLowerCase() === "standard";
 
-/** Builds the full name from the colour, design and size that are set. "Standard" when none is. */
+/** "6" becomes "Size 6", but "Size 6" and "Rose design" are left as they are (they already say what they are). */
+function labelled(kind: "size" | "design", value: string) {
+  return new RegExp(`\\b${kind}\\b`, "i").test(value) ? value : `${kind === "size" ? "Size" : "Design"} ${value}`;
+}
+
+/** Builds the full name from the colour, size and design that are set. "Standard" when none is. */
 export function composeVariantName(parts: VariantParts): string {
-  const bits = [parts.color, parts.design, parts.size]
-    .map((p) => (p ?? "").trim())
-    .filter((p) => p && !isStandard(p));
+  const clean = (v: string | null | undefined) => {
+    const t = (v ?? "").trim();
+    return t && !isStandard(t) ? t : "";
+  };
+  const color = clean(parts.color);
+  const size = clean(parts.size);
+  const design = clean(parts.design);
+  const bits = [color, size && labelled("size", size), design && labelled("design", design)].filter(Boolean);
   return bits.length ? bits.join(", ") : "Standard";
 }
 
+/** The separate lines of a variant name ("Size 6", "Design 2"), for showing each on its own line. Empty for Standard. */
+export function variantLines(name: string | null | undefined): string[] {
+  if (!name || isStandard(name)) return [];
+  return name
+    .split(", ")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 /**
- * The part of an older variant's name that is not its colour. Only used for products saved before
- * designs and sizes had their own columns.
+ * The part of an older variant's name that is not its colour. Only used for products saved before designs
+ * and sizes had their own columns.
  */
 export function variantLabel(name: string, color: string | null | undefined): string {
   const c = (color ?? "").trim();

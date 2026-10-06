@@ -98,7 +98,8 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
   // Colour, design, size and "select several" exist once the design and size migration has been run.
   const withAttrs = formData.has("attrs");
   const variantNames = v.variants.map((x) =>
-    withAttrs ? composeVariantName({ color: x.color, design: x.design, size: x.size }) : composeVariantName({ size: x.name }),
+    // Before the design and size migration the form has one name box, kept exactly as typed.
+    withAttrs ? composeVariantName({ color: x.color, design: x.design, size: x.size }) : x.name?.trim() || "Standard",
   );
   if (new Set(variantNames.map((n) => n.toLowerCase())).size !== variantNames.length) {
     return { error: "Two variants are the same. Each needs its own colour, design or size." };

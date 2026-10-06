@@ -8,7 +8,7 @@ import type {
   ProductVariant,
 } from "@/lib/data/types";
 import { stockStatus } from "@/lib/stock";
-import { variantLabel } from "@/lib/variant-name";
+import { composeVariantName, variantLabel } from "@/lib/variant-name";
 
 /**
  * Public catalogue reads. Everything goes through the cookie-less anon client
@@ -122,7 +122,8 @@ function toDetail(r: RawProduct): ProductDetail {
     .sort((a, b) => a.sort - b.sort)
     .map((v) => ({
       id: v.id,
-      name: v.name,
+      // Built from the separate values, so it always reads "Size 6, Design 2" even if the saved name is older.
+      name: hasAttrs ? composeVariantName({ color: v.color, design: v.design, size: v.size }) : v.name,
       color: v.color ?? null,
       ...(hasAttrs ? { design: v.design ?? null, size: v.size ?? null } : legacyAttributes(v.name, v.color ?? null, r.option_label)),
       stock: v.stock,
@@ -211,7 +212,7 @@ export const getProduct = unstable_cache(
     if (error) throw new Error(`getProduct: ${error.message}`);
     return data ? toDetail(data as unknown as RawProduct) : null;
   },
-  ["product-v3"],
+  ["product-v4"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 

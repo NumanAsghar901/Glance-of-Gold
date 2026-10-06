@@ -14,6 +14,7 @@ import { Check, Field, Input, orderTone, paymentTone, Panel, Pill, Select } from
 import { requireAdmin } from "@/lib/admin/auth";
 import { PAYMENT_LABEL } from "@/lib/email/templates";
 import { messageToCustomer, piecesIn, piecesLabel } from "@/lib/order-text";
+import { variantLines } from "@/lib/variant-name";
 import { whatsappLink } from "@/lib/site";
 import { formatPKR } from "@/lib/utils";
 
@@ -78,7 +79,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 <li key={i.id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                   <div className="min-w-0">
                     <p className="text-sm">{i.name}</p>
-                    {i.variant_name && i.variant_name !== "Standard" && <p className="text-xs text-muted-foreground">{i.variant_name}</p>}
+                    {variantLines(i.variant_name).map((part) => (
+                      <p key={part} className="text-xs text-muted-foreground">
+                        {part}
+                      </p>
+                    ))}
                     <p className="text-xs text-muted-foreground">
                       Qty {i.qty}
                       {i.is_gift ? ", free gift" : `, ${formatPKR(i.unit_price)} each`}

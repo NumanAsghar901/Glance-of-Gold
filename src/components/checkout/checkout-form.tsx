@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 import { piecesLabel } from "@/lib/order-text";
 import { PROVINCES } from "@/lib/pakistan";
+import { variantLines } from "@/lib/variant-name";
 import { cn, formatPKR, uuid } from "@/lib/utils";
 
 type Method = "cod" | "jazzcash" | "easypaisa" | "bank_transfer";
@@ -254,7 +255,11 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm">{l.name}</p>
-                  {l.variantName !== "Standard" && <p className="text-xs text-muted-foreground">{l.variantName}</p>}
+                  {variantLines(l.variantName).map((part) => (
+                    <p key={part} className="text-xs text-muted-foreground">
+                      {part}
+                    </p>
+                  ))}
                   <p className="text-xs text-muted-foreground">
                     Qty {l.qty}, {formatPKR(l.price)} each
                   </p>
