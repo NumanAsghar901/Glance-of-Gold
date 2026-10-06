@@ -70,6 +70,9 @@ export type Category = {
 export type SiteSettings = {
   shippingFlat: number;
   freeShippingThreshold: number;
+  /** Usual delivery time in days, shown on product pages as "Delivery in 4 to 5 days". */
+  deliveryDaysMin: number;
+  deliveryDaysMax: number;
   courier: string;
   whatsapp: string;
   helpline: string;

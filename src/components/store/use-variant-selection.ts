@@ -90,6 +90,19 @@ export function useVariantSelection(product: ProductDetail) {
     setPicks((cur) => cur.map((p) => (p.id === id ? { ...p, qty: next } : p)));
   }
 
+  /** One more or one fewer of a chosen variant, relative to what is chosen right now, so fast taps all count. */
+  function stepQty(id: number, delta: 1 | -1) {
+    const variant = variants.find((v) => v.id === id);
+    if (!variant) return;
+    setPicks((cur) =>
+      cur.flatMap((p) => {
+        if (p.id !== id) return [p];
+        const next = p.qty + delta;
+        return next < 1 ? [] : [{ ...p, qty: Math.min(next, maxQty(variant)) }];
+      }),
+    );
+  }
+
   /** Puts everything chosen in the bag, with its quantity. Returns how many pieces were added. */
   function add() {
     if (!canAdd) return 0;
@@ -134,6 +147,7 @@ export function useVariantSelection(product: ProductDetail) {
     canAdd,
     choose,
     setQty,
+    stepQty,
     add,
   };
 }

@@ -13,6 +13,8 @@ import type {
 const DEFAULT_SETTINGS: SiteSettings = {
   shippingFlat: 100,
   freeShippingThreshold: 2000,
+  deliveryDaysMin: 4,
+  deliveryDaysMax: 5,
   courier: "Leopards",
   whatsapp: "923166568142",
   helpline: "0316 6568142",
@@ -37,13 +39,16 @@ export const getSettings = unstable_cache(
     return {
       shippingFlat: num("shipping_flat", DEFAULT_SETTINGS.shippingFlat),
       freeShippingThreshold: num("free_shipping_threshold", DEFAULT_SETTINGS.freeShippingThreshold),
+      deliveryDaysMin: num("delivery_days_min", DEFAULT_SETTINGS.deliveryDaysMin),
+      deliveryDaysMax: num("delivery_days_max", DEFAULT_SETTINGS.deliveryDaysMax),
       courier: str("courier", DEFAULT_SETTINGS.courier),
       whatsapp: str("whatsapp_number", DEFAULT_SETTINGS.whatsapp),
       helpline: str("helpline", DEFAULT_SETTINGS.helpline),
       email: str("contact_email", DEFAULT_SETTINGS.email),
     };
   },
-  ["settings"],
+  // Versioned key: the data cache survives deployments, so a changed shape needs a new key.
+  ["settings-v2"],
   { tags: ["settings"], revalidate: 3600 },
 );
 

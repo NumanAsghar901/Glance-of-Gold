@@ -83,7 +83,7 @@ export function ProductPurchase() {
 
   return (
     <div>
-      <VariantPicker product={product} sel={sel} idPrefix="pp" />
+      <VariantPicker product={product} sel={sel} idPrefix="pp" stockNote={false} />
 
       <div ref={cta} className="mt-6 flex flex-col gap-3">
         <div className="flex gap-3">

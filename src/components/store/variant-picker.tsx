@@ -60,10 +60,13 @@ export function VariantPicker({
   product,
   sel,
   idPrefix,
+  stockNote = true,
 }: {
   product: ProductDetail;
   sel: VariantSelection;
   idPrefix: string;
+  /** Show "Only N left in stock" under the choices. Off where a stock line is already shown nearby. */
+  stockNote?: boolean;
 }) {
   const word = sel.colourOnly ? "colour" : product.optionLabel === "Option" ? "option" : product.optionLabel.toLowerCase();
   const showChips = sel.hasChoice && (sel.chips.length > 1 || sel.multi);
@@ -182,7 +185,7 @@ export function VariantPicker({
                     <div className="inline-flex items-center border border-border" role="group" aria-label={`Quantity of ${v.name}`}>
                       <button
                         type="button"
-                        onClick={() => sel.setQty(v.id, qty - 1)}
+                        onClick={() => sel.stepQty(v.id, -1)}
                         aria-label={qty === 1 ? `Remove ${v.name}` : `Decrease quantity of ${v.name}`}
                         className="grid size-11 place-items-center transition-colors duration-200 hover:bg-sand active:bg-sand"
                       >
@@ -193,7 +196,7 @@ export function VariantPicker({
                       </span>
                       <button
                         type="button"
-                        onClick={() => sel.setQty(v.id, qty + 1)}
+                        onClick={() => sel.stepQty(v.id, 1)}
                         disabled={atMax}
                         aria-label={`Increase quantity of ${v.name}`}
                         className="grid size-11 place-items-center transition-colors duration-200 hover:bg-sand active:bg-sand disabled:opacity-40 disabled:hover:bg-transparent"
@@ -210,7 +213,7 @@ export function VariantPicker({
         </section>
       )}
 
-      {!sel.multi && lowSelected.length > 0 && (
+      {stockNote && !sel.multi && lowSelected.length > 0 && (
         <p aria-live="polite" className="text-sm text-gold-hover">
           Only {lowSelected[0].stock} left in stock
         </p>

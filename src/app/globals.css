@@ -17,6 +17,8 @@
   /* WhatsApp brand green, used only for the floating chat button so it is recognised at a glance. */
   --whatsapp: #25d366;
   --whatsapp-hover: #1ebe5b;
+  /* Calm green for small "good news" dots, such as the delivery estimate. Never the only signal. */
+  --success: #5e8e55;
   --hairline: color-mix(in srgb, var(--gold) 45%, transparent);
 
   --radius: 0.25rem;
@@ -34,6 +36,7 @@
   --color-gold-hover: var(--gold-hover);
   --color-blush: var(--blush);
   --color-danger: var(--danger);
+  --color-success: var(--success);
   --color-whatsapp: var(--whatsapp);
   --color-whatsapp-hover: var(--whatsapp-hover);
   --color-hairline: var(--hairline);

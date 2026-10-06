@@ -56,6 +56,8 @@ export async function savePaymentAccount(_prev: ActionState, formData: FormData)
 const settingsSchema = z.object({
   shippingFlat: z.coerce.number().int().min(0).max(100000),
   freeShippingThreshold: z.coerce.number().int().min(0).max(10_000_000),
+  deliveryDaysMin: z.coerce.number().int("Delivery days must be whole numbers").min(1, "Delivery time must be at least 1 day").max(60),
+  deliveryDaysMax: z.coerce.number().int("Delivery days must be whole numbers").min(1).max(60),
   courier: z.string().trim().min(2).max(60),
   whatsapp: z
     .string()
@@ -71,6 +73,8 @@ export async function saveSettings(_prev: ActionState, formData: FormData): Prom
   const parsed = settingsSchema.safeParse({
     shippingFlat: formData.get("shippingFlat"),
     freeShippingThreshold: formData.get("freeShippingThreshold"),
+    deliveryDaysMin: formData.get("deliveryDaysMin"),
+    deliveryDaysMax: formData.get("deliveryDaysMax"),
     courier: formData.get("courier"),
     whatsapp: formData.get("whatsapp"),
     helpline: formData.get("helpline"),
@@ -78,10 +82,13 @@ export async function saveSettings(_prev: ActionState, formData: FormData): Prom
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check the settings." };
   const v = parsed.data;
+  if (v.deliveryDaysMax < v.deliveryDaysMin) return { error: "The longest delivery time cannot be shorter than the shortest." };
 
   const { error } = await supabase.from("settings").upsert([
     { key: "shipping_flat", value: v.shippingFlat },
     { key: "free_shipping_threshold", value: v.freeShippingThreshold },
+    { key: "delivery_days_min", value: v.deliveryDaysMin },
+    { key: "delivery_days_max", value: v.deliveryDaysMax },
     { key: "courier", value: v.courier },
     { key: "whatsapp_number", value: v.whatsapp },
     { key: "helpline", value: v.helpline },

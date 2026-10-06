@@ -2,11 +2,13 @@ import { ChevronDown, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DeliveryEstimate } from "@/components/store/delivery-estimate";
 import { ProductGallery } from "@/components/store/product-gallery";
 import { ProductGrid } from "@/components/store/product-grid";
 import { ProductPurchase } from "@/components/store/product-purchase";
 import { ProductReviews } from "@/components/store/product-reviews";
 import { LivePrice, PurchaseProvider } from "@/components/store/purchase-context";
+import { StockLeft } from "@/components/store/stock-left";
 import { StarRating } from "@/components/ui/star-rating";
 import { StockTag } from "@/components/ui/stock-tag";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -151,11 +153,8 @@ export default async function ProductPage({ params }: Props) {
               `Free delivery on orders over ${formatPKR(settings.freeShippingThreshold)}`}
           </p>
 
-          {product.description && (
-            <p className="mt-6 max-w-prose text-[0.9375rem] leading-relaxed text-muted-foreground">
-              {product.description}
-            </p>
-          )}
+          <StockLeft className="mt-5" />
+          <DeliveryEstimate className="mt-3" minDays={settings.deliveryDaysMin} maxDays={settings.deliveryDaysMax} />
 
           <div className="mt-8">
             <ProductPurchase />
@@ -178,7 +177,8 @@ export default async function ProductPage({ params }: Props) {
           </ul>
 
           <div className="mt-2">
-            <Detail title="Details" defaultOpen>
+            <Detail title="Product information" defaultOpen>
+              {product.description && <p className="mb-4 max-w-prose whitespace-pre-line">{product.description}</p>}
               <ul className="space-y-1.5">
                 {product.material && <li>Finish: {product.material}</li>}
                 {product.category && <li>Category: {product.category.name}</li>}
@@ -192,8 +192,12 @@ export default async function ProductPage({ params }: Props) {
             </Detail>
             <Detail title="Delivery">
               <p>
-                Delivery by {settings.courier} across Pakistan. A flat {formatPKR(settings.shippingFlat)} delivery
-                charge applies, and delivery is free on orders over {formatPKR(settings.freeShippingThreshold)}.
+                Delivery by {settings.courier} across Pakistan, usually in{" "}
+                {settings.deliveryDaysMin === settings.deliveryDaysMax
+                  ? `${settings.deliveryDaysMin} ${settings.deliveryDaysMin === 1 ? "day" : "days"}`
+                  : `${settings.deliveryDaysMin} to ${settings.deliveryDaysMax} days`}
+                . A flat {formatPKR(settings.shippingFlat)} delivery charge applies, and delivery is free on orders
+                over {formatPKR(settings.freeShippingThreshold)}.
               </p>
             </Detail>
             <Detail title="Payment">
