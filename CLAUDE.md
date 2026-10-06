@@ -88,7 +88,7 @@ Elegant, restrained hover states. Every interactive element has distinct `hover`
 
 ### Interactive patterns to use (keep light)
 
-Product card with second-image crossfade on hover, heart (wishlist) and eye (quick view) top-right, and a full-width Add to bag bar that slides up on hover (always visible on touch); one shared quick-view dialog; animated cart drawer; wishlist heart toggle; image gallery with swipe and zoom; sticky add-to-cart bar on mobile; filter drawer; skeleton loading in `sand`; toast confirmations; animated order-progress steps; marquee-free, calm hero.
+Product card with second-image crossfade on hover, heart (wishlist) and eye (quick view) top-right, and a full-width Add to cart bar that slides up on hover (always visible on touch); one shared quick-view dialog; animated cart drawer; wishlist heart toggle; image gallery with swipe and zoom; sticky add-to-cart bar on mobile; filter drawer; skeleton loading in `sand`; toast confirmations; animated order-progress steps; marquee-free, calm hero.
 
 ## Performance
 

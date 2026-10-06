@@ -104,7 +104,7 @@ export function CardActions({ product }: { product: ProductSummary }) {
             </>
           ) : (
             <>
-              <ShoppingBag className="size-4" strokeWidth={1.5} /> {qa ? "Add to bag" : "Choose options"}
+              <ShoppingBag className="size-4" strokeWidth={1.5} /> {qa ? "Add to cart" : "Choose options"}
             </>
           )}
         </button>

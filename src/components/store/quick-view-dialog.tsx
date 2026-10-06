@@ -164,11 +164,11 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
               `Select ${choiceNoun(product, sel)}`
             ) : added ? (
               <>
-                <Check /> Added to bag
+                <Check /> Added to cart
               </>
             ) : (
               <>
-                <ShoppingBag /> {count > 1 ? `Add ${piecesLabel(count)} to bag` : "Add to bag"}
+                <ShoppingBag /> {count > 1 ? `Add ${piecesLabel(count)} to cart` : "Add to cart"}
               </>
             )}
           </Button>

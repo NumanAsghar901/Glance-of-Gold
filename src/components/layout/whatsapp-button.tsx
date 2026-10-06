@@ -19,7 +19,7 @@ function WhatsAppLogo({ className }: { className?: string }) {
  * gently up and down (CSS, transform only, see .wa-fab) and opens a chat with the shop's WhatsApp
  * number from the settings.
  *
- * - Product pages lift it above the sticky add-to-bag bar on small screens.
+ * - Product pages lift it above the sticky add-to-cart bar on small screens.
  * - Hidden at checkout so it never covers the place-order button.
  */
 export function WhatsAppButton() {

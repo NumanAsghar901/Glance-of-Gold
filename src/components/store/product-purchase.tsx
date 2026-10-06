@@ -44,7 +44,7 @@ export function ProductPurchase() {
     return () => io.disconnect();
   }, []);
 
-  function addToBag() {
+  function addToCart() {
     if (sel.add() === 0) return;
     track("AddToCart", {
       content_ids: [String(product.id)],
@@ -63,14 +63,14 @@ export function ProductPurchase() {
     `Select ${noun}`
   ) : added ? (
     <>
-      <Check /> Added to bag
+      <Check /> Added to cart
     </>
   ) : (
     <>
-      <ShoppingBag /> {count > 1 ? `Add ${piecesLabel(count)} to bag` : "Add to bag"}
+      <ShoppingBag /> {count > 1 ? `Add ${piecesLabel(count)} to cart` : "Add to cart"}
     </>
   );
-  const stickyLabel = sel.soldOut ? "Out of stock" : needsChoice ? `Select ${noun}` : added ? "Added" : count > 1 ? `Add ${count}` : "Add to bag";
+  const stickyLabel = sel.soldOut ? "Out of stock" : needsChoice ? `Select ${noun}` : added ? "Added" : count > 1 ? `Add ${count}` : "Add to cart";
   const disabled = sel.soldOut || needsChoice || !sel.canAdd;
 
   const waText = [
@@ -87,7 +87,7 @@ export function ProductPurchase() {
 
       <div ref={cta} className="mt-6 flex flex-col gap-3">
         <div className="flex gap-3">
-          <Button size="lg" onClick={addToBag} disabled={disabled} className="flex-1" aria-live="polite">
+          <Button size="lg" onClick={addToCart} disabled={disabled} className="flex-1" aria-live="polite">
             {label}
           </Button>
           <WishlistButton slug={product.slug} name={product.name} className="size-14 border border-border bg-surface" />
@@ -120,7 +120,7 @@ export function ProductPurchase() {
               {count > 1 && <span className="ml-2 text-muted-foreground">for {piecesLabel(count)}</span>}
             </p>
           </div>
-          <Button onClick={addToBag} disabled={disabled} tabIndex={showSticky ? 0 : -1} className="shrink-0">
+          <Button onClick={addToCart} disabled={disabled} tabIndex={showSticky ? 0 : -1} className="shrink-0">
             {stickyLabel}
           </Button>
         </div>
