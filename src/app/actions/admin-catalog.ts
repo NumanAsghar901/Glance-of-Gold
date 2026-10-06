@@ -1,22 +1,14 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
 import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin, type ActionState } from "@/lib/admin/auth";
-import { removeStoredImages } from "@/lib/admin/storage";
+import { imageProblem, removeStoredImages, uploadPublicImage } from "@/lib/admin/storage";
 import { randomSuffix, slugify } from "@/lib/slug";
 import { composeVariantName } from "@/lib/variant-name";
 
 const BUCKET = "product-images";
-const IMAGE_TYPES: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/avif": "avif",
-};
-const MAX_IMAGE = 5 * 1024 * 1024;
 
 const idSchema = z.coerce.number().int().positive();
 
@@ -28,18 +20,6 @@ function refreshCatalog() {
 }
 
 // Images -------------------------------------------------------------------------
-
-type Supabase = Awaited<ReturnType<typeof requireAdmin>>["supabase"];
-
-async function uploadImage(supabase: Supabase, folder: string, file: File) {
-  const ext = IMAGE_TYPES[file.type];
-  if (!ext) throw new Error("Images must be JPG, PNG, WebP or AVIF.");
-  if (file.size > MAX_IMAGE) throw new Error(`${file.name} is larger than 5 MB.`);
-  const path = `${folder}/${randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file, { contentType: file.type });
-  if (error) throw new Error(`Could not upload ${file.name}: ${error.message}`);
-  return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-}
 
 function storagePath(url: string) {
   const marker = `/${BUCKET}/`;
@@ -124,10 +104,11 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     return { error: "Two variants are the same. Each needs its own colour, design or size." };
   }
 
+  // Photos are checked before anything is saved: one that is too small would look blurry in the store.
   const images = filesFrom(formData, "images");
   for (const f of images) {
-    if (!IMAGE_TYPES[f.type]) return { error: "Images must be JPG, PNG, WebP or AVIF." };
-    if (f.size > MAX_IMAGE) return { error: `${f.name} is larger than 5 MB.` };
+    const problem = await imageProblem(f, "product");
+    if (problem) return { error: problem };
   }
 
   const row = {
@@ -203,7 +184,7 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     let sort = count ?? 0;
     try {
       for (const file of images) {
-        const url = await uploadImage(supabase, String(productId), file);
+        const url = await uploadPublicImage(supabase, String(productId), file, "product");
         const { error } = await supabase
           .from("product_images")
           .insert({ product_id: productId, url, alt: v.name, sort: sort++ });
@@ -311,7 +292,7 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
   const file = filesFrom(formData, "image")[0];
   if (file) {
     try {
-      imageUrl = await uploadImage(supabase, "categories", file);
+      imageUrl = await uploadPublicImage(supabase, "categories", file, "category");
     } catch (e) {
       return { error: e instanceof Error ? e.message : "Image upload failed." };
     }

@@ -86,7 +86,7 @@ export function HeroBanner({ slides }: { slides: HeroSlide[] }) {
                 fill
                 priority={i === 0}
                 sizes="100vw"
-                quality={75}
+                quality={85}
                 className={cn("object-cover object-[70%_center]", s.mobileImage && "hidden md:block")}
               />
               {s.mobileImage && (
@@ -96,7 +96,7 @@ export function HeroBanner({ slides }: { slides: HeroSlide[] }) {
                   fill
                   priority={i === 0}
                   sizes="100vw"
-                  quality={75}
+                  quality={85}
                   className="object-cover md:hidden"
                 />
               )}

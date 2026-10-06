@@ -171,7 +171,7 @@ export default async function Home() {
               alt="Layered gold necklaces and stacked gold rings on a cream display stand, beside dried flowers"
               fill
               sizes="(min-width: 1024px) 38vw, 90vw"
-              quality={75}
+              quality={85}
               className="object-cover"
             />
             <RevealCover />

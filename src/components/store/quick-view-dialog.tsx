@@ -115,7 +115,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
               alt={image.alt || product.name}
               fill
               sizes="(min-width: 768px) 28rem, 94vw"
-              quality={75}
+              quality={85}
               className="object-cover"
             />
           )}

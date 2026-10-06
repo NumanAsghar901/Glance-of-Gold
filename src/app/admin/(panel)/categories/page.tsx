@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { deleteCategory, saveCategory } from "@/app/actions/admin-catalog";
 import { ActionButton, ActionForm } from "@/components/admin/action-form";
+import { ImageSizeNote, PhotoInput } from "@/components/admin/photo-input";
 import { Check, Field, Input, PageHeader, Panel, Pill, Textarea } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin/auth";
 
@@ -28,20 +29,23 @@ function Fields({ c, prefix }: { c: Cat; prefix: string }) {
         <Field label="Order in menus" htmlFor={`${prefix}-sort`} hint="Lower numbers come first.">
           <Input id={`${prefix}-sort`} name="sort" type="number" min={0} defaultValue={c.sort} />
         </Field>
-        <Field label="Home page photo" htmlFor={`${prefix}-image`} hint="Optional. Shown on the home page category tiles.">
-          <input id={`${prefix}-image`} name="image" type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="w-full border border-border bg-surface px-3 py-2.5 text-sm file:mr-4 file:border-0 file:bg-sand file:px-4 file:py-1.5 file:text-sm" />
+        <Field label="Home page photo" htmlFor={`${prefix}-image`} hint="Optional. Shown on the home page category tiles. Portrait is best, 1200 x 1500 (at least 800 x 1000). Large photos are reduced for you.">
+          <PhotoInput id={`${prefix}-image`} name="image" slot="category" />
         </Field>
       </div>
       {c.image_url && (
-        <div className="flex items-center gap-4 border border-border p-3">
-          <span className="relative h-20 w-16 shrink-0 overflow-hidden bg-sand">
-            <Image src={c.image_url} alt="" fill sizes="64px" quality={60} className="object-cover" />
-          </span>
-          <Check
-            name="removeImage"
-            label="Remove this photo"
-            hint="It is deleted from storage and the home page falls back to the default picture. Upload a new one above to replace it instead."
-          />
+        <div className="space-y-2 border border-border p-3">
+          <div className="flex items-center gap-4">
+            <span className="relative h-20 w-16 shrink-0 overflow-hidden bg-sand">
+              <Image src={c.image_url} alt="" fill sizes="64px" quality={60} className="object-cover" />
+            </span>
+            <Check
+              name="removeImage"
+              label="Remove this photo"
+              hint="It is deleted from storage and the home page falls back to the default picture. Upload a new one above to replace it instead."
+            />
+          </div>
+          <ImageSizeNote url={c.image_url} slot="category" />
         </div>
       )}
       <Check name="isActive" label="Visible in the store" defaultChecked={c.is_active} />

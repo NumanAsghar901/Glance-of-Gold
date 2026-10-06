@@ -230,11 +230,11 @@ export async function saveBanner(_prev: ActionState, formData: FormData): Promis
   let mobileUrl: string | undefined;
   try {
     if (desktopFile instanceof File && desktopFile.size > 0) {
-      imageUrl = await uploadPublicImage(supabase, "banners", desktopFile);
+      imageUrl = await uploadPublicImage(supabase, "banners", desktopFile, "banner-wide");
       uploaded.push(imageUrl);
     }
     if (mobileFile instanceof File && mobileFile.size > 0) {
-      mobileUrl = await uploadPublicImage(supabase, "banners", mobileFile);
+      mobileUrl = await uploadPublicImage(supabase, "banners", mobileFile, "banner-tall");
       uploaded.push(mobileUrl);
     }
   } catch (e) {

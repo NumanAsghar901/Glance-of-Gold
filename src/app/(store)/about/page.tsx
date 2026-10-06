@@ -34,7 +34,7 @@ export default function AboutPage() {
               fill
               priority
               sizes="(min-width: 1024px) 40vw, 90vw"
-              quality={75}
+              quality={85}
               className="object-cover"
             />
           </ArchFrame>

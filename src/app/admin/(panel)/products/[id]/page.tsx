@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { deleteImage, deleteProduct, makePrimaryImage } from "@/app/actions/admin-catalog";
 import { ActionButton } from "@/components/admin/action-form";
+import { ImageSizeNote } from "@/components/admin/photo-input";
 import { ProductForm } from "@/components/admin/product-form";
 import { PageHeader, Panel, Pill } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin/auth";
@@ -58,6 +59,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
                       </span>
                     )}
                   </div>
+                  <ImageSizeNote url={img.url} slot="product" />
                   <div className="flex flex-wrap gap-1.5">
                     {i !== 0 && (
                       <ActionButton action={makePrimaryImage} fields={{ id: img.id, productId: id }}>

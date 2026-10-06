@@ -4,6 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { saveProduct } from "@/app/actions/admin-catalog";
 import { ActionForm } from "@/components/admin/action-form";
+import { PhotoInput } from "@/components/admin/photo-input";
 import { Check, Field, Input, Panel, Select, Textarea } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { composeVariantName } from "@/lib/variant-name";
@@ -328,15 +329,12 @@ export function ProductForm({
       </Panel>
 
       <Panel title={product.id ? "Add more photos" : "Photos"}>
-        <Field label="Upload photos" htmlFor="images" hint="JPG, PNG, WebP or AVIF, up to 5 MB each. The first photo is the main image; the second appears when someone hovers over the product.">
-          <input
-            id="images"
-            name="images"
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/webp,image/avif"
-            className="w-full border border-border bg-surface px-3 py-3 text-sm file:mr-4 file:border-0 file:bg-sand file:px-4 file:py-2 file:text-sm"
-          />
+        <Field
+          label="Upload photos"
+          htmlFor="images"
+          hint="Portrait photos look best, 1200 x 1500 (at least 800 x 1000). Use the original from your camera: big photos are reduced for you, small ones look blurry. The first photo is the main image; the second appears when someone hovers over the product."
+        >
+          <PhotoInput id="images" name="images" slot="product" multiple />
         </Field>
       </Panel>
     </ActionForm>
