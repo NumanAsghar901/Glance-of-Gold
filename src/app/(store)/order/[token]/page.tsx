@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { getPaymentAccounts, getSettings } from "@/lib/data/site";
 import { PAYMENT_LABEL } from "@/lib/email/templates";
 import { getOrder } from "@/lib/orders";
+import { confirmOrderMessage, piecesIn } from "@/lib/order-text";
 import { whatsappLink } from "@/lib/site";
 import { formatPKR } from "@/lib/utils";
 
@@ -29,17 +30,7 @@ export default async function OrderPage({ params }: { params: Promise<{ token: s
   const account = transfer ? accounts.find((a) => a.method === order.payment_method) : undefined;
   const cancelled = order.order_status === "cancelled";
 
-  const waText = [
-    `Hello Glance of Gold, I have placed order ${order.order_number}.`,
-    "",
-    ...order.items.map((i) => `- ${i.name}${i.variant_name && i.variant_name !== "Standard" ? ` (${i.variant_name})` : ""} x${i.qty}${i.is_gift ? " (free gift)" : ""}`),
-    "",
-    `Total: ${formatPKR(order.total)} (${PAYMENT_LABEL[order.payment_method]})`,
-    `Name: ${order.customer_name}`,
-    `Address: ${order.address}, ${order.city}, ${order.province}`,
-    "",
-    "Please confirm my order.",
-  ].join("\n");
+  const waText = confirmOrderMessage(order, PAYMENT_LABEL[order.payment_method]);
 
   return (
     <div className="wrap py-10 lg:py-16">
@@ -166,7 +157,7 @@ export default async function OrderPage({ params }: { params: Promise<{ token: s
           <h2 className="font-heading text-2xl">Order summary</h2>
           <OrderProgress order={order} />
           <OrderLines order={order} />
-          <OrderTotalsList order={order} />
+          <OrderTotalsList order={order} pieces={piecesIn(order.items)} />
           {order.events.length > 1 && (
             <div>
               <h3 className="mb-4 font-heading text-xl">History</h3>

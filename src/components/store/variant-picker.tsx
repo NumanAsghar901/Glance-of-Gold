@@ -1,11 +1,12 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, Minus, Plus } from "lucide-react";
+import { maxQty, variantPrice, type VariantSelection } from "@/components/store/use-variant-selection";
 import { Price } from "@/components/ui/price";
 import type { ProductDetail } from "@/lib/data/types";
+import { piecesLabel } from "@/lib/order-text";
 import { LOW_STOCK_THRESHOLD } from "@/lib/stock";
 import { cn, formatPKR } from "@/lib/utils";
-import { variantPrice, type VariantSelection } from "@/components/store/use-variant-selection";
 
 const chipBase =
   "grid min-h-11 min-w-12 cursor-pointer place-items-center border px-4 py-1.5 text-center text-sm leading-tight transition-[border-color,background-color,transform] duration-200 ease-(--ease-out) active:scale-[0.97] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold";
@@ -31,12 +32,11 @@ export function SelectionPrice({
   sel: VariantSelection;
   className?: string;
 }) {
-  const count = sel.selected.length;
-  if (count > 1) {
+  if (sel.pieces > 1) {
     return (
       <p aria-live="polite" className={cn("flex flex-wrap items-baseline gap-x-2 text-sm", className)}>
         <span className="font-medium text-foreground">{formatPKR(sel.total)}</span>
-        <span className="text-muted-foreground">for {count} pieces</span>
+        <span className="text-muted-foreground">for {piecesLabel(sel.pieces)}</span>
       </p>
     );
   }
@@ -121,7 +121,8 @@ export function VariantPicker({
           <div className="mt-3 flex flex-wrap gap-2">
             {sel.chips.map((v) => {
               const out = v.stock < 1;
-              const on = sel.ids.includes(v.id);
+              const qty = sel.lines.find((l) => l.variant.id === v.id)?.qty ?? 0;
+              const on = qty > 0;
               const price = variantPrice(product, v);
               const label = sel.colourOnly ? (v.color ?? "Standard") : v.label || "Standard";
               return (
@@ -139,6 +140,7 @@ export function VariantPicker({
                     <span className="inline-flex items-center gap-1.5">
                       {sel.multi && on && <Check className="size-3.5" strokeWidth={2} aria-hidden="true" />}
                       {label}
+                      {sel.multi && qty > 1 && <span className="text-xs opacity-80">x{qty}</span>}
                     </span>
                     {price !== product.price && <span className="text-xs opacity-80">{formatPKR(price)}</span>}
                     {out && <span className="sr-only"> (out of stock)</span>}
@@ -148,23 +150,64 @@ export function VariantPicker({
             })}
           </div>
           {sel.multi && (
-            <p className="mt-2 text-xs text-muted-foreground">You can choose more than one. The price adds up.</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Choose one or more, then set how many of each. The price adds up.
+            </p>
           )}
         </fieldset>
       )}
 
-      {sel.multi && sel.selected.length > 0 && (
-        <div aria-live="polite" className="text-sm">
-          <p>{sel.selected.length} selected</p>
-          <ul className="mt-1 space-y-0.5">
-            {sel.selected.map((v) => (
-              <li key={v.id} className="text-muted-foreground">
-                {v.name}
-                {v.stock <= LOW_STOCK_THRESHOLD && <span className="ml-2 text-gold-hover">only {v.stock} left</span>}
-              </li>
-            ))}
+      {sel.multi && sel.lines.length > 0 && (
+        <section aria-label="Your selection" className="text-sm">
+          <p className="mb-2 flex flex-wrap justify-between gap-x-3">
+            <span>Your selection</span>
+            <span className="text-muted-foreground" aria-live="polite">
+              {piecesLabel(sel.pieces)}, {formatPKR(sel.total)}
+            </span>
+          </p>
+          <ul className="divide-y divide-border border border-border bg-surface">
+            {sel.lines.map(({ variant: v, qty }) => {
+              const each = variantPrice(product, v);
+              const atMax = qty >= maxQty(v);
+              return (
+                <li key={v.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 py-3">
+                  <div className="min-w-0">
+                    <p>{v.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatPKR(each)} each
+                      {v.stock <= LOW_STOCK_THRESHOLD && <span className="text-gold-hover">, only {v.stock} left</span>}
+                    </p>
+                  </div>
+                  <div className="ml-auto flex items-center gap-3">
+                    <div className="inline-flex items-center border border-border" role="group" aria-label={`Quantity of ${v.name}`}>
+                      <button
+                        type="button"
+                        onClick={() => sel.setQty(v.id, qty - 1)}
+                        aria-label={qty === 1 ? `Remove ${v.name}` : `Decrease quantity of ${v.name}`}
+                        className="grid size-11 place-items-center transition-colors duration-200 hover:bg-sand active:bg-sand"
+                      >
+                        <Minus className="size-4" strokeWidth={1.5} />
+                      </button>
+                      <span className="min-w-8 text-center tabular-nums" aria-live="polite">
+                        {qty}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => sel.setQty(v.id, qty + 1)}
+                        disabled={atMax}
+                        aria-label={`Increase quantity of ${v.name}`}
+                        className="grid size-11 place-items-center transition-colors duration-200 hover:bg-sand active:bg-sand disabled:opacity-40 disabled:hover:bg-transparent"
+                      >
+                        <Plus className="size-4" strokeWidth={1.5} />
+                      </button>
+                    </div>
+                    <p className="min-w-[4.5rem] text-right font-medium">{formatPKR(each * qty)}</p>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
-        </div>
+        </section>
       )}
 
       {!sel.multi && lowSelected.length > 0 && (

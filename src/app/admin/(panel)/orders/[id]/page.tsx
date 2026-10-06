@@ -13,6 +13,7 @@ import { ActionButton, ActionForm } from "@/components/admin/action-form";
 import { Check, Field, Input, orderTone, paymentTone, Panel, Pill, Select } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin/auth";
 import { PAYMENT_LABEL } from "@/lib/email/templates";
+import { messageToCustomer, piecesIn, piecesLabel } from "@/lib/order-text";
 import { whatsappLink } from "@/lib/site";
 import { formatPKR } from "@/lib/utils";
 
@@ -45,7 +46,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   );
 
   const customerWa = whatsappLink(
-    `Hello ${order.customer_name}, this is Glance of Gold regarding your order ${order.order_number}.`,
+    messageToCustomer({ ...order, items: items ?? [] }, PAYMENT_LABEL[order.payment_method]),
     order.phone.replace(/^0/, "92"),
   );
   const cancelled = order.order_status === "cancelled";
@@ -77,9 +78,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 <li key={i.id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                   <div className="min-w-0">
                     <p className="text-sm">{i.name}</p>
+                    {i.variant_name && i.variant_name !== "Standard" && <p className="text-xs text-muted-foreground">{i.variant_name}</p>}
                     <p className="text-xs text-muted-foreground">
-                      {i.variant_name && i.variant_name !== "Standard" ? `${i.variant_name}, ` : ""}Qty {i.qty}
-                      {i.is_gift ? ", free gift" : ""}
+                      Qty {i.qty}
+                      {i.is_gift ? ", free gift" : `, ${formatPKR(i.unit_price)} each`}
                     </p>
                   </div>
                   <p className="shrink-0 text-sm">{i.is_gift ? "Free" : formatPKR(i.unit_price * i.qty)}</p>
@@ -87,7 +89,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               ))}
             </ul>
             <dl className="mt-5 space-y-1.5 border-t border-border pt-4 text-sm">
-              <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd>{formatPKR(order.subtotal)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal ({piecesLabel(piecesIn(items ?? []))})</dt><dd>{formatPKR(order.subtotal)}</dd></div>
               {order.discount > 0 && (
                 <div className="flex justify-between"><dt className="text-muted-foreground">Discount {order.coupon_code && `(${order.coupon_code})`}</dt><dd>-{formatPKR(order.discount)}</dd></div>
               )}

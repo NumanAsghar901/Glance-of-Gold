@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import type { OrderView } from "@/lib/orders";
 import { PAYMENT_LABEL } from "@/lib/email/templates";
+import { piecesLabel } from "@/lib/order-text";
 import { cn, formatPKR } from "@/lib/utils";
 
 export const STATUS_LABEL: Record<OrderView["order_status"], string> = {
@@ -78,9 +79,10 @@ export function OrderLines({ order }: { order: Pick<OrderView, "items"> }) {
         <li key={idx} className="flex items-center gap-4 py-4 first:pt-0">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm">{i.name}</p>
+            {i.variant_name && i.variant_name !== "Standard" && <p className="text-xs text-muted-foreground">{i.variant_name}</p>}
             <p className="text-xs text-muted-foreground">
-              {i.variant_name && i.variant_name !== "Standard" ? `${i.variant_name}, ` : ""}Qty {i.qty}
-              {i.is_gift && <span className="text-gold-hover">, free gift</span>}
+              Qty {i.qty}
+              {i.is_gift ? <span className="text-gold-hover">, free gift</span> : `, ${formatPKR(i.unit_price)} each`}
             </p>
           </div>
           <p className="text-sm">{i.is_gift ? "Free" : formatPKR(i.unit_price * i.qty)}</p>
@@ -92,13 +94,16 @@ export function OrderLines({ order }: { order: Pick<OrderView, "items"> }) {
 
 export function OrderTotalsList({
   order,
+  pieces,
 }: {
   order: Pick<OrderView, "subtotal" | "discount" | "coupon_code" | "shipping_fee" | "total" | "payment_method">;
+  /** Pieces bought, shown beside the subtotal when given. */
+  pieces?: number;
 }) {
   return (
     <dl className="space-y-2 text-sm">
       <div className="flex justify-between">
-        <dt className="text-muted-foreground">Subtotal</dt>
+        <dt className="text-muted-foreground">Subtotal{pieces ? ` (${piecesLabel(pieces)})` : ""}</dt>
         <dd>{formatPKR(order.subtotal)}</dd>
       </div>
       {order.discount > 0 && (

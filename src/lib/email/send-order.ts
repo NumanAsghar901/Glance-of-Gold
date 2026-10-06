@@ -1,8 +1,9 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 import { getSettings } from "@/lib/data/site";
-import { customerEmail, ownerEmail, statusEmail, type StatusKind } from "@/lib/email/templates";
+import { customerEmail, ownerEmail, PAYMENT_LABEL, statusEmail, type StatusKind } from "@/lib/email/templates";
 import { getOrder } from "@/lib/orders";
+import { confirmOrderMessage, messageToCustomer } from "@/lib/order-text";
 import { site, whatsappLink } from "@/lib/site";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -97,10 +98,7 @@ export async function sendOrderEmails(orderId: number, only?: "customer" | "owne
           order.email,
           customerEmail(order, {
             ...base,
-            whatsappUrl: whatsappLink(
-              `Hello Glance of Gold, I am confirming my order ${order.order_number}.`,
-              settings.whatsapp,
-            ),
+            whatsappUrl: whatsappLink(confirmOrderMessage(order, PAYMENT_LABEL[order.payment_method]), settings.whatsapp),
           }),
         ),
       );
@@ -117,10 +115,7 @@ export async function sendOrderEmails(orderId: number, only?: "customer" | "owne
             to,
             ownerEmail(order, {
               ...base,
-              whatsappCustomerUrl: whatsappLink(
-                `Hello ${order.customer_name}, this is Glance of Gold regarding your order ${order.order_number}.`,
-                customerWa,
-              ),
+              whatsappCustomerUrl: whatsappLink(messageToCustomer(order, PAYMENT_LABEL[order.payment_method]), customerWa),
             }),
           ),
         );

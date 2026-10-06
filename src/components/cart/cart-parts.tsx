@@ -8,6 +8,7 @@ import { getCartSnapshot, previewCoupon } from "@/app/actions/cart";
 import { useStore } from "@/components/store/store-provider";
 import { Button } from "@/components/ui/button";
 import { cartActions, useCart, type CartLine } from "@/lib/cart-store";
+import { piecesLabel } from "@/lib/order-text";
 import { amountToFreeShipping, shippingFor } from "@/lib/pricing";
 import { cn, formatPKR } from "@/lib/utils";
 
@@ -111,6 +112,7 @@ export function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?
             {line.variantName !== "Standard" && (
               <p className="mt-0.5 text-xs text-muted-foreground">{line.variantName}</p>
             )}
+            {line.qty > 1 && <p className="mt-0.5 text-xs text-muted-foreground">{formatPKR(line.price)} each</p>}
           </div>
           <button
             type="button"
@@ -321,7 +323,7 @@ export function CartTotals({ className }: { className?: string }) {
   return (
     <dl className={cn("space-y-2 text-sm", className)}>
       <div className="flex justify-between">
-        <dt className="text-muted-foreground">Subtotal</dt>
+        <dt className="text-muted-foreground">Subtotal ({piecesLabel(t.count)})</dt>
         <dd>{formatPKR(t.subtotal)}</dd>
       </div>
       {t.discount > 0 && (

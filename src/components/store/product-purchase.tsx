@@ -9,6 +9,7 @@ import { variantPrice } from "@/components/store/use-variant-selection";
 import { choiceNoun, VariantPicker } from "@/components/store/variant-picker";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
+import { piecesLabel, quantityLine } from "@/lib/order-text";
 import { site, whatsappLink } from "@/lib/site";
 import { cn, formatPKR } from "@/lib/utils";
 
@@ -19,7 +20,7 @@ export function ProductPurchase() {
   const [showSticky, setShowSticky] = useState(false);
   const cta = useRef<HTMLDivElement>(null);
 
-  const count = sel.selected.length;
+  const count = sel.pieces;
   const needsChoice = sel.hasChoice && count === 0;
   const noun = choiceNoun(product, sel);
   const total = count > 0 ? sel.total : product.price;
@@ -66,7 +67,7 @@ export function ProductPurchase() {
     </>
   ) : (
     <>
-      <ShoppingBag /> {count > 1 ? `Add ${count} to bag` : "Add to bag"}
+      <ShoppingBag /> {count > 1 ? `Add ${piecesLabel(count)} to bag` : "Add to bag"}
     </>
   );
   const stickyLabel = sel.soldOut ? "Out of stock" : needsChoice ? `Select ${noun}` : added ? "Added" : count > 1 ? `Add ${count}` : "Add to bag";
@@ -75,8 +76,8 @@ export function ProductPurchase() {
   const waText = [
     "Hello Glance of Gold, I would like to order:",
     product.name,
-    ...sel.selected.map((v) => `- ${v.name}, ${formatPKR(variantPrice(product, v))}`),
-    `Total: ${formatPKR(total)}`,
+    ...(sel.hasChoice ? sel.lines.map(({ variant: v, qty }) => quantityLine(v.name, qty, variantPrice(product, v))) : []),
+    `Total${count > 0 ? ` (${piecesLabel(count)})` : ""}: ${formatPKR(total)}`,
     `${site.url}/product/${product.slug}`,
   ].join("\n");
 
@@ -116,7 +117,7 @@ export function ProductPurchase() {
             <p className="truncate font-heading text-lg leading-tight">{product.name}</p>
             <p className="text-sm">
               {formatPKR(total)}
-              {count > 1 && <span className="ml-2 text-muted-foreground">for {count} pieces</span>}
+              {count > 1 && <span className="ml-2 text-muted-foreground">for {piecesLabel(count)}</span>}
             </p>
           </div>
           <Button onClick={addToBag} disabled={disabled} tabIndex={showSticky ? 0 : -1} className="shrink-0">

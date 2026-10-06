@@ -15,6 +15,7 @@ import {
 } from "@/components/cart/cart-parts";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
+import { piecesLabel } from "@/lib/order-text";
 import { PROVINCES } from "@/lib/pakistan";
 import { cn, formatPKR, uuid } from "@/lib/utils";
 
@@ -242,6 +243,7 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
         <div className="space-y-6 border border-border bg-surface p-5 sm:p-7 lg:sticky lg:top-28">
           <h2 id="summary-heading" className="font-heading text-2xl">
             Order summary
+            <span className="ml-2 font-sans text-sm text-muted-foreground">({piecesLabel(cart.count)})</span>
           </h2>
           <ul className="divide-y divide-border">
             {cart.lines.map((l) => (
@@ -253,8 +255,11 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm">{l.name}</p>
                   {l.variantName !== "Standard" && <p className="text-xs text-muted-foreground">{l.variantName}</p>}
+                  <p className="text-xs text-muted-foreground">
+                    Qty {l.qty}, {formatPKR(l.price)} each
+                  </p>
                 </div>
-                <p className="text-sm">{formatPKR(l.price * l.qty)}</p>
+                <p className="shrink-0 text-sm">{formatPKR(l.price * l.qty)}</p>
               </li>
             ))}
             {cart.gift && (

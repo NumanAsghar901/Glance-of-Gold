@@ -12,6 +12,7 @@ import {
   StatusBadge,
 } from "@/components/order/order-parts";
 import { Button } from "@/components/ui/button";
+import { piecesIn } from "@/lib/order-text";
 
 const inputClass =
   "h-12 w-full border border-border bg-surface px-4 text-base transition-colors duration-200 placeholder:text-muted-foreground hover:border-gold focus-visible:border-gold sm:text-sm";
@@ -80,7 +81,7 @@ export function TrackView() {
           )}
 
           <OrderLines order={order} />
-          <OrderTotalsList order={order} />
+          <OrderTotalsList order={order} pieces={piecesIn(order.items)} />
 
           <div>
             <h2 className="mb-4 font-heading text-xl">History</h2>

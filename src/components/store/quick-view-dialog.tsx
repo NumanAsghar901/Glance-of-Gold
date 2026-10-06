@@ -10,6 +10,7 @@ import { useVariantSelection } from "@/components/store/use-variant-selection";
 import { choiceNoun, SelectionPrice, VariantPicker } from "@/components/store/variant-picker";
 import { Button } from "@/components/ui/button";
 import { StockTag } from "@/components/ui/stock-tag";
+import { piecesLabel } from "@/lib/order-text";
 import type { ProductDetail } from "@/lib/data/types";
 import { quickView, useQuickView } from "@/lib/quick-view-store";
 import { cn } from "@/lib/utils";
@@ -93,7 +94,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
   const [imageIndex, setImageIndex] = useState(0);
   const [added, setAdded] = useState(false);
 
-  const count = sel.selected.length;
+  const count = sel.pieces;
   const needsChoice = sel.hasChoice && count === 0;
   const image = product.images[imageIndex];
 
@@ -167,7 +168,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
               </>
             ) : (
               <>
-                <ShoppingBag /> {count > 1 ? `Add ${count} to bag` : "Add to bag"}
+                <ShoppingBag /> {count > 1 ? `Add ${piecesLabel(count)} to bag` : "Add to bag"}
               </>
             )}
           </Button>

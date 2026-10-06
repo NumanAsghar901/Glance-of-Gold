@@ -1,3 +1,4 @@
+import { orderBreakdownLines, piecesIn, piecesLabel } from "@/lib/order-text";
 import { formatPKR } from "@/lib/utils";
 
 /**
@@ -79,6 +80,10 @@ function itemsTable(o: EmailOrder) {
         i.variant_name && i.variant_name !== "Standard"
           ? `<br><span style="color:${C.muted};font-size:12px;">${esc(i.variant_name)}</span>`
           : ""
+      }${
+        !i.is_gift && i.qty > 1
+          ? `<br><span style="color:${C.muted};font-size:12px;">${formatPKR(i.unit_price)} each</span>`
+          : ""
       }${i.is_gift ? `<br><span style="color:${C.goldHover};font-size:12px;">Free gift</span>` : ""}</td>
 <td align="center" style="padding:10px 8px;border-bottom:1px solid ${C.sand};font-size:14px;">${i.qty}</td>
 <td align="right" style="padding:10px 0;border-bottom:1px solid ${C.sand};font-size:14px;">${i.is_gift ? "Free" : formatPKR(i.unit_price * i.qty)}</td></tr>`,
@@ -94,7 +99,7 @@ function itemsTable(o: EmailOrder) {
 <td align="right" style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${C.muted};padding-bottom:8px;border-bottom:1px solid ${C.gold};">Price</td></tr>
 ${rows}</table>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;">
-${line("Subtotal", formatPKR(o.subtotal))}
+${line(`Subtotal (${piecesLabel(piecesIn(o.items))})`, formatPKR(o.subtotal))}
 ${o.discount > 0 ? line(`Discount${o.coupon_code ? ` (${esc(o.coupon_code)})` : ""}`, `-${formatPKR(o.discount)}`) : ""}
 ${line("Delivery", o.shipping_fee === 0 ? "Free" : formatPKR(o.shipping_fee))}
 <tr><td colspan="2" style="border-top:1px solid ${C.gold};padding-top:8px;"></td></tr>
@@ -139,8 +144,9 @@ ${button(confirmUrl, transfer ? "Complete payment" : "View your order")}
     text: [
       `Thank you, ${o.customer_name}.`,
       `We have received your order ${o.order_number}.`,
-      ...o.items.map((i) => `- ${i.name}${i.variant_name && i.variant_name !== "Standard" ? ` (${i.variant_name})` : ""} x${i.qty}${i.is_gift ? " (free gift)" : ""}`),
-      `Total: ${formatPKR(o.total)} (${PAYMENT_LABEL[o.payment_method]})`,
+      "",
+      ...orderBreakdownLines(o, PAYMENT_LABEL[o.payment_method]),
+      "",
       `View your order: ${confirmUrl}`,
       `Helpline: ${ctx.helpline}`,
     ].join("\n"),
@@ -167,7 +173,10 @@ ${button(adminUrl, "Open in admin")}
       `New order ${o.order_number} - ${formatPKR(o.total)} (${PAYMENT_LABEL[o.payment_method]})`,
       `${o.customer_name}, ${o.phone}`,
       `${o.address}, ${o.city}, ${o.province}`,
-      ...o.items.map((i) => `- ${i.name} x${i.qty}${i.is_gift ? " (gift)" : ""}`),
+      ...(o.notes ? [`Note: ${o.notes}`] : []),
+      "",
+      ...orderBreakdownLines(o, PAYMENT_LABEL[o.payment_method]),
+      "",
       `Admin: ${adminUrl}`,
     ].join("\n"),
   };
@@ -269,8 +278,7 @@ ${button(orderUrl, "View your order")}
         ]
       : []),
     "",
-    ...o.items.map((i) => `- ${i.name}${i.variant_name && i.variant_name !== "Standard" ? ` (${i.variant_name})` : ""} x${i.qty}${i.is_gift ? " (free gift)" : ""}`),
-    `Total: ${formatPKR(o.total)} (${PAYMENT_LABEL[o.payment_method]})`,
+    ...orderBreakdownLines(o, PAYMENT_LABEL[o.payment_method]),
     "",
     `View your order: ${orderUrl}`,
     `Helpline: ${ctx.helpline}`,
