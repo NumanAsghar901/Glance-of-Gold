@@ -22,7 +22,8 @@ const schema = z.object({
     .optional()
     .transform((v) => (v ? v : undefined)),
   rating: z.coerce.number().int().min(1, "Choose a star rating").max(5, "Choose a star rating"),
-  comment: z.string().trim().min(10, "Write at least a short sentence").max(600, "Please keep it under 600 characters"),
+  // Any length is welcome, even a single word. Only an empty review is turned away.
+  comment: z.string().trim().min(1, "Please write a few words").max(600, "Please keep it under 600 characters"),
 });
 
 export async function submitReview(_prev: ReviewState, formData: FormData): Promise<ReviewState> {
@@ -58,5 +59,5 @@ export async function submitReview(_prev: ReviewState, formData: FormData): Prom
   // The rating summary and sold count change, so refresh the cached product data and review lists.
   updateTag("catalog");
   updateTag("reviews");
-  return { ok: "Thank you. Your review is now live." };
+  return { ok: "Thank you for sharing your thoughts. We truly appreciate your review." };
 }
