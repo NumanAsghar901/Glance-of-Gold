@@ -4,17 +4,14 @@ export type ProductImage = {
   blur_data_url: string | null;
 };
 
-/** What the variants of a product are called on its page. */
-export type OptionLabel = "Size" | "Design" | "Option";
-
 export type ProductVariant = {
   id: number;
-  /** Full label used in the bag and on orders, for example "Gold, Size 6". */
+  /** Full label used in the bag and on orders, for example "Gold, Design A, Size 6". */
   name: string;
-  /** Colour of this variant, when the product comes in colours. */
+  /** What kind of piece this variant is. Each is optional, and each gets its own picker on the product page. */
   color: string | null;
-  /** The part of the name that is not the colour, for example "Size 6". Empty for a colour-only variant. */
-  label: string;
+  design: string | null;
+  size: string | null;
   stock: number;
   priceOverride: number | null;
 };
@@ -44,8 +41,7 @@ export type ProductDetail = ProductSummary & {
   material: string | null;
   tags: string[];
   variants: ProductVariant[];
-  /** What the variants are called, and whether a customer may pick several at once. */
-  optionLabel: OptionLabel;
+  /** Whether a customer may pick several designs or sizes at once, each with its own quantity. */
   allowMultiple: boolean;
 };
 

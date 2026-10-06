@@ -22,7 +22,7 @@ export function ProductPurchase() {
 
   const count = sel.pieces;
   const needsChoice = sel.hasChoice && count === 0;
-  const noun = choiceNoun(product, sel);
+  const noun = choiceNoun(sel);
   const total = count > 0 ? sel.total : product.price;
 
   useEffect(() => {

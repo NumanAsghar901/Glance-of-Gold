@@ -606,33 +606,39 @@ export type Database = {
       product_variants: {
         Row: {
           color: string | null
+          design: string | null
           id: number
           is_active: boolean
           name: string
           price_override: number | null
           product_id: number
+          size: string | null
           sku: string
           sort: number
           stock: number
         }
         Insert: {
           color?: string | null
+          design?: string | null
           id?: never
           is_active?: boolean
           name?: string
           price_override?: number | null
           product_id: number
+          size?: string | null
           sku: string
           sort?: number
           stock?: number
         }
         Update: {
           color?: string | null
+          design?: string | null
           id?: never
           is_active?: boolean
           name?: string
           price_override?: number | null
           product_id?: number
+          size?: string | null
           sku?: string
           sort?: number
           stock?: number

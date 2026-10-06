@@ -9,7 +9,6 @@ import { ActionButton } from "@/components/admin/action-form";
 import { ProductForm } from "@/components/admin/product-form";
 import { PageHeader, Panel, Pill } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin/auth";
-import { variantLabel } from "@/lib/variant-name";
 
 export const metadata: Metadata = { title: "Edit product" };
 
@@ -19,13 +18,16 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   if (!parsed.success) notFound();
   const id = parsed.data;
 
-  const [{ data: product }, { data: categories }, { data: images }, { data: variants }] = await Promise.all([
+  const [{ data: product }, { data: categories }, { data: images }, { data: variants }, { error: attrsMissing }] = await Promise.all([
     supabase.from("products").select("*").eq("id", id).maybeSingle(),
     supabase.from("categories").select("id, name").order("sort"),
     supabase.from("product_images").select("*").eq("product_id", id).order("sort").order("id"),
     supabase.from("product_variants").select("*").eq("product_id", id).order("sort").order("id"),
+    // Fails until the design and size migration has been run; the form then explains what to do.
+    supabase.from("product_variants").select("design").limit(1),
   ]);
   if (!product) notFound();
+  const attrsAvailable = !attrsMissing;
 
   return (
     <>
@@ -76,8 +78,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
         <ProductForm
           categories={categories ?? []}
-          // select("*") only returns the new columns once the options migration has been run.
-          optionsAvailable={"allow_multiple" in product}
+          attrsAvailable={attrsAvailable}
           product={{
             id: product.id,
             name: product.name,
@@ -90,12 +91,14 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
             tags: product.tags.join(", "),
             isActive: product.is_active,
             isFeatured: product.is_featured,
-            optionLabel: product.option_label === "Size" || product.option_label === "Design" ? product.option_label : "Option",
             allowMultiple: product.allow_multiple ?? false,
             variants: (variants ?? []).map((v) => ({
               id: v.id,
-              name: variantLabel(v.name, v.color),
-              color: v.color ?? "",
+              // Before the design and size migration the form only has one name box, so it holds the full name.
+              name: attrsAvailable ? "" : v.name,
+              color: attrsAvailable ? (v.color ?? "") : "",
+              design: attrsAvailable ? (v.design ?? "") : "",
+              size: attrsAvailable ? (v.size ?? "") : "",
               sku: v.sku,
               stock: v.stock,
               priceOverride: v.price_override,

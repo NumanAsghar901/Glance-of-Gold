@@ -2,7 +2,6 @@ import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import type {
   Category,
-  OptionLabel,
   ProductDetail,
   ProductImage,
   ProductSummary,
@@ -37,34 +36,57 @@ type RawProduct = {
   allow_multiple?: boolean | null;
   category: { name: string; slug: string } | null;
   images: (ProductImage & { sort: number })[];
-  variants: { id: number; name: string; color?: string | null; stock: number; price_override: number | null; sort: number }[];
+  variants: {
+    id: number;
+    name: string;
+    color?: string | null;
+    design?: string | null;
+    size?: string | null;
+    stock: number;
+    price_override: number | null;
+    sort: number;
+  }[];
 };
 
 const BASE_COLUMNS = "id, slug, name, price, compare_at_price, is_featured";
 const STATS = "rating_avg, rating_count, sold_count";
-const relations = (options: boolean) =>
-  `images:product_images(url, alt, sort, blur_data_url), variants:product_variants(id, name, stock, price_override, sort${options ? ", color" : ""})`;
+const relations = (options: boolean, attrs: boolean) =>
+  `images:product_images(url, alt, sort, blur_data_url), variants:product_variants(id, name, stock, price_override, sort${options ? ", color" : ""}${attrs ? ", design, size" : ""})`;
 
 /**
- * Some columns come from later migrations (ratings and sold counts, then colours and options). Until a
- * migration has been run on the database the shop must keep working, so the queries leave those
- * columns out. A missing column is re-checked at most every 30 seconds.
+ * Some columns come from later migrations (ratings and sold counts, then colours and options, then
+ * separate designs and sizes). Until a migration has been run on the database the shop must keep working,
+ * so the queries leave those columns out. A missing column is re-checked at most every 30 seconds.
  */
 const probes = new Map<string, { ok: boolean; at: number }>();
-async function columnAvailable(key: string, column: string): Promise<boolean> {
+async function columnAvailable(key: string, table: "products" | "product_variants", column: string): Promise<boolean> {
   const hit = probes.get(key);
   if (hit && (hit.ok || Date.now() - hit.at < 30_000)) return hit.ok;
-  const { error } = await createPublicClient().from("products").select(column).limit(1);
+  const { error } = await createPublicClient().from(table).select(column).limit(1);
   probes.set(key, { ok: !error, at: Date.now() });
   return !error;
 }
-const statsAvailable = () => columnAvailable("stats", "sold_count");
-const optionsAvailable = () => columnAvailable("options", "allow_multiple");
+const statsAvailable = () => columnAvailable("stats", "products", "sold_count");
+const optionsAvailable = () => columnAvailable("options", "products", "allow_multiple");
+const attrsAvailable = () => columnAvailable("attrs", "product_variants", "design");
 
-const summarySelect = (inner: boolean, stats: boolean, options = false) =>
-  `${BASE_COLUMNS}${stats ? `, ${STATS}` : ""}, category:categories${inner ? "!inner" : ""}(name, slug), ${relations(options)}`;
-const detailSelect = (stats: boolean, options: boolean) =>
-  `${summarySelect(false, stats, options)}, description, material, tags${options ? ", option_label, allow_multiple" : ""}`;
+const summarySelect = (inner: boolean, stats: boolean, options = false, attrs = false) =>
+  `${BASE_COLUMNS}${stats ? `, ${STATS}` : ""}, category:categories${inner ? "!inner" : ""}(name, slug), ${relations(options, attrs)}`;
+// option_label is only needed to sort older products (saved before designs and sizes had their own columns).
+const detailSelect = (stats: boolean, options: boolean, attrs: boolean) =>
+  `${summarySelect(false, stats, options, attrs)}, description, material, tags${options ? `, allow_multiple${attrs ? "" : ", option_label"}` : ""}`;
+
+/**
+ * Products saved before designs and sizes had their own columns kept both in one label. Same rules as the
+ * database migration: a label starting with "Size" is a size, a product labelled Design holds designs,
+ * anything else is a size, and "Standard" means nothing.
+ */
+function legacyAttributes(name: string, color: string | null, optionLabel: string | null | undefined) {
+  const label = variantLabel(name, color);
+  if (!label || label.toLowerCase() === "standard") return { design: null, size: null };
+  const isDesign = optionLabel === "Design" && !/^size/i.test(label);
+  return isDesign ? { design: label, size: null } : { design: null, size: label };
+}
 
 function toSummary(r: RawProduct): ProductSummary {
   const images = [...r.images]
@@ -94,24 +116,24 @@ function toSummary(r: RawProduct): ProductSummary {
 }
 
 function toDetail(r: RawProduct): ProductDetail {
+  // The design and size columns are only present once their migration has been run.
+  const hasAttrs = r.variants.some((v) => "design" in v || "size" in v);
   const variants: ProductVariant[] = [...r.variants]
     .sort((a, b) => a.sort - b.sort)
     .map((v) => ({
       id: v.id,
       name: v.name,
       color: v.color ?? null,
-      label: variantLabel(v.name, v.color),
+      ...(hasAttrs ? { design: v.design ?? null, size: v.size ?? null } : legacyAttributes(v.name, v.color ?? null, r.option_label)),
       stock: v.stock,
       priceOverride: v.price_override,
     }));
-  const optionLabel: OptionLabel = r.option_label === "Size" || r.option_label === "Design" ? r.option_label : "Option";
   return {
     ...toSummary(r),
     description: r.description ?? null,
     material: r.material ?? null,
     tags: r.tags ?? [],
     variants,
-    optionLabel,
     allowMultiple: r.allow_multiple ?? false,
   };
 }
@@ -184,12 +206,12 @@ export const getProducts = unstable_cache(
 export const getProduct = unstable_cache(
   async (slug: string): Promise<ProductDetail | null> => {
     const supabase = createPublicClient();
-    const [stats, options] = await Promise.all([statsAvailable(), optionsAvailable()]);
-    const { data, error } = await supabase.from("products").select(detailSelect(stats, options)).eq("slug", slug).maybeSingle();
+    const [stats, options, attrs] = await Promise.all([statsAvailable(), optionsAvailable(), attrsAvailable()]);
+    const { data, error } = await supabase.from("products").select(detailSelect(stats, options, attrs)).eq("slug", slug).maybeSingle();
     if (error) throw new Error(`getProduct: ${error.message}`);
     return data ? toDetail(data as unknown as RawProduct) : null;
   },
-  ["product-v2"],
+  ["product-v3"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 

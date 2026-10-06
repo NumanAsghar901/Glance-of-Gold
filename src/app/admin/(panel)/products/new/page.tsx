@@ -9,10 +9,10 @@ export const metadata: Metadata = { title: "Add product" };
 
 export default async function NewProductPage() {
   const { supabase } = await requireAdmin();
-  const [{ data: categories }, { error: optionsMissing }] = await Promise.all([
+  const [{ data: categories }, { error: attrsMissing }] = await Promise.all([
     supabase.from("categories").select("id, name").order("sort"),
-    // Fails until the options migration has been run; the form then explains what to do.
-    supabase.from("products").select("allow_multiple").limit(1),
+    // Fails until the design and size migration has been run; the form then explains what to do.
+    supabase.from("product_variants").select("design").limit(1),
   ]);
 
   return (
@@ -23,7 +23,7 @@ export default async function NewProductPage() {
       <PageHeader title="Add product" description="Add the details, set the stock and upload photos. You can edit everything later." />
       <ProductForm
         categories={categories ?? []}
-        optionsAvailable={!optionsMissing}
+        attrsAvailable={!attrsMissing}
         product={{
           name: "",
           slug: "",
@@ -35,7 +35,6 @@ export default async function NewProductPage() {
           tags: "",
           isActive: true,
           isFeatured: false,
-          optionLabel: "Option",
           allowMultiple: false,
           variants: [],
         }}

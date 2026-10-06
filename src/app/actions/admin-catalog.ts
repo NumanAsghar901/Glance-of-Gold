@@ -55,9 +55,11 @@ function filesFrom(formData: FormData, key: string) {
 
 const variantSchema = z.object({
   id: z.number().int().positive().nullable().optional(),
-  // The size, design or option. May be empty when the variant is only a colour; empty on its own means Standard.
-  name: z.string().trim().max(40),
+  // The full name. Only sent by the older form (before designs and sizes had their own boxes); otherwise it is built from the three below.
+  name: z.string().trim().max(100).optional(),
   color: z.string().trim().max(30).nullable().optional(),
+  design: z.string().trim().max(30).nullable().optional(),
+  size: z.string().trim().max(30).nullable().optional(),
   sku: z.string().trim().max(40).optional(),
   stock: z.coerce.number().int().min(0, "Stock cannot be negative").max(100000),
   priceOverride: z.coerce.number().int().min(0).max(10_000_000).nullable().optional(),
@@ -77,7 +79,6 @@ const productSchema = z.object({
   isActive: z.boolean(),
   isFeatured: z.boolean(),
   variants: z.array(variantSchema).min(1, "Add at least one variant").max(40),
-  optionLabel: z.enum(["Size", "Design", "Option"]).optional(),
   allowMultiple: z.boolean().optional(),
 });
 
@@ -104,9 +105,8 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     isActive: formData.get("isActive") === "on",
     isFeatured: formData.get("isFeatured") === "on",
     variants: variantsRaw,
-    // The form only sends these once the options migration has been run, so older databases still save.
-    optionLabel: formData.get("optionLabel") || undefined,
-    allowMultiple: formData.has("optionLabel") ? formData.get("allowMultiple") === "on" : undefined,
+    // The form only sends the marker "attrs" once the design and size migration has been run, so older databases still save.
+    allowMultiple: formData.has("attrs") ? formData.get("allowMultiple") === "on" : undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check the product details." };
   const v = parsed.data;
@@ -115,11 +115,13 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     return { error: "The original price must be higher than the selling price, or left empty." };
   }
 
-  // Colour, size/design label and "select several" exist once the options migration has been run.
-  const withOptions = v.optionLabel !== undefined;
-  const variantNames = v.variants.map((x) => composeVariantName(withOptions ? x.color : null, x.name));
+  // Colour, design, size and "select several" exist once the design and size migration has been run.
+  const withAttrs = formData.has("attrs");
+  const variantNames = v.variants.map((x) =>
+    withAttrs ? composeVariantName({ color: x.color, design: x.design, size: x.size }) : composeVariantName({ size: x.name }),
+  );
   if (new Set(variantNames.map((n) => n.toLowerCase())).size !== variantNames.length) {
-    return { error: "Each variant needs its own name, or its own colour and name together." };
+    return { error: "Two variants are the same. Each needs its own colour, design or size." };
   }
 
   const images = filesFrom(formData, "images");
@@ -141,7 +143,7 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
       .filter(Boolean),
     is_active: v.isActive,
     is_featured: v.isFeatured,
-    ...(withOptions ? { option_label: v.optionLabel, allow_multiple: v.allowMultiple ?? false } : {}),
+    ...(withAttrs ? { allow_multiple: v.allowMultiple ?? false } : {}),
   };
 
   // Create or update the product, retrying once with a different slug if it is taken.
@@ -175,7 +177,9 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     const fullName = variantNames[i];
     const fields = {
       name: fullName,
-      ...(withOptions ? { color: x.color?.trim() || null } : {}),
+      ...(withAttrs
+        ? { color: x.color?.trim() || null, design: x.design?.trim() || null, size: x.size?.trim() || null }
+        : {}),
       stock: x.stock,
       price_override: x.priceOverride ?? null,
       is_active: x.isActive,

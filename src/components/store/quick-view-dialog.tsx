@@ -161,7 +161,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
             {sel.soldOut ? (
               "Out of stock"
             ) : needsChoice ? (
-              `Select ${choiceNoun(product, sel)}`
+              `Select ${choiceNoun(sel)}`
             ) : added ? (
               <>
                 <Check /> Added to cart

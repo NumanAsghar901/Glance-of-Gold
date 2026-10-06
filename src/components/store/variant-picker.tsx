@@ -1,7 +1,12 @@
 "use client";
 
 import { Check, Minus, Plus } from "lucide-react";
-import { maxQty, variantPrice, type VariantSelection } from "@/components/store/use-variant-selection";
+import {
+  maxQty,
+  variantPrice,
+  type DimInfo,
+  type VariantSelection,
+} from "@/components/store/use-variant-selection";
 import { Price } from "@/components/ui/price";
 import type { ProductDetail } from "@/lib/data/types";
 import { piecesLabel } from "@/lib/order-text";
@@ -14,15 +19,14 @@ const chipOn = "border-foreground bg-foreground text-background";
 const chipOff = "border-border bg-surface hover:border-gold";
 const chipOut = "cursor-not-allowed text-muted-foreground line-through opacity-50 hover:border-border";
 
-/** "a size", "a design", "a colour" or "an option": for button text like "Select a size". */
-export function choiceNoun(product: ProductDetail, sel: VariantSelection) {
-  if (sel.colourOnly) return "a colour";
-  if (product.optionLabel === "Size") return "a size";
-  if (product.optionLabel === "Design") return "a design";
-  return "an option";
+const noun = (d: DimInfo["dim"]) => (d === "colour" ? "a colour" : d === "design" ? "a design" : "a size");
+
+/** "a size", "a design" or "a colour": for button text like "Select a size". */
+export function choiceNoun(sel: VariantSelection) {
+  return sel.missing ? noun(sel.missing) : "an option";
 }
 
-/** The price for what is chosen: one price, or the total when several are chosen. */
+/** The price for what is chosen: one price, or the total when several pieces are chosen. */
 export function SelectionPrice({
   product,
   sel,
@@ -52,9 +56,64 @@ export function SelectionPrice({
   );
 }
 
+/** One kind of choice (colour, design or size): its chips, as radio buttons or, when several are allowed, checkboxes. */
+function Group({ d, sel, idPrefix }: { d: DimInfo; sel: VariantSelection; idPrefix: string }) {
+  const picked = sel.chosen[d.dim];
+  const heading = d.dim === "colour" ? "Colour" : `Select ${d.label.toLowerCase()}${d.multiSelect ? "s" : ""}`;
+  // A leftover variant with no value of this kind (shown as "Standard") is hidden once it is out of stock.
+  const values = d.values.filter((value) => value !== null || !sel.isDisabled(d.dim, null));
+
+  // Only one value left: nothing to choose, just say what it is.
+  if (values.length === 1) {
+    return (
+      <p className="text-sm">
+        {d.label} <span className="ml-2 text-muted-foreground">{values[0] ?? "Standard"}</span>
+      </p>
+    );
+  }
+
+  return (
+    <fieldset className="min-w-0">
+      <legend className="text-sm">
+        {heading}
+        {!d.multiSelect && picked[0] !== undefined && (
+          <span className="ml-2 text-muted-foreground">{picked[0] ?? "Standard"}</span>
+        )}
+      </legend>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {values.map((value) => {
+          const on = picked.includes(value);
+          const out = sel.isDisabled(d.dim, value);
+          const price = sel.valuePrice(d.dim, value);
+          return (
+            <label key={value ?? "none"} className={cn("relative", out && "cursor-not-allowed")}>
+              <input
+                type={d.multiSelect ? "checkbox" : "radio"}
+                name={`${idPrefix}-${d.dim}`}
+                checked={on}
+                disabled={out}
+                onChange={() => sel.toggleValue(d.dim, value)}
+                className="peer sr-only"
+              />
+              <span className={cn(chipBase, on ? chipOn : chipOff, out && chipOut)}>
+                <span className="inline-flex items-center gap-1.5">
+                  {d.multiSelect && on && <Check className="size-3.5" strokeWidth={2} aria-hidden="true" />}
+                  {value ?? "Standard"}
+                </span>
+                {price !== null && <span className="text-xs opacity-80">{formatPKR(price)}</span>}
+                {out && <span className="sr-only"> (out of stock)</span>}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
 /**
- * Colour chips, then size / design / option chips, then a note on what is selected and what is
- * running low. Radio buttons when one thing can be chosen, checkboxes when several can.
+ * The pickers for a product: colour, design and size, each on its own, then (when several can be chosen) the
+ * list of what is chosen with a quantity for each, then a note about what is running low.
  */
 export function VariantPicker({
   product,
@@ -68,96 +127,25 @@ export function VariantPicker({
   /** Show "Only N left in stock" under the choices. Off where a stock line is already shown nearby. */
   stockNote?: boolean;
 }) {
-  const word = sel.colourOnly ? "colour" : product.optionLabel === "Option" ? "option" : product.optionLabel.toLowerCase();
-  const showChips = sel.hasChoice && (sel.chips.length > 1 || sel.multi);
-  const lowSelected = sel.selected.filter((v) => v.stock > 0 && v.stock <= LOW_STOCK_THRESHOLD);
+  const anyMulti = sel.dims.some((d) => d.multiSelect && d.values.length > 1);
+  const lowSingle = !sel.multi && sel.variant && sel.variant.stock > 0 && sel.variant.stock <= LOW_STOCK_THRESHOLD;
 
   return (
     <div className="space-y-5">
-      {sel.singleColour && (
-        <p className="text-sm">
-          Colour <span className="ml-2 text-muted-foreground">{sel.singleColour}</span>
+      {sel.dims.map((d) => (
+        <Group key={d.dim} d={d} sel={sel} idPrefix={idPrefix} />
+      ))}
+
+      {anyMulti && (
+        <p className="-mt-2 text-xs text-muted-foreground">
+          Choose one or more, then set how many of each. The price adds up.
         </p>
       )}
 
-      {sel.showColourPicker && (
-        <fieldset className="min-w-0">
-          <legend className="text-sm">
-            Colour <span className="ml-2 text-muted-foreground">{sel.colour ?? "Standard"}</span>
-          </legend>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {sel.groups.map((g) => {
-              const inGroup = product.variants.filter((v) => (v.color ?? null) === g);
-              const out = inGroup.every((v) => v.stock < 1);
-              const on = g === sel.colour;
-              return (
-                <label key={g ?? "none"} className="relative">
-                  <input
-                    type="radio"
-                    name={`${idPrefix}-colour`}
-                    checked={on}
-                    onChange={() => sel.chooseColour(g)}
-                    className="peer sr-only"
-                  />
-                  <span className={cn(chipBase, on ? chipOn : chipOff, out && !on && "opacity-60")}>
-                    {g ?? "Standard"}
-                    {out && <span className="sr-only"> (out of stock)</span>}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
-      )}
-
-      {showChips && (
-        <fieldset className="min-w-0">
-          <legend className="text-sm">
-            {sel.colourOnly ? "Colour" : word === "option" ? "Select option" : `Select ${word}`}
-            {sel.multi ? "s" : ""}
-            {!sel.multi && sel.variant && (
-              <span className="ml-2 text-muted-foreground">
-                {sel.colourOnly ? sel.variant.color : sel.variant.label || sel.variant.name}
-              </span>
-            )}
-          </legend>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {sel.chips.map((v) => {
-              const out = v.stock < 1;
-              const qty = sel.lines.find((l) => l.variant.id === v.id)?.qty ?? 0;
-              const on = qty > 0;
-              const price = variantPrice(product, v);
-              const label = sel.colourOnly ? (v.color ?? "Standard") : v.label || "Standard";
-              return (
-                <label key={v.id} className={cn("relative", out && "cursor-not-allowed")}>
-                  <input
-                    type={sel.multi ? "checkbox" : "radio"}
-                    name={`${idPrefix}-option`}
-                    value={v.id}
-                    checked={on}
-                    disabled={out}
-                    onChange={() => sel.choose(v.id)}
-                    className="peer sr-only"
-                  />
-                  <span className={cn(chipBase, on ? chipOn : chipOff, out && chipOut)}>
-                    <span className="inline-flex items-center gap-1.5">
-                      {sel.multi && on && <Check className="size-3.5" strokeWidth={2} aria-hidden="true" />}
-                      {label}
-                      {sel.multi && qty > 1 && <span className="text-xs opacity-80">x{qty}</span>}
-                    </span>
-                    {price !== product.price && <span className="text-xs opacity-80">{formatPKR(price)}</span>}
-                    {out && <span className="sr-only"> (out of stock)</span>}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-          {sel.multi && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Choose one or more, then set how many of each. The price adds up.
-            </p>
-          )}
-        </fieldset>
+      {sel.unavailable && (
+        <p role="status" className="text-sm text-muted-foreground">
+          That mix is not available right now. Please try another.
+        </p>
       )}
 
       {sel.multi && sel.lines.length > 0 && (
@@ -213,9 +201,9 @@ export function VariantPicker({
         </section>
       )}
 
-      {stockNote && !sel.multi && lowSelected.length > 0 && (
+      {stockNote && lowSingle && sel.variant && (
         <p aria-live="polite" className="text-sm text-gold-hover">
-          Only {lowSelected[0].stock} left in stock
+          Only {sel.variant.stock} left in stock
         </p>
       )}
     </div>
