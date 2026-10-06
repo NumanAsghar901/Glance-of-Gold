@@ -21,7 +21,14 @@ const optionalText = (max: number) =>
 
 export const cartPayloadSchema = z.object({
   items: z
-    .array(z.object({ variantId: z.number().int().positive(), qty: z.number().int().min(1).max(20) }))
+    .array(
+      z.object({
+        variantId: z.number().int().positive(),
+        qty: z.number().int().min(1).max(20),
+        // Which of colour, size and design the customer chose. The order says only those.
+        parts: z.array(z.enum(["colour", "size", "design"])).max(3).optional(),
+      }),
+    )
     .min(1, "Your bag is empty")
     .max(50),
   giftVariantId: z.number().int().positive().nullable().optional(),

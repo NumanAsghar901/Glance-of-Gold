@@ -10,6 +10,21 @@
 
 export type VariantParts = { color?: string | null; design?: string | null; size?: string | null };
 
+/** The three things a variant can differ by. A customer may choose only some of them, for example just a size. */
+export type VariantPart = "colour" | "size" | "design";
+
+/** The name of a variant showing only the parts the customer chose ("Size 6" when no design was chosen). */
+export function composeChosenName(
+  variant: { color?: string | null; design?: string | null; size?: string | null },
+  parts: readonly VariantPart[],
+): string {
+  return composeVariantName({
+    color: parts.includes("colour") ? variant.color : null,
+    size: parts.includes("size") ? variant.size : null,
+    design: parts.includes("design") ? variant.design : null,
+  });
+}
+
 const isStandard = (label: string) => label.toLowerCase() === "standard";
 
 /** "6" becomes "Size 6", but "Size 6" and "Rose design" are left as they are (they already say what they are). */

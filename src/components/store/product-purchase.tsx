@@ -76,7 +76,7 @@ export function ProductPurchase() {
   const waText = [
     "Hello Glance of Gold, I would like to order:",
     product.name,
-    ...(sel.hasChoice ? sel.lines.map(({ variant: v, qty }) => quantityLine(v.name, qty, variantPrice(product, v))) : []),
+    ...(sel.hasChoice ? sel.lines.map(({ variant: v, qty, label }) => quantityLine(label, qty, variantPrice(product, v))) : []),
     `Total${count > 0 ? ` (${piecesLabel(count)})` : ""}: ${formatPKR(total)}`,
     `${site.url}/product/${product.slug}`,
   ].join("\n");
@@ -115,6 +115,12 @@ export function ProductPurchase() {
         <div className="flex items-center gap-4">
           <div className="min-w-0 flex-1">
             <p className="truncate font-heading text-lg leading-tight">{product.name}</p>
+            {sel.hasChoice && sel.lines.length > 0 && (
+              <p className="truncate text-xs text-muted-foreground">
+                {sel.lines[0].label}
+                {sel.lines.length > 1 && ` and ${sel.lines.length - 1} more`}
+              </p>
+            )}
             <p className="text-sm">
               {formatPKR(total)}
               {count > 1 && <span className="ml-2 text-muted-foreground">for {piecesLabel(count)}</span>}

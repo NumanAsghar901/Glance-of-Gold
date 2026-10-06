@@ -100,7 +100,7 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
   }, []);
 
   const cartPayload = JSON.stringify({
-    items: cart.lines.map((l) => ({ variantId: l.variantId, qty: l.qty })),
+    items: cart.lines.map((l) => ({ variantId: l.variantId, qty: l.qty, parts: l.parts })),
     giftVariantId: cart.giftEligible ? cart.giftVariantId : null,
     couponCode: cart.coupon?.code ?? null,
   });

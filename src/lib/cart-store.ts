@@ -2,6 +2,7 @@
 
 import { useMemo, useSyncExternalStore } from "react";
 import { MAX_QTY_PER_LINE } from "@/lib/pricing";
+import type { VariantPart } from "@/lib/variant-name";
 
 /**
  * Cart kept in localStorage. Prices stored here are only for display; the
@@ -14,6 +15,8 @@ export type CartLine = {
   slug: string;
   name: string;
   variantName: string;
+  /** Which of colour, size and design the customer chose. Left out means all of them. */
+  parts?: VariantPart[];
   price: number;
   image: string | null;
   qty: number;
