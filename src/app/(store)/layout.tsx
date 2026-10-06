@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { ScrollReveal } from "@/components/layout/scroll-reveal";
 import { SmoothScroll } from "@/components/layout/smooth-scroll";
+import { WhatsAppButton } from "@/components/layout/whatsapp-button";
 import { QuickViewDialog } from "@/components/store/quick-view-dialog";
 import { StoreProvider } from "@/components/store/store-provider";
 import { getCategories } from "@/lib/data/catalog";
@@ -35,6 +36,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         <Footer />
         <CartDrawer />
         <QuickViewDialog />
+        <WhatsAppButton />
         <SmoothScroll />
         <ScrollReveal />
         <MetaPixel />

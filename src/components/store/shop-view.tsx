@@ -19,7 +19,7 @@ function Chip({ href, active, children }: { href: string; active: boolean; child
       href={href}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "inline-flex h-10 shrink-0 items-center border px-4 text-[0.8125rem] transition-[background-color,border-color,color,transform] duration-200 ease-(--ease-out) active:scale-[0.97]",
+        "inline-flex min-h-11 max-w-full items-center justify-center border px-4 py-2 text-center text-[0.8125rem] leading-tight transition-[background-color,border-color,color,transform] duration-200 ease-(--ease-out) active:scale-[0.97]",
         active
           ? "border-foreground bg-foreground text-background"
           : "border-border bg-surface hover:border-gold hover:bg-sand",
@@ -73,8 +73,8 @@ export async function ShopView({
         {description && <p className="mx-auto mt-4 max-w-lg text-sm text-muted-foreground">{description}</p>}
       </header>
 
-      <nav aria-label="Categories" className="-mx-4 mt-10 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none]">
-        <ul className="flex gap-2 sm:flex-wrap sm:justify-center">
+      <nav aria-label="Categories" className="mt-10">
+        <ul className="flex flex-wrap justify-center gap-2">
           <li>
             <Chip href={categoryHref(undefined)} active={!activeCategory}>
               All
@@ -91,9 +91,9 @@ export async function ShopView({
       </nav>
 
       <div className="mt-6 flex flex-col gap-4 border-y border-border py-4 md:flex-row md:items-center md:justify-between">
-        <nav aria-label="Price" className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0 [scrollbar-width:none]">
-          <ul className="flex items-center gap-2">
-            <li className="shrink-0 pr-2 text-sm text-muted-foreground">Price</li>
+        <nav aria-label="Price" className="min-w-0">
+          <ul className="flex flex-wrap items-center gap-2">
+            <li className="w-full text-sm text-muted-foreground sm:w-auto sm:pr-2">Price</li>
             {PRICE_RANGES.map((r) => (
               <li key={r.key}>
                 <Chip
@@ -106,7 +106,7 @@ export async function ShopView({
             ))}
           </ul>
         </nav>
-        <div className="flex items-center justify-between gap-4 md:justify-end">
+        <div className="flex min-w-0 items-center justify-between gap-4 md:justify-end">
           <p className="text-sm text-muted-foreground" aria-live="polite">
             {total} {total === 1 ? "piece" : "pieces"}
           </p>
