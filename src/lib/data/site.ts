@@ -13,7 +13,7 @@ import type {
 const DEFAULT_SETTINGS: SiteSettings = {
   shippingFlat: 100,
   freeShippingThreshold: 2000,
-  deliveryDaysMin: 4,
+  deliveryDaysMin: 3,
   deliveryDaysMax: 5,
   courier: "Leopards",
   whatsapp: "923166568142",
@@ -48,7 +48,7 @@ export const getSettings = unstable_cache(
     };
   },
   // Versioned key: the data cache survives deployments, so a changed shape needs a new key.
-  ["settings-v2"],
+  ["settings-v3"],
   { tags: ["settings"], revalidate: 3600 },
 );
 

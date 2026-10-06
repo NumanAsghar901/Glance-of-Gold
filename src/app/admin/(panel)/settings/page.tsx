@@ -27,8 +27,8 @@ export default async function SettingsPage() {
             </Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Delivery takes, from (days)" htmlFor="deliveryDaysMin" hint="Shown on every product page, for example Delivery in 4 to 5 days.">
-              <Input id="deliveryDaysMin" name="deliveryDaysMin" type="number" min={1} max={60} defaultValue={num("delivery_days_min", 4)} required />
+            <Field label="Delivery takes, from (days)" htmlFor="deliveryDaysMin" hint="Shown on every product page, for example Delivery in 3 to 5 days.">
+              <Input id="deliveryDaysMin" name="deliveryDaysMin" type="number" min={1} max={60} defaultValue={num("delivery_days_min", 3)} required />
             </Field>
             <Field label="Delivery takes, up to (days)" htmlFor="deliveryDaysMax" hint="The date range is worked out from the day the customer is looking.">
               <Input id="deliveryDaysMax" name="deliveryDaysMax" type="number" min={1} max={60} defaultValue={num("delivery_days_max", 5)} required />
