@@ -1,11 +1,13 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { saveProduct } from "@/app/actions/admin-catalog";
 import { ActionForm } from "@/components/admin/action-form";
-import { Check, Field, Input, Panel, Select, Textarea } from "@/components/admin/ui";
+import { Check, Field, inputCls, Input, Panel, Select, Textarea } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
+import type { OptionLabel } from "@/lib/data/types";
+import { composeVariantName } from "@/lib/variant-name";
 
 export type ProductFormData = {
   id?: number;
@@ -19,27 +21,45 @@ export type ProductFormData = {
   tags: string;
   isActive: boolean;
   isFeatured: boolean;
-  variants: { id: number | null; name: string; sku: string; stock: number; priceOverride: number | null; isActive: boolean }[];
+  /** What the variants are called on the product page, and whether customers may pick several at once. */
+  optionLabel: OptionLabel;
+  allowMultiple: boolean;
+  /** `name` is the size, design or option only; `color` is kept apart and joined when saved. */
+  variants: {
+    id: number | null;
+    name: string;
+    color: string;
+    sku: string;
+    stock: number;
+    priceOverride: number | null;
+    isActive: boolean;
+  }[];
 };
 
 type Row = ProductFormData["variants"][number] & { key: string };
 
-let counter = 0;
-const newKey = () => `v${++counter}`;
-
 export function ProductForm({
   product,
   categories,
+  optionsAvailable,
 }: {
   product: ProductFormData;
   categories: { id: number; name: string }[];
+  /** False until the options migration has been run on the database. */
+  optionsAvailable: boolean;
 }) {
   const [rows, setRows] = useState<Row[]>(() =>
     (product.variants.length
       ? product.variants
-      : [{ id: null, name: "Standard", sku: "", stock: 0, priceOverride: null, isActive: true }]
-    ).map((v) => ({ ...v, key: newKey() })),
+      : [{ id: null, name: "Standard", color: "", sku: "", stock: 0, priceOverride: null, isActive: true }]
+    ).map((v, i) => ({ ...v, key: `v${i}` })),
   );
+  // Row keys are built per form (not from a counter shared by every render), so the ids in the server
+  // HTML and in the browser are the same.
+  const nextKey = useRef(rows.length);
+  const [optionLabel, setOptionLabel] = useState<OptionLabel>(product.optionLabel);
+  const [allowMultiple, setAllowMultiple] = useState(product.allowMultiple);
+  const nameLabel = optionLabel === "Option" ? "Option name" : `${optionLabel} name`;
 
   const update = (key: string, patch: Partial<Row>) =>
     setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
@@ -51,9 +71,10 @@ export function ProductForm({
         type="hidden"
         name="variants"
         value={JSON.stringify(
-          rows.map(({ id, name, sku, stock, priceOverride, isActive }) => ({ id, name, sku, stock, priceOverride, isActive })),
+          rows.map(({ id, name, color, sku, stock, priceOverride, isActive }) => ({ id, name, color, sku, stock, priceOverride, isActive })),
         )}
       />
+      {optionsAvailable && <input type="hidden" name="optionLabel" value={optionLabel} />}
 
       <Panel title="Details">
         <div className="space-y-5">
@@ -108,22 +129,84 @@ export function ProductForm({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() =>
-              setRows((rs) => [...rs, { key: newKey(), id: null, name: "", sku: "", stock: 0, priceOverride: null, isActive: true }])
-            }
+            onClick={() => {
+              const key = `v${nextKey.current++}`;
+              setRows((rs) => [...rs, { key, id: null, name: "", color: "", sku: "", stock: 0, priceOverride: null, isActive: true }]);
+            }}
           >
             <Plus /> Add variant
           </Button>
         }
       >
         <p className="mb-4 text-sm text-muted-foreground">
-          Use one variant named Standard for simple pieces. Add variants for sizes, for example Size 6, Size 7.
+          Use one variant named Standard for simple pieces. Add a variant for each size, design or colour you sell, each with its own stock.
         </p>
+
+        {optionsAvailable ? (
+          <div className="mb-5 grid gap-4 border border-border bg-sand/40 p-4 sm:grid-cols-2 sm:items-start">
+            <Field label="The variants are" htmlFor="optionLabel" hint="Sets the heading customers see, for example Select size. Use Sizes for rings, nose rings and bangles.">
+              <select
+                id="optionLabel"
+                value={optionLabel}
+                onChange={(e) => setOptionLabel(e.target.value as OptionLabel)}
+                className={inputCls}
+              >
+                <option value="Size">Sizes</option>
+                <option value="Design">Designs</option>
+                <option value="Option">Other options</option>
+              </select>
+            </Field>
+            <div className="sm:pt-7">
+              <label className="flex cursor-pointer items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  name="allowMultiple"
+                  checked={allowMultiple}
+                  onChange={(e) => setAllowMultiple(e.target.checked)}
+                  className="mt-0.5 size-4 shrink-0 accent-[var(--gold)]"
+                />
+                <span>
+                  Customers can choose several at once
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    For example two ring sizes or three designs in one order. The price adds up.
+                  </span>
+                </span>
+              </label>
+            </div>
+          </div>
+        ) : (
+          <p className="mb-5 border border-gold bg-sand/50 p-4 text-sm leading-relaxed">
+            To add colours, and to let customers choose several sizes or designs, run the database step{" "}
+            <code className="bg-surface px-1.5 py-0.5 text-xs">supabase/migrations/20261006000002_product_options.sql</code> once in the Supabase
+            SQL Editor, then reload this page.
+          </p>
+        )}
+
         <ul className="space-y-4">
           {rows.map((r) => (
-            <li key={r.key} className="grid gap-3 border border-border p-4 sm:grid-cols-[1.4fr_1fr_1fr_auto] sm:items-end">
-              <Field label="Variant name" htmlFor={`vn-${r.key}`}>
-                <Input id={`vn-${r.key}`} value={r.name} onChange={(e) => update(r.key, { name: e.target.value })} placeholder="Standard" />
+            <li
+              key={r.key}
+              className={
+                optionsAvailable
+                  ? "grid gap-3 border border-border p-4 sm:grid-cols-2 lg:grid-cols-[1fr_1.2fr_0.8fr_1fr_auto] lg:items-end"
+                  : "grid gap-3 border border-border p-4 sm:grid-cols-[1.4fr_1fr_1fr_auto] sm:items-end"
+              }
+            >
+              {optionsAvailable && (
+                <Field label="Colour (optional)" htmlFor={`vc-${r.key}`}>
+                  <Input id={`vc-${r.key}`} value={r.color} maxLength={30} onChange={(e) => update(r.key, { color: e.target.value })} placeholder="e.g. Gold" />
+                </Field>
+              )}
+              <Field label={nameLabel} htmlFor={`vn-${r.key}`}>
+                <Input
+                  id={`vn-${r.key}`}
+                  value={r.name}
+                  onChange={(e) => update(r.key, { name: e.target.value })}
+                  placeholder={r.color.trim() ? "Leave empty for colour only" : "Standard"}
+                />
+                {optionsAvailable && r.color.trim() && (
+                  <p className="mt-1 text-xs text-muted-foreground">Shown as {composeVariantName(r.color, r.name)}</p>
+                )}
               </Field>
               <Field label="In stock" htmlFor={`vs-${r.key}`}>
                 <Input id={`vs-${r.key}`} type="number" inputMode="numeric" min={0} value={r.stock} onChange={(e) => update(r.key, { stock: Number(e.target.value) })} />
@@ -139,7 +222,7 @@ export function ProductForm({
                   onChange={(e) => update(r.key, { priceOverride: e.target.value === "" ? null : Number(e.target.value) })}
                 />
               </Field>
-              <div className="flex items-center justify-between gap-4 sm:justify-end">
+              <div className="flex items-center justify-between gap-4 sm:col-span-2 sm:justify-end lg:col-span-1">
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={r.isActive} onChange={(e) => update(r.key, { isActive: e.target.checked })} className="size-4 accent-[var(--gold)]" />
                   Active

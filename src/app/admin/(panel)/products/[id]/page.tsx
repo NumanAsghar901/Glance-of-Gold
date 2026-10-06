@@ -9,6 +9,7 @@ import { ActionButton } from "@/components/admin/action-form";
 import { ProductForm } from "@/components/admin/product-form";
 import { PageHeader, Panel, Pill } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin/auth";
+import { variantLabel } from "@/lib/variant-name";
 
 export const metadata: Metadata = { title: "Edit product" };
 
@@ -75,6 +76,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
         <ProductForm
           categories={categories ?? []}
+          // select("*") only returns the new columns once the options migration has been run.
+          optionsAvailable={"allow_multiple" in product}
           product={{
             id: product.id,
             name: product.name,
@@ -87,9 +90,12 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
             tags: product.tags.join(", "),
             isActive: product.is_active,
             isFeatured: product.is_featured,
+            optionLabel: product.option_label === "Size" || product.option_label === "Design" ? product.option_label : "Option",
+            allowMultiple: product.allow_multiple ?? false,
             variants: (variants ?? []).map((v) => ({
               id: v.id,
-              name: v.name,
+              name: variantLabel(v.name, v.color),
+              color: v.color ?? "",
               sku: v.sku,
               stock: v.stock,
               priceOverride: v.price_override,

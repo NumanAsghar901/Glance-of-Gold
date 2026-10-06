@@ -6,9 +6,10 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { getQuickView } from "@/app/actions/catalog";
 import { WishlistButton } from "@/components/store/card-actions";
+import { useVariantSelection } from "@/components/store/use-variant-selection";
+import { choiceNoun, SelectionPrice, VariantPicker } from "@/components/store/variant-picker";
 import { Button } from "@/components/ui/button";
-import { Price } from "@/components/ui/price";
-import { cartActions } from "@/lib/cart-store";
+import { StockTag } from "@/components/ui/stock-tag";
 import type { ProductDetail } from "@/lib/data/types";
 import { quickView, useQuickView } from "@/lib/quick-view-store";
 import { cn } from "@/lib/utils";
@@ -88,29 +89,16 @@ export function QuickViewDialog() {
 }
 
 function QuickViewBody({ product }: { product: ProductDetail }) {
-  const firstAvailable = product.variants.find((v) => v.stock > 0) ?? product.variants[0];
-  const [variantId, setVariantId] = useState(firstAvailable?.id);
+  const sel = useVariantSelection(product);
   const [imageIndex, setImageIndex] = useState(0);
   const [added, setAdded] = useState(false);
 
-  const variant = product.variants.find((v) => v.id === variantId) ?? firstAvailable;
-  const price = variant?.priceOverride ?? product.price;
-  const soldOut = !variant || variant.stock < 1;
-  const hasChoice = product.variants.length > 1;
+  const count = sel.selected.length;
+  const needsChoice = sel.hasChoice && count === 0;
   const image = product.images[imageIndex];
 
   function add() {
-    if (!variant || soldOut) return;
-    cartActions.add({
-      variantId: variant.id,
-      productId: product.id,
-      slug: product.slug,
-      name: product.name,
-      variantName: variant.name,
-      price,
-      image: product.images[0]?.url ?? null,
-      stock: variant.stock,
-    });
+    if (sel.add() === 0) return;
     setAdded(true);
     window.setTimeout(() => quickView.close(), 350);
   }
@@ -156,60 +144,30 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
       <div className="flex min-w-0 flex-col p-5 sm:p-6 md:p-8">
         {product.category && <p className="text-sm text-muted-foreground">{product.category.name}</p>}
         <h2 className="mt-1 pr-10 font-heading text-4xl leading-tight">{product.name}</h2>
-        <Price price={price} compareAt={variant?.priceOverride ? null : product.compareAtPrice} className="mt-3 text-lg" />
+        <SelectionPrice product={product} sel={sel} className="mt-3 text-lg" />
+        <StockTag inStock={product.inStock} lowStock={product.lowStock} className="mt-3 inline-block self-start" />
 
         {product.description && (
           <p className="mt-5 line-clamp-4 text-[0.9375rem] leading-relaxed text-muted-foreground">{product.description}</p>
         )}
 
-        {hasChoice && (
-          <fieldset className="mt-6 min-w-0">
-            <legend className="text-sm">
-              Select option <span className="ml-1 text-muted-foreground">{variant?.name}</span>
-            </legend>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {product.variants.map((v) => {
-                const out = v.stock < 1;
-                return (
-                  <label key={v.id} className={cn("relative", out && "cursor-not-allowed")}>
-                    <input
-                      type="radio"
-                      name="qv-variant"
-                      value={v.id}
-                      checked={v.id === variantId}
-                      disabled={out}
-                      onChange={() => setVariantId(v.id)}
-                      className="peer sr-only"
-                    />
-                    <span
-                      className={cn(
-                        "grid h-11 min-w-12 cursor-pointer place-items-center border px-4 text-sm transition-colors duration-200 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold",
-                        v.id === variantId ? "border-foreground bg-foreground text-background" : "border-border bg-surface hover:border-gold",
-                        out && "cursor-not-allowed text-muted-foreground line-through opacity-50 hover:border-border",
-                      )}
-                    >
-                      {v.name}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </fieldset>
-        )}
-
-        {variant && !soldOut && variant.stock <= 3 && <p className="mt-4 text-sm text-gold-hover">Only {variant.stock} left in stock</p>}
+        <div className="mt-6">
+          <VariantPicker product={product} sel={sel} idPrefix="qv" />
+        </div>
 
         <div className="mt-8 flex gap-3">
-          <Button size="lg" onClick={add} disabled={soldOut || added} className="flex-1">
-            {soldOut ? (
-              "Sold out"
+          <Button size="lg" onClick={add} disabled={sel.soldOut || needsChoice || !sel.canAdd || added} className="flex-1">
+            {sel.soldOut ? (
+              "Out of stock"
+            ) : needsChoice ? (
+              `Select ${choiceNoun(product, sel)}`
             ) : added ? (
               <>
                 <Check /> Added to bag
               </>
             ) : (
               <>
-                <ShoppingBag /> Add to bag
+                <ShoppingBag /> {count > 1 ? `Add ${count} to bag` : "Add to bag"}
               </>
             )}
           </Button>

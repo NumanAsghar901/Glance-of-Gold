@@ -3,26 +3,26 @@
 import { Check, MessageCircle, ShoppingBag } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { WishlistButton } from "@/components/store/card-actions";
+import { usePurchase } from "@/components/store/purchase-context";
 import { useStore } from "@/components/store/store-provider";
+import { variantPrice } from "@/components/store/use-variant-selection";
+import { choiceNoun, VariantPicker } from "@/components/store/variant-picker";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
-import { cartActions } from "@/lib/cart-store";
-import type { ProductDetail } from "@/lib/data/types";
 import { site, whatsappLink } from "@/lib/site";
 import { cn, formatPKR } from "@/lib/utils";
 
-export function ProductPurchase({ product }: { product: ProductDetail }) {
+export function ProductPurchase() {
   const { settings } = useStore();
-  const firstAvailable = product.variants.find((v) => v.stock > 0) ?? product.variants[0];
-  const [variantId, setVariantId] = useState(firstAvailable?.id);
+  const { product, sel } = usePurchase();
   const [added, setAdded] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
   const cta = useRef<HTMLDivElement>(null);
 
-  const variant = product.variants.find((v) => v.id === variantId) ?? firstAvailable;
-  const price = variant?.priceOverride ?? product.price;
-  const soldOut = !variant || variant.stock < 1;
-  const hasChoice = product.variants.length > 1;
+  const count = sel.selected.length;
+  const needsChoice = sel.hasChoice && count === 0;
+  const noun = choiceNoun(product, sel);
+  const total = count > 0 ? sel.total : product.price;
 
   useEffect(() => {
     track("ViewContent", {
@@ -44,88 +44,50 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
   }, []);
 
   function addToBag() {
-    if (!variant || soldOut) return;
-    cartActions.add({
-      variantId: variant.id,
-      productId: product.id,
-      slug: product.slug,
-      name: product.name,
-      variantName: variant.name,
-      price,
-      image: product.images[0]?.url ?? null,
-      stock: variant.stock,
-    });
+    if (sel.add() === 0) return;
     track("AddToCart", {
       content_ids: [String(product.id)],
       content_name: product.name,
       content_type: "product",
-      value: price,
+      value: sel.total,
       currency: "PKR",
     });
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1800);
   }
 
-  const waText = `Hello Glance of Gold, I would like to order:\n${product.name}${hasChoice && variant ? ` (${variant.name})` : ""}\nPrice: ${formatPKR(price)}\n${site.url}/product/${product.slug}`;
+  const label = sel.soldOut ? (
+    "Out of stock"
+  ) : needsChoice ? (
+    `Select ${noun}`
+  ) : added ? (
+    <>
+      <Check /> Added to bag
+    </>
+  ) : (
+    <>
+      <ShoppingBag /> {count > 1 ? `Add ${count} to bag` : "Add to bag"}
+    </>
+  );
+  const stickyLabel = sel.soldOut ? "Out of stock" : needsChoice ? `Select ${noun}` : added ? "Added" : count > 1 ? `Add ${count}` : "Add to bag";
+  const disabled = sel.soldOut || needsChoice || !sel.canAdd;
+
+  const waText = [
+    "Hello Glance of Gold, I would like to order:",
+    product.name,
+    ...sel.selected.map((v) => `- ${v.name}, ${formatPKR(variantPrice(product, v))}`),
+    `Total: ${formatPKR(total)}`,
+    `${site.url}/product/${product.slug}`,
+  ].join("\n");
 
   return (
     <div>
-      {hasChoice && (
-        <fieldset>
-          <legend className="text-sm">
-            Select {product.category?.slug === "rings" ? "size" : "option"}
-            {variant && <span className="ml-2 text-muted-foreground">{variant.name}</span>}
-          </legend>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {product.variants.map((v) => {
-              const out = v.stock < 1;
-              const selected = v.id === variantId;
-              return (
-                <label key={v.id} className={cn("relative", out && "cursor-not-allowed")}>
-                  <input
-                    type="radio"
-                    name="variant"
-                    value={v.id}
-                    checked={selected}
-                    disabled={out}
-                    onChange={() => setVariantId(v.id)}
-                    className="peer sr-only"
-                  />
-                  <span
-                    className={cn(
-                      "grid h-11 min-w-12 cursor-pointer place-items-center border px-4 text-sm transition-[border-color,background-color,transform] duration-200 ease-(--ease-out) active:scale-[0.97]",
-                      "peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold",
-                      selected ? "border-foreground bg-foreground text-background" : "border-border bg-surface hover:border-gold",
-                      out && "cursor-not-allowed text-muted-foreground line-through opacity-50 hover:border-border",
-                    )}
-                  >
-                    {v.name}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
-      )}
-
-      {variant && !soldOut && variant.stock <= 3 && (
-        <p className="mt-4 text-sm text-gold-hover">Only {variant.stock} left in stock</p>
-      )}
+      <VariantPicker product={product} sel={sel} idPrefix="pp" />
 
       <div ref={cta} className="mt-6 flex flex-col gap-3">
         <div className="flex gap-3">
-          <Button size="lg" onClick={addToBag} disabled={soldOut} className="flex-1" aria-live="polite">
-            {soldOut ? (
-              "Sold out"
-            ) : added ? (
-              <>
-                <Check /> Added to bag
-              </>
-            ) : (
-              <>
-                <ShoppingBag /> Add to bag
-              </>
-            )}
+          <Button size="lg" onClick={addToBag} disabled={disabled} className="flex-1" aria-live="polite">
+            {label}
           </Button>
           <WishlistButton slug={product.slug} name={product.name} className="size-14 border border-border bg-surface" />
         </div>
@@ -152,10 +114,13 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
         <div className="flex items-center gap-4">
           <div className="min-w-0 flex-1">
             <p className="truncate font-heading text-lg leading-tight">{product.name}</p>
-            <p className="text-sm">{formatPKR(price)}</p>
+            <p className="text-sm">
+              {formatPKR(total)}
+              {count > 1 && <span className="ml-2 text-muted-foreground">for {count} pieces</span>}
+            </p>
           </div>
-          <Button onClick={addToBag} disabled={soldOut} tabIndex={showSticky ? 0 : -1} className="shrink-0">
-            {soldOut ? "Sold out" : added ? "Added" : "Add to bag"}
+          <Button onClick={addToBag} disabled={disabled} tabIndex={showSticky ? 0 : -1} className="shrink-0">
+            {stickyLabel}
           </Button>
         </div>
       </div>

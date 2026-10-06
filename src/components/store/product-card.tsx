@@ -4,6 +4,7 @@ import { LogoMark } from "@/components/brand/logo";
 import { CardActions } from "@/components/store/card-actions";
 import { discountPercent, Price } from "@/components/ui/price";
 import { StarRating } from "@/components/ui/star-rating";
+import { StockTag } from "@/components/ui/stock-tag";
 import type { ProductSummary } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
 
@@ -60,11 +61,7 @@ export function ProductCard({
         </Link>
 
         <div className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-1.5">
-          {!product.inStock && (
-            <span className="bg-surface px-2.5 py-1 text-xs text-muted-foreground">
-              Sold out
-            </span>
-          )}
+          <StockTag inStock={product.inStock} lowStock={product.lowStock} />
           {product.inStock && off > 0 && (
             <span className="bg-blush px-2.5 py-1 text-xs text-foreground">
               {off}% off

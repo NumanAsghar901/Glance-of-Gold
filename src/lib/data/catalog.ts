@@ -2,11 +2,14 @@ import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import type {
   Category,
+  OptionLabel,
   ProductDetail,
   ProductImage,
   ProductSummary,
   ProductVariant,
 } from "@/lib/data/types";
+import { stockStatus } from "@/lib/stock";
+import { variantLabel } from "@/lib/variant-name";
 
 /**
  * Public catalogue reads. Everything goes through the cookie-less anon client
@@ -30,37 +33,45 @@ type RawProduct = {
   rating_avg?: number | null;
   rating_count?: number | null;
   sold_count?: number | null;
+  option_label?: string | null;
+  allow_multiple?: boolean | null;
   category: { name: string; slug: string } | null;
   images: (ProductImage & { sort: number })[];
-  variants: { id: number; name: string; stock: number; price_override: number | null; sort: number }[];
+  variants: { id: number; name: string; color?: string | null; stock: number; price_override: number | null; sort: number }[];
 };
 
 const BASE_COLUMNS = "id, slug, name, price, compare_at_price, is_featured";
-const RELATIONS =
-  "images:product_images(url, alt, sort, blur_data_url), variants:product_variants(id, name, stock, price_override, sort)";
 const STATS = "rating_avg, rating_count, sold_count";
+const relations = (options: boolean) =>
+  `images:product_images(url, alt, sort, blur_data_url), variants:product_variants(id, name, stock, price_override, sort${options ? ", color" : ""})`;
 
 /**
- * Ratings and sold counts come from columns added by the reviews migration. Until that migration has
- * been run on the database, the shop must keep working, so the queries leave those columns out.
- * The check is repeated at most every 30 seconds while the columns are missing.
+ * Some columns come from later migrations (ratings and sold counts, then colours and options). Until a
+ * migration has been run on the database the shop must keep working, so the queries leave those
+ * columns out. A missing column is re-checked at most every 30 seconds.
  */
-let statsCheck: { ok: boolean; at: number } | null = null;
-async function statsAvailable(): Promise<boolean> {
-  if (statsCheck && (statsCheck.ok || Date.now() - statsCheck.at < 30_000)) return statsCheck.ok;
-  const { error } = await createPublicClient().from("products").select("sold_count").limit(1);
-  statsCheck = { ok: !error, at: Date.now() };
-  return statsCheck.ok;
+const probes = new Map<string, { ok: boolean; at: number }>();
+async function columnAvailable(key: string, column: string): Promise<boolean> {
+  const hit = probes.get(key);
+  if (hit && (hit.ok || Date.now() - hit.at < 30_000)) return hit.ok;
+  const { error } = await createPublicClient().from("products").select(column).limit(1);
+  probes.set(key, { ok: !error, at: Date.now() });
+  return !error;
 }
+const statsAvailable = () => columnAvailable("stats", "sold_count");
+const optionsAvailable = () => columnAvailable("options", "allow_multiple");
 
-const summarySelect = (inner: boolean, stats: boolean) =>
-  `${BASE_COLUMNS}${stats ? `, ${STATS}` : ""}, category:categories${inner ? "!inner" : ""}(name, slug), ${RELATIONS}`;
-const detailSelect = (stats: boolean) => `${summarySelect(false, stats)}, description, material, tags`;
+const summarySelect = (inner: boolean, stats: boolean, options = false) =>
+  `${BASE_COLUMNS}${stats ? `, ${STATS}` : ""}, category:categories${inner ? "!inner" : ""}(name, slug), ${relations(options)}`;
+const detailSelect = (stats: boolean, options: boolean) =>
+  `${summarySelect(false, stats, options)}, description, material, tags${options ? ", option_label, allow_multiple" : ""}`;
 
 function toSummary(r: RawProduct): ProductSummary {
   const images = [...r.images]
     .sort((a, b) => a.sort - b.sort)
     .map(({ url, alt, blur_data_url }) => ({ url, alt, blur_data_url }));
+  const unitsLeft = r.variants.reduce((n, v) => n + Math.max(0, v.stock), 0);
+  const status = stockStatus(unitsLeft);
   return {
     id: r.id,
     slug: r.slug,
@@ -70,7 +81,8 @@ function toSummary(r: RawProduct): ProductSummary {
     isFeatured: r.is_featured,
     category: r.category,
     images,
-    inStock: r.variants.some((v) => v.stock > 0),
+    inStock: status !== "out",
+    lowStock: status === "low",
     rating: Number(r.rating_avg ?? 0),
     ratingCount: r.rating_count ?? 0,
     soldCount: r.sold_count ?? 0,
@@ -84,13 +96,23 @@ function toSummary(r: RawProduct): ProductSummary {
 function toDetail(r: RawProduct): ProductDetail {
   const variants: ProductVariant[] = [...r.variants]
     .sort((a, b) => a.sort - b.sort)
-    .map((v) => ({ id: v.id, name: v.name, stock: v.stock, priceOverride: v.price_override }));
+    .map((v) => ({
+      id: v.id,
+      name: v.name,
+      color: v.color ?? null,
+      label: variantLabel(v.name, v.color),
+      stock: v.stock,
+      priceOverride: v.price_override,
+    }));
+  const optionLabel: OptionLabel = r.option_label === "Size" || r.option_label === "Design" ? r.option_label : "Option";
   return {
     ...toSummary(r),
     description: r.description ?? null,
     material: r.material ?? null,
     tags: r.tags ?? [],
     variants,
+    optionLabel,
+    allowMultiple: r.allow_multiple ?? false,
   };
 }
 
@@ -153,22 +175,21 @@ export const getProducts = unstable_cache(
       pageCount: Math.max(1, Math.ceil(total / pageSize)),
     };
   },
-  ["products"],
+  // The key carries a version: bump it whenever the shape of a cached product changes, because the
+  // data cache survives deployments and would otherwise hand old-shaped objects to new code.
+  ["products-v2"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 
 export const getProduct = unstable_cache(
   async (slug: string): Promise<ProductDetail | null> => {
     const supabase = createPublicClient();
-    const { data, error } = await supabase
-      .from("products")
-      .select(detailSelect(await statsAvailable()))
-      .eq("slug", slug)
-      .maybeSingle();
+    const [stats, options] = await Promise.all([statsAvailable(), optionsAvailable()]);
+    const { data, error } = await supabase.from("products").select(detailSelect(stats, options)).eq("slug", slug).maybeSingle();
     if (error) throw new Error(`getProduct: ${error.message}`);
     return data ? toDetail(data as unknown as RawProduct) : null;
   },
-  ["product"],
+  ["product-v2"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 
@@ -186,7 +207,7 @@ export const getRelatedProducts = unstable_cache(
     if (error) throw new Error(`getRelatedProducts: ${error.message}`);
     return (data as unknown as RawProduct[]).map(toSummary);
   },
-  ["related"],
+  ["related-v2"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 
@@ -218,7 +239,7 @@ export const searchProducts = unstable_cache(
     const byId = new Map((data as unknown as RawProduct[]).map((p) => [p.id, toSummary(p)]));
     return ids.flatMap((id) => byId.get(id) ?? []);
   },
-  ["search"],
+  ["search-v2"],
   { tags: ["catalog"], revalidate: 120 },
 );
 

@@ -6,8 +6,9 @@ import { ProductGallery } from "@/components/store/product-gallery";
 import { ProductGrid } from "@/components/store/product-grid";
 import { ProductPurchase } from "@/components/store/product-purchase";
 import { ProductReviews } from "@/components/store/product-reviews";
-import { Price } from "@/components/ui/price";
+import { LivePrice, PurchaseProvider } from "@/components/store/purchase-context";
 import { StarRating } from "@/components/ui/star-rating";
+import { StockTag } from "@/components/ui/stock-tag";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { getAllProductSlugs, getProduct, getRelatedProducts } from "@/lib/data/catalog";
 import { getProductReviews } from "@/lib/data/reviews";
@@ -91,6 +92,11 @@ export default async function ProductPage({ params }: Props) {
 
   const transfers = accounts.length > 0;
 
+  // For the Details section: the colours on offer, and the sizes, designs or options (without the colour).
+  const colours = [...new Set(product.variants.flatMap((v) => (v.color ? [v.color] : [])))];
+  const options = [...new Set(product.variants.map((v) => v.label).filter(Boolean))];
+  const optionTitle = product.optionLabel === "Option" ? "Options" : `${product.optionLabel}s`;
+
   return (
     <div className="wrap py-6 lg:py-10">
       <script
@@ -122,6 +128,7 @@ export default async function ProductPage({ params }: Props) {
         <ProductGallery images={product.images} name={product.name} />
 
         <div className="lg:py-4">
+          <PurchaseProvider product={product}>
           <h1 className="text-title">{product.name}</h1>
           {(product.ratingCount > 0 || product.soldCount > 0) && (
             <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
@@ -137,7 +144,8 @@ export default async function ProductPage({ params }: Props) {
               {product.soldCount > 0 && <span className="text-muted-foreground">{product.soldCount} sold</span>}
             </div>
           )}
-          <Price price={product.price} compareAt={product.compareAtPrice} className="mt-4 text-lg" />
+          <LivePrice className="mt-4 text-lg" />
+          <StockTag inStock={product.inStock} lowStock={product.lowStock} className="mt-3 inline-block" />
           <p className="mt-1 text-xs text-muted-foreground">
             {settings.freeShippingThreshold > 0 &&
               `Free delivery on orders over ${formatPKR(settings.freeShippingThreshold)}`}
@@ -150,8 +158,9 @@ export default async function ProductPage({ params }: Props) {
           )}
 
           <div className="mt-8">
-            <ProductPurchase product={product} />
+            <ProductPurchase />
           </div>
+          </PurchaseProvider>
 
           <ul className="mt-8 grid gap-4 border-y border-border py-6 text-sm">
             <li className="flex items-center gap-3">
@@ -173,8 +182,11 @@ export default async function ProductPage({ params }: Props) {
               <ul className="space-y-1.5">
                 {product.material && <li>Finish: {product.material}</li>}
                 {product.category && <li>Category: {product.category.name}</li>}
-                {product.variants.length > 1 && (
-                  <li>Available in: {product.variants.map((v) => v.name).join(", ")}</li>
+                {colours.length > 0 && <li>{colours.length === 1 ? "Colour" : "Colours"}: {colours.join(", ")}</li>}
+                {options.length > 1 && (
+                  <li>
+                    {optionTitle}: {options.join(", ")}
+                  </li>
                 )}
               </ul>
             </Detail>

@@ -605,6 +605,7 @@ export type Database = {
       }
       product_variants: {
         Row: {
+          color: string | null
           id: number
           is_active: boolean
           name: string
@@ -615,6 +616,7 @@ export type Database = {
           stock: number
         }
         Insert: {
+          color?: string | null
           id?: never
           is_active?: boolean
           name?: string
@@ -625,6 +627,7 @@ export type Database = {
           stock?: number
         }
         Update: {
+          color?: string | null
           id?: never
           is_active?: boolean
           name?: string
@@ -646,6 +649,7 @@ export type Database = {
       }
       products: {
         Row: {
+          allow_multiple: boolean
           category_id: number | null
           compare_at_price: number | null
           created_at: string
@@ -656,6 +660,7 @@ export type Database = {
           is_sample: boolean
           material: string | null
           name: string
+          option_label: string
           price: number
           rating_avg: number
           rating_count: number
@@ -666,6 +671,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_multiple?: boolean
           category_id?: number | null
           compare_at_price?: number | null
           created_at?: string
@@ -676,6 +682,7 @@ export type Database = {
           is_sample?: boolean
           material?: string | null
           name: string
+          option_label?: string
           price: number
           rating_avg?: number
           rating_count?: number
@@ -686,6 +693,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_multiple?: boolean
           category_id?: number | null
           compare_at_price?: number | null
           created_at?: string
@@ -696,6 +704,7 @@ export type Database = {
           is_sample?: boolean
           material?: string | null
           name?: string
+          option_label?: string
           price?: number
           rating_avg?: number
           rating_count?: number
