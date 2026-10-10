@@ -1,10 +1,12 @@
 "use client";
 
-import { Mail, Menu, MessageCircle, Phone, Search, X } from "lucide-react";
+import { House, Mail, Menu, MessageCircle, Phone, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
 import { Logo } from "@/components/brand/logo";
+import { buttonVariants } from "@/components/ui/button";
 import { helpNav, site, whatsappLink } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
 type Category = { id: number; slug: string; name: string };
 
@@ -69,6 +71,14 @@ export function SiteMenu({ categories }: { categories: Category[] }) {
               <Search className="size-5" strokeWidth={1.5} />
             </button>
           </form>
+
+          <Link
+            href="/"
+            onClick={close}
+            className={cn(buttonVariants({ variant: "outline", size: "md" }), "mt-6 w-full")}
+          >
+            <House strokeWidth={1.5} /> Home
+          </Link>
 
           <nav aria-label="Shop" className="mt-8">
             <h2 className="text-sm text-muted-foreground">Shop</h2>
