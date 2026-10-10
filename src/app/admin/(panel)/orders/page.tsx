@@ -1,15 +1,16 @@
+import { FileSpreadsheet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Empty, Input, orderTone, PageHeader, Pager, Pill, TableWrap, td, th } from "@/components/admin/ui";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { LinkPending } from "@/components/ui/link-pending";
 import { requireAdmin } from "@/lib/admin/auth";
+import { ORDER_STATUSES as STATUSES, parseOrderFilter } from "@/lib/admin/order-filter";
 import { PAYMENT_LABEL } from "@/lib/email/templates";
 import { cn, formatPKR } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Orders" };
 
-const STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "returned"] as const;
 const PAGE_SIZE = 25;
 
 export default async function OrdersPage({
@@ -19,9 +20,7 @@ export default async function OrdersPage({
 }) {
   const { supabase } = await requireAdmin();
   const sp = await searchParams;
-  const status = STATUSES.find((s) => s === sp.status);
-  // Keep only characters that are safe inside a PostgREST or() filter.
-  const q = (sp.q ?? "").replace(/[^a-zA-Z0-9\s-]/g, "").trim().slice(0, 40);
+  const { status, q } = parseOrderFilter(sp);
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
 
   let query = supabase
@@ -44,9 +43,30 @@ export default async function OrdersPage({
     return s ? `/admin/orders?${s}` : "/admin/orders";
   };
 
+  const exportParams = new URLSearchParams();
+  if (status) exportParams.set("status", status);
+  if (q) exportParams.set("q", q);
+  const exportQuery = exportParams.toString();
+
   return (
     <>
-      <PageHeader title="Orders" description={`${count ?? 0} ${count === 1 ? "order" : "orders"}${status ? ` with status ${status}` : ""}.`} />
+      <PageHeader
+        title="Orders"
+        description={`${count ?? 0} ${count === 1 ? "order" : "orders"}${status ? ` with status ${status}` : ""}.`}
+        actions={
+          count ? (
+            // A plain link, not next/link: the response is a file download, not a page.
+            <a
+              href={`/admin/orders/export${exportQuery ? `?${exportQuery}` : ""}`}
+              download
+              title="Downloads every order in this list, not only this page"
+              className={buttonVariants({ variant: "outline", size: "md" })}
+            >
+              <FileSpreadsheet strokeWidth={1.5} /> Export to Excel
+            </a>
+          ) : null
+        }
+      />
 
       <form action="/admin/orders" className="mb-4 flex gap-2">
         {status && <input type="hidden" name="status" value={status} />}
