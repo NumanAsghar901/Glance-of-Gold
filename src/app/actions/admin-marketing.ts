@@ -217,30 +217,32 @@ export async function saveBanner(_prev: ActionState, formData: FormData): Promis
   const v = parsed.data;
   if (v.ctaUrl && !/^(\/|https?:\/\/)/.test(v.ctaUrl)) return { error: "The button link must start with / or https://" };
 
-  const { data: existing } = v.id
-    ? await supabase.from("banners").select("image_url, mobile_image_url").eq("id", v.id).maybeSingle()
-    : { data: null };
-
   const desktopFile = formData.get("image");
   const mobileFile = formData.get("mobileImage");
   const removeMobile = formData.get("removeMobileImage") === "on";
 
-  const uploaded: string[] = [];
-  let imageUrl: string | undefined;
-  let mobileUrl: string | undefined;
-  try {
-    if (desktopFile instanceof File && desktopFile.size > 0) {
-      imageUrl = await uploadPublicImage(supabase, "banners", desktopFile, "banner-wide");
-      uploaded.push(imageUrl);
-    }
-    if (mobileFile instanceof File && mobileFile.size > 0) {
-      mobileUrl = await uploadPublicImage(supabase, "banners", mobileFile, "banner-tall");
-      uploaded.push(mobileUrl);
-    }
-  } catch (e) {
+  // The current row is read while the new photos upload, since neither waits on the other.
+  const [{ data: existing }, [wide, tall]] = await Promise.all([
+    v.id
+      ? supabase.from("banners").select("image_url, mobile_image_url").eq("id", v.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    Promise.allSettled([
+      desktopFile instanceof File && desktopFile.size > 0
+        ? uploadPublicImage(supabase, "banners", desktopFile, "banner-wide")
+        : Promise.resolve(undefined),
+      mobileFile instanceof File && mobileFile.size > 0
+        ? uploadPublicImage(supabase, "banners", mobileFile, "banner-tall")
+        : Promise.resolve(undefined),
+    ]),
+  ]);
+  const uploaded = [wide, tall].flatMap((r) => (r.status === "fulfilled" && r.value ? [r.value] : []));
+  const failure = [wide, tall].find((r) => r.status === "rejected");
+  if (failure) {
     await removeStoredImages(supabase, ...uploaded);
-    return { error: e instanceof Error ? e.message : "Image upload failed." };
+    return { error: failure.reason instanceof Error ? failure.reason.message : "Image upload failed." };
   }
+  const imageUrl = wide.status === "fulfilled" ? wide.value : undefined;
+  const mobileUrl = tall.status === "fulfilled" ? tall.value : undefined;
   if (!v.id && !imageUrl) return { error: "Upload an image for the banner." };
 
   const row = {

@@ -46,53 +46,58 @@ async function pixelSize(buffer: Buffer): Promise<{ width: number; height: numbe
   return turned ? { width: meta.height, height: meta.width } : { width: meta.width, height: meta.height };
 }
 
+/** A photo that passed the size check and is ready to store, so it is decoded only once. */
+export type PreparedImage = { name: string; body: Buffer; contentType: string; ext: string };
+
 /**
- * Why this photo cannot be used, or null if it can. A photo smaller than the minimum for its place would be
- * stretched by the browser and look blurry, so it is turned away with the size it needs.
+ * Checks a photo and gets it ready to store. A photo smaller than the minimum for its place would be stretched
+ * by the browser and look blurry, so it is turned away with the size it needs. One longer than the slot needs is
+ * reduced first (the admin form already does this in the browser; this is the safety net).
  */
-export async function imageProblem(file: File, slot: ImageSlot): Promise<string | null> {
+export async function prepareImage(file: File, slot: ImageSlot): Promise<{ problem: string } | { image: PreparedImage }> {
   const basic = validateImage(file);
-  if (basic) return basic;
+  if (basic) return { problem: basic };
+  const buffer = Buffer.from(await file.arrayBuffer());
   let size: { width: number; height: number } | null;
   try {
-    size = await pixelSize(Buffer.from(await file.arrayBuffer()));
+    size = await pixelSize(buffer);
   } catch {
-    return `${file.name} could not be read as a picture.`;
+    return { problem: `${file.name} could not be read as a picture.` };
   }
-  if (!size) return `${file.name} could not be read as a picture.`;
+  if (!size) return { problem: `${file.name} could not be read as a picture.` };
   const { verdict, text } = describeImageSize(slot, size.width, size.height);
-  return verdict === "too-small" ? `${file.name}: ${text}` : null;
-}
+  if (verdict === "too-small") return { problem: `${file.name}: ${text}` };
 
-/**
- * Uploads an image under `folder/` and returns its public URL. Throws a readable Error on failure or when the
- * photo is too small for its place. A photo longer than the slot needs is reduced first (the admin form already
- * does this in the browser; this is the safety net).
- */
-export async function uploadPublicImage(supabase: Supabase, folder: string, file: File, slot: ImageSlot): Promise<string> {
-  const problem = await imageProblem(file, slot);
-  if (problem) throw new Error(problem);
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const size = await pixelSize(buffer);
   const { maxEdge } = IMAGE_SPECS[slot];
-
-  let body: Buffer = buffer;
-  let contentType = file.type;
-  let ext = IMAGE_TYPES[file.type];
-  if (size && Math.max(size.width, size.height) > maxEdge) {
-    body = await sharp(buffer)
+  if (Math.max(size.width, size.height) > maxEdge) {
+    const body = await sharp(buffer)
       .rotate()
       .resize({ width: maxEdge, height: maxEdge, fit: "inside", withoutEnlargement: true })
       .flatten({ background: "#ffffff" })
       .jpeg({ quality: 90, mozjpeg: true })
       .toBuffer();
-    contentType = "image/jpeg";
-    ext = "jpg";
+    return { image: { name: file.name, body, contentType: "image/jpeg", ext: "jpg" } };
   }
+  return { image: { name: file.name, body: buffer, contentType: file.type, ext: IMAGE_TYPES[file.type] } };
+}
 
-  const path = `${folder}/${randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(path, body, { contentType });
-  if (error) throw new Error(`Could not upload ${file.name}: ${error.message}`);
+/** Why this photo cannot be used, or null if it can. */
+export async function imageProblem(file: File, slot: ImageSlot): Promise<string | null> {
+  const result = await prepareImage(file, slot);
+  return "problem" in result ? result.problem : null;
+}
+
+/** Stores a prepared photo under `folder/` and returns its public URL. Throws a readable Error on failure. */
+export async function uploadPreparedImage(supabase: Supabase, folder: string, image: PreparedImage): Promise<string> {
+  const path = `${folder}/${randomUUID()}.${image.ext}`;
+  const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(path, image.body, { contentType: image.contentType });
+  if (error) throw new Error(`Could not upload ${image.name}: ${error.message}`);
   return supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+/** Checks, prepares and uploads one photo. Throws a readable Error on failure or when the photo is too small for its place. */
+export async function uploadPublicImage(supabase: Supabase, folder: string, file: File, slot: ImageSlot): Promise<string> {
+  const result = await prepareImage(file, slot);
+  if ("problem" in result) throw new Error(result.problem);
+  return uploadPreparedImage(supabase, folder, result.image);
 }

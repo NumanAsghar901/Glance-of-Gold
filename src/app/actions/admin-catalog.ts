@@ -4,9 +4,10 @@ import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin, type ActionState } from "@/lib/admin/auth";
-import { imageProblem, removeStoredImages, uploadPublicImage } from "@/lib/admin/storage";
+import { prepareImage, removeStoredImages, uploadPreparedImage, uploadPublicImage } from "@/lib/admin/storage";
 import { randomSuffix, slugify } from "@/lib/slug";
 import { composeVariantName } from "@/lib/variant-name";
+import type { Database } from "@/types/database";
 
 const BUCKET = "product-images";
 
@@ -105,12 +106,11 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     return { error: "Two variants are the same. Each needs its own colour, design or size." };
   }
 
-  // Photos are checked before anything is saved: one that is too small would look blurry in the store.
-  const images = filesFrom(formData, "images");
-  for (const f of images) {
-    const problem = await imageProblem(f, "product");
-    if (problem) return { error: problem };
-  }
+  // Photos are checked (and reduced if huge) before anything is saved: one that is too small would look blurry in the store.
+  const checked = await Promise.all(filesFrom(formData, "images").map((f) => prepareImage(f, "product")));
+  const images = checked.flatMap((c) => ("image" in c ? [c.image] : []));
+  const rejected = checked.find((c) => "problem" in c);
+  if (rejected && "problem" in rejected) return { error: rejected.problem };
 
   const row = {
     name: v.name,
@@ -129,11 +129,18 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
   };
 
   // Create or update the product, retrying once with a different slug if it is taken.
+  // Every database call below that does not depend on another runs at the same time: each one is a
+  // round trip, and a product with many variants and photos used to wait for them one after another.
   let productId = v.id;
+  let existingIds: number[] = [];
   if (productId) {
     const patch = v.slug ? { ...row, slug: slugify(v.slug) } : row;
-    const { error } = await supabase.from("products").update(patch).eq("id", productId);
+    const [{ error }, { data: existing }] = await Promise.all([
+      supabase.from("products").update(patch).eq("id", productId),
+      supabase.from("product_variants").select("id").eq("product_id", productId),
+    ]);
     if (error) return { error: error.code === "23505" ? "Another product already uses that URL name." : error.message };
+    existingIds = (existing ?? []).map((x) => x.id);
   } else {
     const base = slugify(v.slug || v.name) || "product";
     for (const slug of [base, `${base}-${randomSuffix()}`]) {
@@ -146,15 +153,19 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     }
     if (!productId) return { error: "Could not create the product. Try a different name." };
   }
+  const pid = productId;
 
-  // Variants: update the ones with ids, insert the new, remove the ones that were dropped.
-  const { data: existing } = await supabase.from("product_variants").select("id").eq("product_id", productId);
+  // Variants: update the ones with ids, insert the new ones in a single call, remove the ones that were dropped.
   const keep = new Set(v.variants.flatMap((x) => (x.id ? [x.id] : [])));
-  const drop = (existing ?? []).map((x) => x.id).filter((id) => !keep.has(id));
+  const drop = existingIds.filter((id) => !keep.has(id));
   if (drop.length) {
+    // First, so a new variant can reuse the SKU of one that was just removed.
     const { error } = await supabase.from("product_variants").delete().in("id", drop);
     if (error) return { error: error.message };
   }
+  const skuTaken = (label: string) => `The SKU for "${label}" is already in use.`;
+  const variantWrites: PromiseLike<string | null>[] = [];
+  const newRows: Database["public"]["Tables"]["product_variants"]["Insert"][] = [];
   for (const [i, x] of v.variants.entries()) {
     const fullName = variantNames[i];
     const fields = {
@@ -167,34 +178,64 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
       is_active: x.isActive,
       sort: i,
     };
-    const { error } = x.id
-      ? await supabase.from("product_variants").update({ ...fields, ...(x.sku ? { sku: x.sku } : {}) }).eq("id", x.id)
-      : await supabase.from("product_variants").insert({
-          ...fields,
-          product_id: productId,
-          sku: x.sku || `GG-${productId}-${slugify(fullName).toUpperCase().slice(0, 12) || "STD"}-${randomSuffix(3).toUpperCase()}`,
-        });
-    if (error) {
-      return { error: error.code === "23505" ? `The SKU for "${fullName}" is already in use.` : error.message };
+    if (x.id) {
+      variantWrites.push(
+        supabase
+          .from("product_variants")
+          .update({ ...fields, ...(x.sku ? { sku: x.sku } : {}) })
+          .eq("id", x.id)
+          .then(({ error }) => (error ? (error.code === "23505" ? skuTaken(fullName) : error.message) : null)),
+      );
+    } else {
+      newRows.push({
+        ...fields,
+        product_id: pid,
+        sku: x.sku || `GG-${pid}-${slugify(fullName).toUpperCase().slice(0, 12) || "STD"}-${randomSuffix(3).toUpperCase()}`,
+      });
     }
   }
+  if (newRows.length) {
+    variantWrites.push(
+      supabase
+        .from("product_variants")
+        .insert(newRows)
+        .then(({ error }) =>
+          error ? (error.code === "23505" ? "A SKU you entered is already used by another variant." : error.message) : null,
+        ),
+    );
+  }
 
-  // Images
-  if (images.length) {
-    const { count } = await supabase.from("product_images").select("id", { count: "exact", head: true }).eq("product_id", productId);
-    let sort = count ?? 0;
-    try {
-      for (const file of images) {
-        const url = await uploadPublicImage(supabase, String(productId), file, "product");
-        const { error } = await supabase
-          .from("product_images")
-          .insert({ product_id: productId, url, alt: v.name, sort: sort++ });
-        if (error) throw new Error(error.message);
+  // Photos: stored side by side, then added to the product in one call. Anything stored that cannot be
+  // recorded is removed again, so the bucket never keeps files no product points to.
+  const savePhotos = async (): Promise<string | null> => {
+    if (!images.length) return null;
+    const [{ count }, uploads] = await Promise.all([
+      supabase.from("product_images").select("id", { count: "exact", head: true }).eq("product_id", pid),
+      Promise.allSettled(images.map((img) => uploadPreparedImage(supabase, String(pid), img))),
+    ]);
+    const urls = uploads.flatMap((u) => (u.status === "fulfilled" ? [u.value] : []));
+    if (urls.length) {
+      const { error } = await supabase
+        .from("product_images")
+        .insert(urls.map((url, i) => ({ product_id: pid, url, alt: v.name, sort: (count ?? 0) + i })));
+      if (error) {
+        await removeStoredImages(supabase, ...urls);
+        return error.message;
       }
-    } catch (e) {
-      refreshCatalog();
-      return { error: `Product saved, but an image failed: ${e instanceof Error ? e.message : "upload error"}` };
     }
+    const failed = uploads.find((u) => u.status === "rejected");
+    return failed ? (failed.reason instanceof Error ? failed.reason.message : "upload error") : null;
+  };
+
+  const [variantErrors, photoError] = await Promise.all([Promise.all(variantWrites), savePhotos()]);
+  const variantError = variantErrors.find((e) => e !== null);
+  if (variantError) {
+    refreshCatalog();
+    return { error: variantError };
+  }
+  if (photoError) {
+    refreshCatalog();
+    return { error: `Product saved, but an image failed: ${photoError}` };
   }
 
   refreshCatalog();
@@ -284,20 +325,25 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
   };
   if (!row.slug) return { error: "Enter a valid name." };
 
-  const { data: existing } = v.id
-    ? await supabase.from("categories").select("image_url").eq("id", v.id).maybeSingle()
-    : { data: null };
   const removeImage = formData.get("removeImage") === "on";
-
-  let imageUrl: string | undefined;
   const file = filesFrom(formData, "image")[0];
-  if (file) {
+
+  const uploadPhoto = async (): Promise<{ url?: string; error?: string }> => {
+    if (!file) return {};
     try {
-      imageUrl = await uploadPublicImage(supabase, "categories", file, "category");
+      return { url: await uploadPublicImage(supabase, "categories", file, "category") };
     } catch (e) {
       return { error: e instanceof Error ? e.message : "Image upload failed." };
     }
-  }
+  };
+
+  // The current row is read while the new photo uploads, since neither waits on the other.
+  const [{ data: existing }, upload] = await Promise.all([
+    v.id ? supabase.from("categories").select("image_url").eq("id", v.id).maybeSingle() : Promise.resolve({ data: null }),
+    uploadPhoto(),
+  ]);
+  if (upload.error) return { error: upload.error };
+  const imageUrl = upload.url;
 
   // New photo wins; otherwise "remove" clears it; otherwise leave the current one untouched.
   const imagePatch = imageUrl ? { image_url: imageUrl } : removeImage ? { image_url: null } : {};
