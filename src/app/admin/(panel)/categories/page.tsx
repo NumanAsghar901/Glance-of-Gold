@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { deleteCategory, saveCategory } from "@/app/actions/admin-catalog";
 import { ActionButton, ActionForm } from "@/components/admin/action-form";
-import { ImageSizeNote, PhotoInput } from "@/components/admin/photo-input";
+import { PhotoInput } from "@/components/admin/photo-input";
 import { Check, Field, Input, PageHeader, Panel, Pill, Textarea } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin/auth";
 
@@ -29,7 +29,7 @@ function Fields({ c, prefix }: { c: Cat; prefix: string }) {
         <Field label="Order in menus" htmlFor={`${prefix}-sort`} hint="Lower numbers come first.">
           <Input id={`${prefix}-sort`} name="sort" type="number" min={0} defaultValue={c.sort} />
         </Field>
-        <Field label="Home page photo" htmlFor={`${prefix}-image`} hint="Optional. Shown on the home page category tiles. Portrait is best, 1200 x 1500 (at least 800 x 1000). Large photos are reduced for you.">
+        <Field label="Home page photo" htmlFor={`${prefix}-image`} hint="Optional. Shown on the home page category tiles. Portrait is best, such as 1200 x 1500. Any size works.">
           <PhotoInput id={`${prefix}-image`} name="image" slot="category" />
         </Field>
       </div>
@@ -45,7 +45,6 @@ function Fields({ c, prefix }: { c: Cat; prefix: string }) {
               hint="It is deleted from storage and the home page falls back to the default picture. Upload a new one above to replace it instead."
             />
           </div>
-          <ImageSizeNote url={c.image_url} slot="category" />
         </div>
       )}
       <Check name="isActive" label="Visible in the store" defaultChecked={c.is_active} />

@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import sharp from "sharp";
 import type { requireAdmin } from "@/lib/admin/auth";
-import { describeImageSize, IMAGE_SPECS, type ImageSlot } from "@/lib/image-specs";
+import { MAX_EDGE, type ImageSlot } from "@/lib/image-specs";
 
 /** Helpers for the public product-images bucket (product photos, category photos, banners). */
 
@@ -46,13 +46,12 @@ async function pixelSize(buffer: Buffer): Promise<{ width: number; height: numbe
   return turned ? { width: meta.height, height: meta.width } : { width: meta.width, height: meta.height };
 }
 
-/** A photo that passed the size check and is ready to store, so it is decoded only once. */
+/** A photo that has been checked and is ready to store, so it is decoded only once. */
 export type PreparedImage = { name: string; body: Buffer; contentType: string; ext: string };
 
 /**
- * Checks a photo and gets it ready to store. A photo smaller than the minimum for its place would be stretched
- * by the browser and look blurry, so it is turned away with the size it needs. One longer than the slot needs is
- * reduced first (the admin form already does this in the browser; this is the safety net).
+ * Checks that a photo can be read and gets it ready to store. Any size is accepted. One longer than the slot keeps
+ * is reduced first (the admin form already does this in the browser; this is the safety net).
  */
 export async function prepareImage(file: File, slot: ImageSlot): Promise<{ problem: string } | { image: PreparedImage }> {
   const basic = validateImage(file);
@@ -65,10 +64,8 @@ export async function prepareImage(file: File, slot: ImageSlot): Promise<{ probl
     return { problem: `${file.name} could not be read as a picture.` };
   }
   if (!size) return { problem: `${file.name} could not be read as a picture.` };
-  const { verdict, text } = describeImageSize(slot, size.width, size.height);
-  if (verdict === "too-small") return { problem: `${file.name}: ${text}` };
 
-  const { maxEdge } = IMAGE_SPECS[slot];
+  const maxEdge = MAX_EDGE[slot];
   if (Math.max(size.width, size.height) > maxEdge) {
     const body = await sharp(buffer)
       .rotate()
@@ -81,7 +78,7 @@ export async function prepareImage(file: File, slot: ImageSlot): Promise<{ probl
   return { image: { name: file.name, body: buffer, contentType: file.type, ext: IMAGE_TYPES[file.type] } };
 }
 
-/** Why this photo cannot be used, or null if it can. */
+/** Why this photo cannot be used (unreadable or the wrong type), or null if it can. */
 export async function imageProblem(file: File, slot: ImageSlot): Promise<string | null> {
   const result = await prepareImage(file, slot);
   return "problem" in result ? result.problem : null;
@@ -95,7 +92,7 @@ export async function uploadPreparedImage(supabase: Supabase, folder: string, im
   return supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path).data.publicUrl;
 }
 
-/** Checks, prepares and uploads one photo. Throws a readable Error on failure or when the photo is too small for its place. */
+/** Checks, prepares and uploads one photo. Throws a readable Error when it cannot be read or stored. */
 export async function uploadPublicImage(supabase: Supabase, folder: string, file: File, slot: ImageSlot): Promise<string> {
   const result = await prepareImage(file, slot);
   if ("problem" in result) throw new Error(result.problem);

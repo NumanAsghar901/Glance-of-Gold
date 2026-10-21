@@ -106,7 +106,7 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     return { error: "Two variants are the same. Each needs its own colour, design or size." };
   }
 
-  // Photos are checked (and reduced if huge) before anything is saved: one that is too small would look blurry in the store.
+  // Photos are checked (unreadable ones are turned away) and reduced if huge before anything is saved.
   const checked = await Promise.all(filesFrom(formData, "images").map((f) => prepareImage(f, "product")));
   const images = checked.flatMap((c) => ("image" in c ? [c.image] : []));
   const rejected = checked.find((c) => "problem" in c);

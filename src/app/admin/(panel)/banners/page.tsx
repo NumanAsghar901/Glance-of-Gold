@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { deleteBanner, saveBanner } from "@/app/actions/admin-marketing";
 import { ActionButton, ActionForm } from "@/components/admin/action-form";
-import { ImageSizeNote, PhotoInput } from "@/components/admin/photo-input";
+import { PhotoInput } from "@/components/admin/photo-input";
 import { Check, Field, Input, PageHeader, Panel, Pill } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin/auth";
 
@@ -25,10 +25,10 @@ function Fields({ b, p }: { b: B; p: string }) {
     <>
       {b.id && <input type="hidden" name="id" value={b.id} />}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Wide photo (computers and tablets)" htmlFor={`${p}-img`} hint="Landscape, best 2400 x 1200 (at least 1600 x 800), about twice as wide as tall. Keep the left half calm because the headline sits there. Large photos are reduced for you.">
+        <Field label="Wide photo (computers and tablets)" htmlFor={`${p}-img`} hint="Landscape, about twice as wide as tall, such as 2400 x 1200. Any size works. Keep the left half calm because the headline sits there.">
           <PhotoInput id={`${p}-img`} name="image" slot="banner-wide" required={!b.id} />
         </Field>
-        <Field label="Tall photo (phones, optional)" htmlFor={`${p}-mimg`} hint="Portrait like a phone screen, best 1080 x 1920 (at least 750 x 1300), with the subject in the top half. Without it the wide photo is cropped to fit, and a phone shows only a narrow slice of it.">
+        <Field label="Tall photo (phones, optional)" htmlFor={`${p}-mimg`} hint="Portrait like a phone screen, such as 1080 x 1920, with the subject in the top half. Any size works. Without it the wide photo is cropped to fit, and a phone shows only a narrow slice of it.">
           <PhotoInput id={`${p}-mimg`} name="mobileImage" slot="banner-tall" />
         </Field>
       </div>
@@ -49,8 +49,6 @@ function Fields({ b, p }: { b: B; p: string }) {
           )}
           {(b.image_url || b.mobile_image_url) && (
             <div className="w-full space-y-1.5">
-              {b.image_url && <ImageSizeNote url={b.image_url} slot="banner-wide" />}
-              {b.mobile_image_url && <ImageSizeNote url={b.mobile_image_url} slot="banner-tall" />}
               {!b.mobile_image_url && (
                 <p className="text-xs leading-relaxed text-gold-hover">
                   No tall photo for phones yet. Phones then show only a narrow slice of the wide photo, stretched, which looks blurry. Add a tall photo above.

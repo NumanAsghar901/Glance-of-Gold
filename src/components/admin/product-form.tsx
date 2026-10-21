@@ -385,7 +385,7 @@ export function ProductForm({
         <Field
           label="Upload photos"
           htmlFor="images"
-          hint="Portrait photos look best, 1200 x 1500 (at least 800 x 1000). Use the original from your camera: big photos are reduced for you, small ones look blurry. The first photo is the main image; the second appears when someone hovers over the product."
+          hint="Portrait photos look best, such as 1200 x 1500. Any size works, so use the original from your camera: very large photos are reduced for you. The first photo is the main image; the second appears when someone hovers over the product."
         >
           <PhotoInput id="images" name="images" slot="product" multiple />
         </Field>
