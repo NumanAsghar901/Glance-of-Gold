@@ -6,7 +6,6 @@ import { discountPercent, Price } from "@/components/ui/price";
 import { StarRating } from "@/components/ui/star-rating";
 import { StockTag } from "@/components/ui/stock-tag";
 import type { ProductSummary } from "@/lib/data/types";
-import { photoRatio } from "@/lib/image-ratio";
 import { cn } from "@/lib/utils";
 
 const SIZES = "(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 50vw";
@@ -26,8 +25,8 @@ export function ProductCard({
 
   return (
     <article className={cn("group", className)}>
-      {/* The frame takes the shape of the first photo, so nothing is cropped and no empty band shows around it. */}
-      <div className="relative overflow-hidden bg-sand" style={{ aspectRatio: photoRatio(first) }}>
+      {/* Every card has the same frame, so a row of cards lines up; the photo fills it. The product page shows the whole photo. */}
+      <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-sand">
         {/* Image link is decorative for assistive tech; the title below is the real link. */}
         <Link href={href} tabIndex={-1} aria-hidden="true" className="absolute inset-0">
           {first ? (
@@ -40,7 +39,7 @@ export function ProductCard({
                 quality={75}
                 priority={priority}
                 className={cn(
-                  "object-contain transition-opacity duration-500 ease-(--ease-out)",
+                  "object-cover transition-opacity duration-500 ease-(--ease-out)",
                   second && "group-hover:opacity-0",
                 )}
               />
@@ -51,7 +50,7 @@ export function ProductCard({
                   fill
                   sizes={SIZES}
                   quality={75}
-                  className="object-contain opacity-0 transition-opacity duration-500 ease-(--ease-out) group-hover:opacity-100"
+                  className="object-cover opacity-0 transition-opacity duration-500 ease-(--ease-out) group-hover:opacity-100"
                 />
               )}
             </>

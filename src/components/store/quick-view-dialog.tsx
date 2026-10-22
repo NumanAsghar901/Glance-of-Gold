@@ -108,7 +108,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
   return (
     <div className="grid md:grid-cols-2">
       <div className="min-w-0 bg-sand">
-        <div className="relative" style={{ aspectRatio: photoRatio(product.images[0]) }}>
+        <div className="relative overflow-hidden rounded-sm" style={{ aspectRatio: photoRatio(product.images[0]) }}>
           {image && (
             <Image
               key={image.url}

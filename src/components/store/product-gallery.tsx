@@ -47,7 +47,7 @@ export function ProductGallery({ images, name }: { images: ProductImage[]; name:
                 aria-label={`Show image ${i + 1} of ${images.length}`}
                 aria-current={i === active}
                 className={cn(
-                  "relative block w-full overflow-hidden bg-sand outline-offset-2 transition-opacity duration-200",
+                  "relative block w-full overflow-hidden rounded-sm bg-sand outline-offset-2 transition-opacity duration-200",
                   i === active ? "ring-1 ring-gold" : "opacity-60 hover:opacity-100",
                 )}
                 style={{ aspectRatio: photoRatio(img) }}
@@ -67,7 +67,7 @@ export function ProductGallery({ images, name }: { images: ProductImage[]; name:
             const i = Math.round(el.scrollLeft / el.clientWidth);
             if (i !== active) setActive(i);
           }}
-          className="flex snap-x snap-mandatory overflow-x-auto bg-sand [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex snap-x snap-mandatory overflow-x-auto rounded-sm bg-sand [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-roledescription="carousel"
           aria-label={`${name} images`}
         >
