@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Brand mark: a solitaire ring whose band is drawn as a "G".
+ * Brand mark: an "L" for Little Luxe Glow with a sparkle beside it for the glow.
  * Thin gold strokes only, matching the hairline style of the site.
  */
 export function LogoMark({ className }: { className?: string }) {
@@ -16,11 +16,13 @@ export function LogoMark({ className }: { className?: string }) {
       aria-hidden="true"
       className={cn("text-gold", className)}
     >
-      {/* Band shaped as a G */}
-      <path d="M47.32 25.14A20 20 0 1 0 52 38H36" />
-      {/* Gem */}
-      <path d="M32 3.5 38.5 11 32 18 25.5 11Z" />
-      <path d="M25.5 11h13M32 3.5 29.5 11 32 18l2.5-7Z" strokeWidth="1.1" />
+      <g transform="translate(-5 0)">
+        {/* The L */}
+        <path d="M19 7v37.5c0 3.6 2.4 6.5 6 6.5h22" />
+        {/* Large and small sparkle */}
+        <path d="M43 6c.9 7.2 4.6 10.9 11.8 11.8C47.6 18.7 43.9 22.4 43 29.6c-.9-7.2-4.6-10.9-11.8-11.8C38.4 16.9 42.1 13.2 43 6Z" />
+        <path d="M51.5 33c.5 3.7 2.3 5.5 6 6-3.7.5-5.5 2.3-6 6-.5-3.7-2.3-5.5-6-6 3.7-.5 5.5-2.3 6-6Z" strokeWidth="1.2" />
+      </g>
     </svg>
   );
 }
