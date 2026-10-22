@@ -1,6 +1,8 @@
 "use client";
 
-import { Eye, Heart } from "lucide-react";
+import { Check, Eye, Heart, ShoppingBag } from "lucide-react";
+import { useState } from "react";
+import { cartActions } from "@/lib/cart-store";
 import type { ProductSummary } from "@/lib/data/types";
 import { quickView } from "@/lib/quick-view-store";
 import { useWishlist, wishlistActions } from "@/lib/wishlist-store";
@@ -47,10 +49,14 @@ export function WishlistButton({
 
 /**
  * Overlay inside a product card's image area.
- * Mouse devices: the eye appears on hover or keyboard focus. Touch devices have no hover, so it is always visible.
- * There is deliberately no Add to cart here: customers add from the product page (or quick view).
+ * Mouse devices: the eye and the add bar appear on hover or keyboard focus.
+ * Touch devices have no hover, so the eye is always visible there; the add bar is desktop only.
  */
-export function CardActions({ product }: { product: ProductSummary }) {
+export function CardActions({ product, showAdd = true }: { product: ProductSummary; /** Set false to leave out the Add to cart bar (the heart and quick view stay). */ showAdd?: boolean }) {
+  const [added, setAdded] = useState(false);
+  const qa = product.quickAdd;
+  const canAdd = showAdd && product.inStock;
+
   const hoverOnly =
     "[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100";
 
@@ -67,6 +73,43 @@ export function CardActions({ product }: { product: ProductSummary }) {
           <Eye className="size-[1.125rem]" strokeWidth={1.5} aria-hidden="true" />
         </button>
       </div>
+
+      {canAdd && (
+        <button
+          type="button"
+          onClick={() => {
+            if (!qa) return quickView.open(product.slug);
+            cartActions.add({
+              variantId: qa.variantId,
+              productId: product.id,
+              slug: product.slug,
+              name: product.name,
+              variantName: qa.variantName,
+              price: product.price,
+              image: product.images[0]?.url ?? null,
+              stock: qa.stock,
+            });
+            setAdded(true);
+            window.setTimeout(() => setAdded(false), 1500);
+          }}
+          className={cn(
+            // Desktop only (a screen that can hover): phones and tablets have no add bar on cards, they add from the product page.
+            "absolute inset-x-0 bottom-0 hidden h-11 items-center justify-center gap-2 bg-foreground/92 text-sm font-medium text-background backdrop-blur-0 lg:[@media(hover:hover)]:flex",
+            "transition-[transform,background-color,color] duration-300 ease-(--ease-out) hover:bg-gold hover:text-foreground active:brightness-95",
+            "[@media(hover:hover)]:translate-y-full [@media(hover:hover)]:group-hover:translate-y-0 [@media(hover:hover)]:group-focus-within:translate-y-0",
+          )}
+        >
+          {added ? (
+            <>
+              <Check className="size-4" strokeWidth={1.75} /> Added
+            </>
+          ) : (
+            <>
+              <ShoppingBag className="size-4" strokeWidth={1.5} /> {qa ? "Add to cart" : "Choose options"}
+            </>
+          )}
+        </button>
+      )}
     </>
   );
 }
