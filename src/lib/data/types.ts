@@ -2,6 +2,9 @@ export type ProductImage = {
   url: string;
   alt: string;
   blur_data_url: string | null;
+  /** Pixel size of the photo, so cards and galleries take its shape. Null for photos not measured yet. */
+  width: number | null;
+  height: number | null;
 };
 
 export type ProductVariant = {

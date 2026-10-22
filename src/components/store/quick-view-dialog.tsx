@@ -10,6 +10,7 @@ import { useVariantSelection } from "@/components/store/use-variant-selection";
 import { choiceNoun, SelectionPrice, VariantPicker } from "@/components/store/variant-picker";
 import { Button } from "@/components/ui/button";
 import { StockTag } from "@/components/ui/stock-tag";
+import { photoRatio } from "@/lib/image-ratio";
 import { piecesLabel } from "@/lib/order-text";
 import type { ProductDetail } from "@/lib/data/types";
 import { quickView, useQuickView } from "@/lib/quick-view-store";
@@ -107,7 +108,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
   return (
     <div className="grid md:grid-cols-2">
       <div className="min-w-0 bg-sand">
-        <div className="relative aspect-[4/5]">
+        <div className="relative" style={{ aspectRatio: photoRatio(product.images[0]) }}>
           {image && (
             <Image
               key={image.url}

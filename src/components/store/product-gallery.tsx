@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useCallback, useRef, useState } from "react";
 import { LogoMark } from "@/components/brand/logo";
 import type { ProductImage } from "@/lib/data/types";
+import { photoRatio } from "@/lib/image-ratio";
 import { cn } from "@/lib/utils";
 
 /**
@@ -46,9 +47,10 @@ export function ProductGallery({ images, name }: { images: ProductImage[]; name:
                 aria-label={`Show image ${i + 1} of ${images.length}`}
                 aria-current={i === active}
                 className={cn(
-                  "relative block aspect-[4/5] w-full overflow-hidden bg-sand outline-offset-2 transition-opacity duration-200",
+                  "relative block w-full overflow-hidden bg-sand outline-offset-2 transition-opacity duration-200",
                   i === active ? "ring-1 ring-gold" : "opacity-60 hover:opacity-100",
                 )}
+                style={{ aspectRatio: photoRatio(img) }}
               >
                 <Image src={img.url} alt="" fill sizes="72px" quality={60} className="object-contain" />
               </button>
@@ -72,7 +74,9 @@ export function ProductGallery({ images, name }: { images: ProductImage[]; name:
           {images.map((img, i) => (
             <li
               key={img.url}
-              className="relative aspect-[4/5] w-full shrink-0 snap-center overflow-hidden"
+              className="relative w-full shrink-0 snap-center overflow-hidden"
+              // Every slide uses the shape of the first photo, so the carousel keeps one height while swiping.
+              style={{ aspectRatio: photoRatio(images[0]) }}
               aria-roledescription="slide"
               aria-label={`${i + 1} of ${images.length}`}
             >

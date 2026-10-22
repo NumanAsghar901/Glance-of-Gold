@@ -572,26 +572,32 @@ export type Database = {
         Row: {
           alt: string
           blur_data_url: string | null
+          height: number | null
           id: number
           product_id: number
           sort: number
           url: string
+          width: number | null
         }
         Insert: {
           alt?: string
           blur_data_url?: string | null
+          height?: number | null
           id?: never
           product_id: number
           sort?: number
           url: string
+          width?: number | null
         }
         Update: {
           alt?: string
           blur_data_url?: string | null
+          height?: number | null
           id?: never
           product_id?: number
           sort?: number
           url?: string
+          width?: number | null
         }
         Relationships: [
           {

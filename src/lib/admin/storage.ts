@@ -47,7 +47,8 @@ async function pixelSize(buffer: Buffer): Promise<{ width: number; height: numbe
 }
 
 /** A photo that has been checked and is ready to store, so it is decoded only once. */
-export type PreparedImage = { name: string; body: Buffer; contentType: string; ext: string };
+/** `width` and `height` are the photo as it is seen (after any camera rotation), kept so the store can frame it in its own shape. */
+export type PreparedImage = { name: string; body: Buffer; contentType: string; ext: string; width: number; height: number };
 
 /**
  * Checks that a photo can be read and gets it ready to store. Any size is accepted. One longer than the slot keeps
@@ -67,15 +68,17 @@ export async function prepareImage(file: File, slot: ImageSlot): Promise<{ probl
 
   const maxEdge = MAX_EDGE[slot];
   if (Math.max(size.width, size.height) > maxEdge) {
-    const body = await sharp(buffer)
+    const { data: body, info } = await sharp(buffer)
       .rotate()
       .resize({ width: maxEdge, height: maxEdge, fit: "inside", withoutEnlargement: true })
       .flatten({ background: "#ffffff" })
       .jpeg({ quality: 90, mozjpeg: true })
-      .toBuffer();
-    return { image: { name: file.name, body, contentType: "image/jpeg", ext: "jpg" } };
+      .toBuffer({ resolveWithObject: true });
+    return { image: { name: file.name, body, contentType: "image/jpeg", ext: "jpg", width: info.width, height: info.height } };
   }
-  return { image: { name: file.name, body: buffer, contentType: file.type, ext: IMAGE_TYPES[file.type] } };
+  return {
+    image: { name: file.name, body: buffer, contentType: file.type, ext: IMAGE_TYPES[file.type], width: size.width, height: size.height },
+  };
 }
 
 /** Why this photo cannot be used (unreadable or the wrong type), or null if it can. */

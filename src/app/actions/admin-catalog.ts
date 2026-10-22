@@ -213,13 +213,21 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
       supabase.from("product_images").select("id", { count: "exact", head: true }).eq("product_id", pid),
       Promise.allSettled(images.map((img) => uploadPreparedImage(supabase, String(pid), img))),
     ]);
-    const urls = uploads.flatMap((u) => (u.status === "fulfilled" ? [u.value] : []));
-    if (urls.length) {
-      const { error } = await supabase
-        .from("product_images")
-        .insert(urls.map((url, i) => ({ product_id: pid, url, alt: v.name, sort: (count ?? 0) + i })));
+    const stored = uploads.flatMap((u, i) => (u.status === "fulfilled" ? [{ url: u.value, image: images[i] }] : []));
+    if (stored.length) {
+      const rows = (withSize: boolean) =>
+        stored.map(({ url, image }, i) => ({
+          product_id: pid,
+          url,
+          alt: v.name,
+          sort: (count ?? 0) + i,
+          ...(withSize ? { width: image.width, height: image.height } : {}),
+        }));
+      let { error } = await supabase.from("product_images").insert(rows(true));
+      // Before the photo size migration has been run the columns do not exist: save without them.
+      if (error && /width|height|schema cache/i.test(error.message)) ({ error } = await supabase.from("product_images").insert(rows(false)));
       if (error) {
-        await removeStoredImages(supabase, ...urls);
+        await removeStoredImages(supabase, ...stored.map((s) => s.url));
         return error.message;
       }
     }

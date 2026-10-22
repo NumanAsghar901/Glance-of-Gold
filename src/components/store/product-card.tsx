@@ -6,6 +6,7 @@ import { discountPercent, Price } from "@/components/ui/price";
 import { StarRating } from "@/components/ui/star-rating";
 import { StockTag } from "@/components/ui/stock-tag";
 import type { ProductSummary } from "@/lib/data/types";
+import { photoRatio } from "@/lib/image-ratio";
 import { cn } from "@/lib/utils";
 
 const SIZES = "(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 50vw";
@@ -25,7 +26,8 @@ export function ProductCard({
 
   return (
     <article className={cn("group", className)}>
-      <div className="relative aspect-[4/5] overflow-hidden bg-sand">
+      {/* The frame takes the shape of the first photo, so nothing is cropped and no empty band shows around it. */}
+      <div className="relative overflow-hidden bg-sand" style={{ aspectRatio: photoRatio(first) }}>
         {/* Image link is decorative for assistive tech; the title below is the real link. */}
         <Link href={href} tabIndex={-1} aria-hidden="true" className="absolute inset-0">
           {first ? (
