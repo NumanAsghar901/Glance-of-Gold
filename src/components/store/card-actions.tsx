@@ -93,8 +93,8 @@ export function CardActions({ product, showAdd = true }: { product: ProductSumma
             window.setTimeout(() => setAdded(false), 1500);
           }}
           className={cn(
-            // Desktop only (a screen that can hover): phones and tablets have no add bar on cards, they add from the product page.
-            "absolute inset-x-0 bottom-0 hidden h-11 items-center justify-center gap-2 bg-foreground/92 text-sm font-medium text-background backdrop-blur-0 lg:[@media(hover:hover)]:flex",
+            // Only on a screen that can hover (a mouse, any window width): phones and tablets have no add bar on cards, they add from the product page.
+            "absolute inset-x-0 bottom-0 hidden h-11 items-center justify-center gap-2 bg-foreground/92 text-sm font-medium text-background backdrop-blur-0 [@media(hover:hover)]:flex",
             "transition-[transform,background-color,color] duration-300 ease-(--ease-out) hover:bg-gold hover:text-foreground active:brightness-95",
             "[@media(hover:hover)]:translate-y-full [@media(hover:hover)]:group-hover:translate-y-0 [@media(hover:hover)]:group-focus-within:translate-y-0",
           )}
