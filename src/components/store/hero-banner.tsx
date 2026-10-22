@@ -106,12 +106,12 @@ export function HeroBanner({ slides }: { slides: HeroSlide[] }) {
             <div className="absolute inset-0 hidden bg-gradient-to-r from-background/80 via-background/25 to-transparent md:block" aria-hidden="true" />
             <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-background via-background/85 to-transparent md:hidden" aria-hidden="true" />
 
-            <div className="wrap relative flex h-full flex-col justify-end pb-24 md:justify-center md:pb-0">
-              <div className={cn("slide-text max-w-xl", active && "slide-text-on")}>
+            <div className="wrap relative flex h-full flex-col justify-end pb-24 md:justify-center md:py-24">
+              <div className={cn("slide-text max-w-2xl", active && "slide-text-on")}>
                 {i === 0 ? (
-                  <h1 className="text-display max-w-[12ch]">{s.heading}</h1>
+                  <h1 className="text-hero max-w-[16ch]">{s.heading}</h1>
                 ) : (
-                  <h2 className="text-display max-w-[12ch]">{s.heading}</h2>
+                  <h2 className="text-hero max-w-[16ch]">{s.heading}</h2>
                 )}
                 {s.subheading && (
                   <p className="mt-5 max-w-md text-base leading-relaxed text-foreground/75 md:mt-7 md:text-lg">{s.subheading}</p>
