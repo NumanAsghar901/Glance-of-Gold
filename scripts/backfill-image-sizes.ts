@@ -32,7 +32,13 @@ async function main() {
 
   let done = 0;
   let failed = 0;
+  let samples = 0;
   for (const photo of photos) {
+    // The built-in sample pictures live in /public (not in storage) and are all 800 x 1000, the standard frame.
+    if (!/^https?:\/\//.test(photo.url)) {
+      samples++;
+      continue;
+    }
     try {
       const res = await fetch(photo.url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -51,7 +57,12 @@ async function main() {
       console.error(`Photo ${photo.id} skipped: ${e instanceof Error ? e.message : e}`);
     }
   }
-  console.log(`Measured ${done} photo${done === 1 ? "" : "s"}${failed ? `, ${failed} skipped` : ""}.`);
+  console.log(
+    `Measured ${done} photo${done === 1 ? "" : "s"}` +
+      (samples ? `, ${samples} built-in sample picture${samples === 1 ? "" : "s"} left as they are (already the standard shape)` : "") +
+      (failed ? `, ${failed} could not be read` : "") +
+      ".",
+  );
 }
 
 main().catch((err) => {
