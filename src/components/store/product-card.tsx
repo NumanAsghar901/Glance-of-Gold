@@ -38,8 +38,8 @@ export function ProductCard({
                 quality={75}
                 priority={priority}
                 className={cn(
-                  "object-cover transition-[opacity,transform] duration-500 ease-(--ease-out)",
-                  second ? "group-hover:opacity-0" : "group-hover:scale-[1.03]",
+                  "object-contain transition-opacity duration-500 ease-(--ease-out)",
+                  second && "group-hover:opacity-0",
                 )}
               />
               {second && (
@@ -49,7 +49,7 @@ export function ProductCard({
                   fill
                   sizes={SIZES}
                   quality={75}
-                  className="object-cover opacity-0 transition-opacity duration-500 ease-(--ease-out) group-hover:opacity-100"
+                  className="object-contain opacity-0 transition-opacity duration-500 ease-(--ease-out) group-hover:opacity-100"
                 />
               )}
             </>

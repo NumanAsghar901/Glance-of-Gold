@@ -50,7 +50,7 @@ export function ProductGallery({ images, name }: { images: ProductImage[]; name:
                   i === active ? "ring-1 ring-gold" : "opacity-60 hover:opacity-100",
                 )}
               >
-                <Image src={img.url} alt="" fill sizes="72px" quality={60} className="object-cover" />
+                <Image src={img.url} alt="" fill sizes="72px" quality={60} className="object-contain" />
               </button>
             </li>
           ))}
@@ -83,7 +83,7 @@ export function ProductGallery({ images, name }: { images: ProductImage[]; name:
                 sizes="(min-width: 1024px) 48vw, 100vw"
                 quality={85}
                 priority={i === 0}
-                className="object-cover transition-transform duration-700 ease-(--ease-out) [@media(hover:hover)]:hover:scale-[1.06]"
+                className="object-contain"
               />
             </li>
           ))}

@@ -95,7 +95,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                     <td className={td}>
                       <Link prefetch={false} href={`/admin/products/${p.id}`} className="flex items-center gap-3">
                         <span className="relative h-14 w-11 shrink-0 overflow-hidden bg-sand">
-                          {img && <Image src={img.url} alt="" fill sizes="44px" quality={60} className="object-cover" />}
+                          {img && <Image src={img.url} alt="" fill sizes="44px" quality={60} className="object-contain" />}
                         </span>
                         <span className="font-medium underline-offset-4 hover:underline">{p.name}</span>
                       </Link>

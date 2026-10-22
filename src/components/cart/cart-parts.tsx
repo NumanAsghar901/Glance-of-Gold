@@ -102,7 +102,7 @@ export function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?
         onClick={onNavigate}
         className="relative block h-24 w-[4.75rem] shrink-0 overflow-hidden bg-sand"
       >
-        {line.image && <Image src={line.image} alt="" fill sizes="80px" quality={60} className="object-cover" />}
+        {line.image && <Image src={line.image} alt="" fill sizes="80px" quality={60} className="object-contain" />}
       </Link>
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-start justify-between gap-3">

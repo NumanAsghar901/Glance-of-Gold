@@ -116,7 +116,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
               fill
               sizes="(min-width: 768px) 28rem, 94vw"
               quality={85}
-              className="object-cover"
+              className="object-contain"
             />
           )}
         </div>
@@ -134,7 +134,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
                     i === imageIndex ? "ring-1 ring-gold" : "opacity-60 hover:opacity-100",
                   )}
                 >
-                  <Image src={img.url} alt="" fill sizes="48px" quality={60} className="object-cover" />
+                  <Image src={img.url} alt="" fill sizes="48px" quality={60} className="object-contain" />
                 </button>
               </li>
             ))}

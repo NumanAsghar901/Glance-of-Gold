@@ -51,7 +51,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
               {images.map((img, i) => (
                 <li key={img.id} className="space-y-2">
                   <div className="relative aspect-[4/5] overflow-hidden bg-sand">
-                    <Image src={img.url} alt={img.alt} fill sizes="200px" quality={60} className="object-cover" />
+                    <Image src={img.url} alt={img.alt} fill sizes="200px" quality={60} className="object-contain" />
                     {i === 0 && (
                       <span className="absolute left-2 top-2">
                         <Pill tone="good">Main</Pill>
