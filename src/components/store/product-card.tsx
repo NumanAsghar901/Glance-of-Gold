@@ -5,44 +5,22 @@ import { CardActions } from "@/components/store/card-actions";
 import { discountPercent, Price } from "@/components/ui/price";
 import { StarRating } from "@/components/ui/star-rating";
 import { StockTag } from "@/components/ui/stock-tag";
-import type { ProductImage, ProductSummary } from "@/lib/data/types";
+import { DEFAULT_PHOTO_RATIO } from "@/lib/image-ratio";
+import type { ProductSummary } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
 
 const SIZES = "(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 50vw";
 
-/** Frames that already fit the photo need no filler: within this much of 4:5 the photo just fills the card. */
-const CARD_RATIO = 4 / 5;
-
-/**
- * A photo shown whole inside the card frame. When its shape differs from the frame, the leftover space is
- * filled with a tiny copy of the same photo stretched to fit (the browser smooths it into a soft blur, so no
- * filter is needed and it costs a few hundred bytes), instead of a flat band.
- */
-function CardPhoto({ photo, priority = false, className }: { photo: ProductImage; priority?: boolean; className?: string }) {
-  const fits = !photo.width || !photo.height || Math.abs(photo.width / photo.height - CARD_RATIO) < 0.03;
-  return (
-    <div className={cn("absolute inset-0", className)}>
-      {!fits && <Image src={photo.url} alt="" fill sizes="16px" quality={60} aria-hidden="true" className="object-cover" />}
-      <Image
-        src={photo.url}
-        alt=""
-        fill
-        sizes={SIZES}
-        quality={75}
-        priority={priority}
-        className={fits ? "object-cover" : "object-contain"}
-      />
-    </div>
-  );
-}
-
 export function ProductCard({
   product,
   priority = false,
+  ratio = DEFAULT_PHOTO_RATIO,
   className,
 }: {
   product: ProductSummary;
   priority?: boolean;
+  /** Frame shape (width over height), the same for every card in a grid: see `commonRatio`. */
+  ratio?: number;
   className?: string;
 }) {
   const [first, second] = product.images;
@@ -51,21 +29,32 @@ export function ProductCard({
 
   return (
     <article className={cn("group", className)}>
-      {/* Every card has the same frame, so a row of cards lines up. The whole photo shows inside it. */}
-      <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-sand">
+      {/* Every card in a grid has the same frame, shaped like most of its photos, so rows line up and most photos show whole. */}
+      <div className="relative overflow-hidden rounded-sm bg-sand" style={{ aspectRatio: ratio }}>
         {/* Image link is decorative for assistive tech; the title below is the real link. */}
         <Link href={href} tabIndex={-1} aria-hidden="true" className="absolute inset-0">
           {first ? (
             <>
-              <CardPhoto
-                photo={first}
+              <Image
+                src={first.url}
+                alt=""
+                fill
+                sizes={SIZES}
+                quality={75}
                 priority={priority}
-                className={cn("transition-opacity duration-500 ease-(--ease-out)", second && "group-hover:opacity-0")}
+                className={cn(
+                  "object-cover transition-opacity duration-500 ease-(--ease-out)",
+                  second && "group-hover:opacity-0",
+                )}
               />
               {second && (
-                <CardPhoto
-                  photo={second}
-                  className="opacity-0 transition-opacity duration-500 ease-(--ease-out) group-hover:opacity-100"
+                <Image
+                  src={second.url}
+                  alt=""
+                  fill
+                  sizes={SIZES}
+                  quality={75}
+                  className="object-cover opacity-0 transition-opacity duration-500 ease-(--ease-out) group-hover:opacity-100"
                 />
               )}
             </>

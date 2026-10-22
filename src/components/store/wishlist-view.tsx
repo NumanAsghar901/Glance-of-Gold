@@ -7,6 +7,7 @@ import { GridSkeleton } from "@/components/store/grid-skeleton";
 import { ProductCard } from "@/components/store/product-card";
 import { Button } from "@/components/ui/button";
 import type { ProductSummary } from "@/lib/data/types";
+import { commonRatio } from "@/lib/image-ratio";
 import { useWishlist } from "@/lib/wishlist-store";
 
 const noop = () => () => {};
@@ -45,11 +46,12 @@ export function WishlistView() {
     );
   }
 
+  const ratio = commonRatio(shown.map((x) => x.images[0]));
   return (
     <ul className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 md:gap-x-6 xl:grid-cols-4">
       {shown.map((p) => (
         <li key={p.id}>
-          <ProductCard product={p} />
+          <ProductCard product={p} ratio={ratio} />
         </li>
       ))}
     </ul>
