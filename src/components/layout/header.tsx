@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { CartButton } from "@/components/cart/cart-drawer";
+import { HomeLink } from "@/components/layout/home-link";
 import { CategoryStrip } from "@/components/layout/category-strip";
 import { SiteMenu } from "@/components/layout/site-menu";
 import { WishlistLink } from "@/components/layout/wishlist-link";
@@ -15,9 +16,9 @@ export function Header({ categories }: { categories: { id: number; slug: string;
     <>
       <header className="sticky top-0 z-40 border-b border-border bg-background">
         <div className="wrap grid h-16 grid-cols-[1fr_auto] items-center gap-4 lg:h-20 lg:grid-cols-[1fr_auto_1fr]">
-          <Link href="/" aria-label={`${site.name} home`} className="justify-self-start">
+          <HomeLink aria-label={`${site.name} home`} className="justify-self-start">
             <Logo />
-          </Link>
+          </HomeLink>
 
           <nav aria-label="Primary" className="hidden lg:block">
             <ul className="flex items-center gap-10 text-[0.9375rem]">

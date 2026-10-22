@@ -3,6 +3,7 @@
 import { House, Mail, Menu, MessageCircle, Phone, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
+import { HomeLink } from "@/components/layout/home-link";
 import { Logo } from "@/components/brand/logo";
 import { buttonVariants } from "@/components/ui/button";
 import { helpNav, site, whatsappLink } from "@/lib/site";
@@ -42,9 +43,9 @@ export function SiteMenu({ categories }: { categories: Category[] }) {
       >
         <div className="flex h-full flex-col overflow-y-auto px-6 pb-8 pt-5">
           <div className="flex items-center justify-between">
-            <Link href="/" onClick={close} aria-label={`${site.name} home`}>
+            <HomeLink onClick={close} aria-label={`${site.name} home`}>
               <Logo compact />
-            </Link>
+            </HomeLink>
             <button
               type="button"
               onClick={close}
