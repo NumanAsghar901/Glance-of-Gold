@@ -105,7 +105,7 @@ export default async function Home() {
       {/* New arrivals ---------------------------------------------------------- */}
       <section className="wrap pt-24 lg:pt-32">
         <SectionHeading title="New arrivals" linkLabel="View all" href="/shop?sort=newest" />
-        <ProductGrid products={newest.items} priorityCount={0} className="mt-10" />
+        <ProductGrid products={newest.items} priorityCount={0} showAdd={false} className="mt-10" />
       </section>
 
       {/* Gift offer: the gifts are shown as round stones ------------------------------ */}
@@ -142,7 +142,7 @@ export default async function Home() {
       {featured.items.length > 0 && (
         <section className="wrap pt-24 lg:pt-32">
           <SectionHeading title="Customer favourites" linkLabel="Shop all" href="/shop" />
-          <ProductGrid products={featured.items} className="mt-10" />
+          <ProductGrid products={featured.items} showAdd={false} className="mt-10" />
         </section>
       )}
 

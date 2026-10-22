@@ -52,10 +52,10 @@ export function WishlistButton({
  * Mouse devices: the eye and the add bar appear on hover or keyboard focus.
  * Touch devices have no hover, so they are always visible there.
  */
-export function CardActions({ product }: { product: ProductSummary }) {
+export function CardActions({ product, showAdd = true }: { product: ProductSummary; /** Set false to leave out the Add to cart bar (the heart and quick view stay). */ showAdd?: boolean }) {
   const [added, setAdded] = useState(false);
   const qa = product.quickAdd;
-  const canAdd = product.inStock;
+  const canAdd = showAdd && product.inStock;
 
   const hoverOnly =
     "[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100";

@@ -15,12 +15,15 @@ export function ProductCard({
   product,
   priority = false,
   ratio = DEFAULT_PHOTO_RATIO,
+  showAdd = true,
   className,
 }: {
   product: ProductSummary;
   priority?: boolean;
   /** Frame shape (width over height), the same for every card in a grid: see `commonRatio`. */
   ratio?: number;
+  /** False leaves out the Add to cart bar on the photo, as on the home page. */
+  showAdd?: boolean;
   className?: string;
 }) {
   const [first, second] = product.images;
@@ -74,7 +77,7 @@ export function ProductCard({
           )}
         </div>
 
-        <CardActions product={product} />
+        <CardActions product={product} showAdd={showAdd} />
       </div>
 
       <Link href={href} className="mt-4 block space-y-1">
