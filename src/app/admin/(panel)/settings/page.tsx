@@ -46,7 +46,7 @@ export default async function SettingsPage() {
             </Field>
           </div>
           <Field label="Contact email shown to customers" htmlFor="email">
-            <Input id="email" name="email" type="email" defaultValue={str("contact_email", "Glanceofgold@gmail.com")} required />
+            <Input id="email" name="email" type="email" defaultValue={str("contact_email", "Littleluxeglowofficial@gmail.com")} required />
           </Field>
         </ActionForm>
       </Panel>

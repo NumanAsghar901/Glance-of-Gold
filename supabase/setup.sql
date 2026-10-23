@@ -776,7 +776,7 @@ insert into public.settings (key, value) values
   ('courier', '"Leopards"'),
   ('whatsapp_number', '"923166568142"'),
   ('helpline', '"0316 6568142"'),
-  ('contact_email', '"Glanceofgold@gmail.com"')
+  ('contact_email', '"Littleluxeglowofficial@gmail.com"')
 on conflict (key) do nothing;
 
 -- Real account details are entered by the owner in admin; inactive until then.

@@ -17,7 +17,7 @@ Status: approved by owner on 2026-10-03. Update this file when decisions change.
 | Stock | Reserved at order time, released when an order is cancelled. Unverified transfer orders are cancelled manually by admin. |
 | Marketing | Admin-generated coupons, floating announcement strip, "buy 2, choose 1 free gift" offer, Meta Pixel + Conversions API |
 | Email | Nodemailer over Gmail SMTP with an app password |
-| Contact | Helpline 03166568142, Glanceofgold@gmail.com |
+| Contact | Helpline 03166568142, Littleluxeglowofficial@gmail.com |
 | Not in v1 | Reviews, size guide, Instagram section, accounts/wishlist, gift wrap, Urdu |
 
 ## Pages

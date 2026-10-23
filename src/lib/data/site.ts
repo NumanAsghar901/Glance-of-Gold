@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   courier: "Leopards",
   whatsapp: "923166568142",
   helpline: "0316 6568142",
-  email: "Glanceofgold@gmail.com",
+  email: "Littleluxeglowofficial@gmail.com",
 };
 
 export const getSettings = unstable_cache(

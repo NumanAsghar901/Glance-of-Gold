@@ -13,7 +13,7 @@ export const site = {
   emailUrl: trimSlash(process.env.EMAIL_SITE_URL ?? PRODUCTION_URL),
   helpline: "0316 6568142",
   helplineTel: "+923166568142",
-  email: "Glanceofgold@gmail.com",
+  email: "Littleluxeglowofficial@gmail.com",
   // International format without "+" for wa.me links. Defaults to the helpline.
   whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "923166568142",
   courier: "Leopards",

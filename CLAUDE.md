@@ -126,7 +126,7 @@ Target WCAG 2.1 AA.
 
 Full plan and schema: see [PLAN.md](PLAN.md).
 
-- Contact: helpline 03166568142, Glanceofgold@gmail.com. Courier: Leopards.
+- Contact: helpline 03166568142, Littleluxeglowofficial@gmail.com. Courier: Leopards.
 - Shipping: flat Rs. 100 everywhere, free at Rs. 2,000+ subtotal (before coupon). Read from the `settings` table, never hard-coded.
 - Guest checkout only; customers track orders by order number + phone. Only admins have accounts.
 - Stock is reserved when the order is placed and released on cancellation. Unverified transfer orders are cancelled manually by admin.
