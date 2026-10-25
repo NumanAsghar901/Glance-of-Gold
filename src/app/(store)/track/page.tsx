@@ -3,7 +3,7 @@ import { TrackView } from "@/components/order/track-view";
 
 export const metadata: Metadata = {
   title: "Track your order",
-  description: "Check the status of your Glance of Gold order with your order number and phone number.",
+  description: "Check the status of your Little Luxe Glow order with your order number and phone number.",
 };
 
 export default function TrackPage() {

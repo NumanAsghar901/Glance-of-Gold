@@ -39,7 +39,7 @@ export function WhatsAppButton() {
       )}
     >
       <a
-        href={whatsappLink("Hello Glance of Gold, I need some help.", settings.whatsapp)}
+        href={whatsappLink("Hello Little Luxe Glow, I need some help.", settings.whatsapp)}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with us on WhatsApp"

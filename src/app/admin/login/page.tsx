@@ -13,7 +13,7 @@ export default function LoginPage() {
         </div>
         <div className="mt-10 border border-border bg-surface p-6 sm:p-8">
           <h1 className="font-heading text-3xl">Sign in</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">Store admin for Glance of Gold.</p>
+          <p className="mt-1.5 text-sm text-muted-foreground">Store admin for Little Luxe Glow.</p>
           <LoginForm />
         </div>
       </div>

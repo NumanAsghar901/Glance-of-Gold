@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "About us",
-  description: "The story behind Glance of Gold, a Pakistani jewellery brand.",
+  description: "The story behind Little Luxe Glow, a Pakistani jewellery brand.",
   alternates: { canonical: "/about" },
 };
 
@@ -22,7 +22,7 @@ export default function AboutPage() {
         <div className="order-2 lg:order-1 lg:col-span-7">
           <h1 className="text-display hero-in max-w-[12ch]">A glance is all it takes</h1>
           <p className="hero-in hero-in-delay-1 mt-8 max-w-md text-lg leading-relaxed text-muted-foreground">
-            Glance of Gold is a Pakistani jewellery brand built on a simple idea: beautiful jewellery should be
+            Little Luxe Glow is a Pakistani jewellery brand built on a simple idea: beautiful jewellery should be
             effortless to wear and easy to buy.
           </p>
         </div>

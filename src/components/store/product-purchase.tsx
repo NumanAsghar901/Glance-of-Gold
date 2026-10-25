@@ -74,7 +74,7 @@ export function ProductPurchase() {
   const disabled = sel.soldOut || needsChoice || !sel.canAdd;
 
   const waText = [
-    "Hello Glance of Gold, I would like to order:",
+    "Hello Little Luxe Glow, I would like to order:",
     product.name,
     ...(sel.hasChoice ? sel.lines.map(({ variant: v, qty, label }) => quantityLine(label, qty, variantPrice(product, v))) : []),
     `Total${count > 0 ? ` (${piecesLabel(count)})` : ""}: ${formatPKR(total)}`,

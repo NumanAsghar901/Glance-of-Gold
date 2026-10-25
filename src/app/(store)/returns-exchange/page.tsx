@@ -4,7 +4,7 @@ import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Returns & Exchange",
-  description: "Return or exchange your Glance of Gold order within 14 days of delivery.",
+  description: "Return or exchange your Little Luxe Glow order within 14 days of delivery.",
   alternates: { canonical: "/returns-exchange" },
 };
 
@@ -13,7 +13,7 @@ export default function ReturnsPage() {
     <PolicyPage
       title="Returns & Exchange"
       subtitle="Not quite right? We make returns and exchanges simple."
-      intro="At Glance of Gold, customer satisfaction is our priority. If you are not fully satisfied with your purchase, you may request a return or exchange within 14 days of receiving your order."
+      intro="At Little Luxe Glow, customer satisfaction is our priority. If you are not fully satisfied with your purchase, you may request a return or exchange within 14 days of receiving your order."
     >
       <PolicySection title="Eligibility">
         <ul>

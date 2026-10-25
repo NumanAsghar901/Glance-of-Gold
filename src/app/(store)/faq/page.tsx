@@ -6,7 +6,7 @@ import { formatPKR } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "FAQ",
-  description: "Answers to common questions about ordering, delivery, payment and returns at Glance of Gold.",
+  description: "Answers to common questions about ordering, delivery, payment and returns at Little Luxe Glow.",
   alternates: { canonical: "/faq" },
 };
 

@@ -4,10 +4,10 @@ export const PRODUCTION_URL = "https://glance-of-gold.vercel.app";
 const trimSlash = (u: string) => u.replace(/\/+$/, "");
 
 export const site = {
-  name: "Glance of Gold",
-  tagline: "Jewellery for every glance",
+  name: "Little Luxe Glow",
+  tagline: "Jewellery with a little glow",
   description:
-    "Glance of Gold is a Pakistani jewellery brand. Discover elegant necklaces, earrings, rings and bangles with cash on delivery across Pakistan.",
+    "Little Luxe Glow is a Pakistani jewellery brand. Discover elegant necklaces, earrings, rings and bangles with cash on delivery across Pakistan.",
   url: trimSlash(process.env.NEXT_PUBLIC_SITE_URL ?? PRODUCTION_URL),
   // Every link inside an email points here (also when the order was placed on a local dev copy).
   emailUrl: trimSlash(process.env.EMAIL_SITE_URL ?? PRODUCTION_URL),

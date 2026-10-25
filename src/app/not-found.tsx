@@ -6,7 +6,7 @@ export default function GlobalNotFound() {
       <p className="font-heading text-6xl text-gold">404</p>
       <h1 className="font-heading text-3xl">Page not found</h1>
       <Link href="/" className="link-draw mx-auto">
-        Back to Glance of Gold
+        Back to Little Luxe Glow
       </Link>
     </main>
   );

@@ -56,13 +56,13 @@ const esc = (s: string) =>
 
 function shell(preheader: string, body: string, helpline: string, contactEmail: string, siteUrl: string) {
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Glance of Gold</title></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Little Luxe Glow</title></head>
 <body style="margin:0;padding:0;background:${C.bg};font-family:Arial,Helvetica,sans-serif;color:${C.text};">
 <span style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</span>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg};"><tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${C.surface};border:1px solid ${C.gold};">
 <tr><td align="center" style="padding:32px 24px 20px;border-bottom:1px solid ${C.gold};">
-<a href="${siteUrl}" style="text-decoration:none;color:${C.text};"><div style="font-family:Georgia,'Times New Roman',serif;font-size:24px;letter-spacing:6px;text-transform:uppercase;color:${C.text};">Glance of Gold</div>
+<a href="${siteUrl}" style="text-decoration:none;color:${C.text};"><div style="font-family:Georgia,'Times New Roman',serif;font-size:20px;letter-spacing:4px;text-transform:uppercase;color:${C.text};">Little Luxe Glow</div>
 <div style="font-size:10px;letter-spacing:5px;text-transform:uppercase;color:${C.muted};margin-top:6px;">Jewellery</div></a>
 </td></tr>
 <tr><td style="padding:28px 24px;">${body}</td></tr>
@@ -138,7 +138,7 @@ ${addressBlock(o)}
 ${button(confirmUrl, transfer ? "Complete payment" : "View your order")}
 <p style="margin:20px 0 0;font-size:13px;"><a href="${ctx.whatsappUrl}" style="color:${C.goldHover};">Confirm this order on WhatsApp</a></p>`;
   return {
-    subject: `Order ${o.order_number} received | Glance of Gold`,
+    subject: `Order ${o.order_number} received | Little Luxe Glow`,
     html: shell(`Your order ${o.order_number} has been received`, body, ctx.helpline, ctx.contactEmail, ctx.siteUrl),
     text: [
       `Thank you, ${o.customer_name}.`,
@@ -198,7 +198,7 @@ type StatusCopy = { subject: (n: string) => string; heading: string; lead: (o: E
 
 const STATUS_COPY: Record<StatusKind, StatusCopy> = {
   confirmed: {
-    subject: (n) => `Your Glance of Gold order ${n} is confirmed`,
+    subject: (n) => `Your Little Luxe Glow order ${n} is confirmed`,
     heading: "Your order is confirmed",
     lead: (o) => `Thank you for confirming. We have confirmed order ${o.order_number} and will start preparing it now.`,
   },

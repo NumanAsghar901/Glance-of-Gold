@@ -4,7 +4,7 @@ import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How Glance of Gold collects, uses and protects your personal information.",
+  description: "How Little Luxe Glow collects, uses and protects your personal information.",
   alternates: { canonical: "/privacy" },
 };
 
@@ -13,7 +13,7 @@ export default function PrivacyPage() {
     <PolicyPage
       title="Privacy Policy"
       subtitle="Your privacy matters to us. Here's how we protect it."
-      intro="At Glance of Gold, your privacy is important to us. This Privacy Policy explains how we collect, use, and protect your personal information when you visit our website, place an order, or contact our customer support team."
+      intro="At Little Luxe Glow, your privacy is important to us. This Privacy Policy explains how we collect, use, and protect your personal information when you visit our website, place an order, or contact our customer support team."
     >
       <PolicySection title="Information We Collect">
         <p>
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
       </PolicySection>
       <PolicySection title="Payment Method">
         <p>
-          Glance of Gold offers Cash on Delivery (COD): you only pay when your order is delivered to your address.
+          Little Luxe Glow offers Cash on Delivery (COD): you only pay when your order is delivered to your address.
           Where shown at checkout, you may instead pay by JazzCash, Easypaisa or bank transfer. In that case we receive
           the transaction ID and any screenshot you send us, and use them only to verify your payment.
         </p>
@@ -60,7 +60,7 @@ export default function PrivacyPage() {
       </PolicySection>
       <PolicySection title="Policy Updates">
         <p>
-          Glance of Gold may update this Privacy Policy from time to time. Any changes will be posted on this page, and
+          Little Luxe Glow may update this Privacy Policy from time to time. Any changes will be posted on this page, and
           we encourage you to review it periodically.
         </p>
       </PolicySection>

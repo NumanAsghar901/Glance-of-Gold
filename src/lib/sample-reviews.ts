@@ -26,7 +26,7 @@ const FIVE = [
   "Looks exactly like the photos. I got so many compliments at my cousin's mehndi.",
   "The packaging was neat and delivery was quick. Very happy with this {item}.",
   "Lovely finish and so light to wear all day. Will order again.",
-  "Maine apni behan ko gift kiya tha, usay boht pasand aya. Shukriya Glance of Gold.",
+  "Maine apni behan ko gift kiya tha, usay boht pasand aya. Shukriya Little Luxe Glow.",
   "Perfect for weddings. The {item} caught the light beautifully in every photo.",
   "Great value for money. The quality is better than I expected.",
   "Ordered on cash on delivery, arrived on time and the team confirmed on WhatsApp. Smooth experience.",

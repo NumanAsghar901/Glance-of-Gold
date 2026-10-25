@@ -53,7 +53,7 @@ async function main() {
 
   const { error: profileError } = await supabase
     .from("profiles")
-    .upsert({ id, full_name: "Glance of Gold Admin", role: "admin" });
+    .upsert({ id, full_name: "Little Luxe Glow Admin", role: "admin" });
   if (profileError) throw profileError;
 
   console.log("Admin profile ready. You can sign in at /admin/login.");

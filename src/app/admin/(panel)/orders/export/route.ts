@@ -62,7 +62,7 @@ export async function GET(request: Request) {
   }
 
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Glance of Gold";
+  workbook.creator = "Little Luxe Glow";
   const sheet = workbook.addWorksheet("Orders", { views: [{ state: "frozen", ySplit: 1 }] });
 
   sheet.columns = [
@@ -126,7 +126,7 @@ export async function GET(request: Request) {
 
   const buffer = await workbook.xlsx.writeBuffer();
   const day = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Karachi" });
-  const filename = `glance-of-gold-orders${status ? `-${status}` : ""}-${day}.xlsx`;
+  const filename = `little-luxe-glow-orders${status ? `-${status}` : ""}-${day}.xlsx`;
 
   return new Response(buffer, {
     headers: {

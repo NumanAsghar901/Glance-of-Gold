@@ -6,7 +6,7 @@ import { formatPKR } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Shipping & Delivery",
-  description: "Delivery charges, free delivery threshold and payment options at Glance of Gold.",
+  description: "Delivery charges, free delivery threshold and payment options at Little Luxe Glow.",
   alternates: { canonical: "/shipping" },
 };
 

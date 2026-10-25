@@ -7,7 +7,7 @@ import { whatsappLink } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contact us",
-  description: "Call, WhatsApp or email Glance of Gold. We are happy to help with your order.",
+  description: "Call, WhatsApp or email Little Luxe Glow. We are happy to help with your order.",
   alternates: { canonical: "/contact" },
 };
 
@@ -20,7 +20,7 @@ export default async function ContactPage() {
       icon: MessageCircle,
       title: "WhatsApp",
       text: "The fastest way to reach us",
-      href: whatsappLink("Hello Glance of Gold, I need some help.", settings.whatsapp),
+      href: whatsappLink("Hello Little Luxe Glow, I need some help.", settings.whatsapp),
       external: true,
     },
     { icon: Phone, title: "Call the helpline", text: settings.helpline, href: `tel:${tel}` },

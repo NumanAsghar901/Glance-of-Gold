@@ -1,8 +1,8 @@
-# Glance of Gold
+# Little Luxe Glow
 
 @AGENTS.md
 
-E-commerce site for **Glance of Gold**, a Pakistani jewellery brand.
+E-commerce site for **Little Luxe Glow**, a Pakistani jewellery brand.
 
 **Stack:** Next.js 16 (App Router, TypeScript), Tailwind CSS v4, Framer Motion, Supabase, Nodemailer. shadcn/ui is configured but its generated components use a neutral theme with dark variants, so restyle or rewrite them to the tokens below before use.
 

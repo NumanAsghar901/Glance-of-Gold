@@ -54,7 +54,7 @@ type MessageOrder = OrderBreakdown & {
 /** What the customer sends the shop on WhatsApp to confirm a new order. */
 export function confirmOrderMessage(o: MessageOrder, paymentLabel: string): string {
   return [
-    `Hello Glance of Gold, I have placed order ${o.order_number}.`,
+    `Hello Little Luxe Glow, I have placed order ${o.order_number}.`,
     "",
     ...orderBreakdownLines(o, paymentLabel),
     "",
@@ -68,7 +68,7 @@ export function confirmOrderMessage(o: MessageOrder, paymentLabel: string): stri
 /** What the shop sends a customer on WhatsApp about their order, with the items and totals to check. */
 export function messageToCustomer(o: MessageOrder, paymentLabel: string): string {
   return [
-    `Hello ${o.customer_name}, this is Glance of Gold regarding your order ${o.order_number}.`,
+    `Hello ${o.customer_name}, this is Little Luxe Glow regarding your order ${o.order_number}.`,
     "",
     ...orderBreakdownLines(o, paymentLabel),
     "",

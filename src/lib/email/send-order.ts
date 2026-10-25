@@ -180,7 +180,7 @@ export async function sendStatusEmail(orderId: number, kind: StatusKind) {
         siteUrl: site.emailUrl,
         helpline: settings.helpline,
         contactEmail: settings.email,
-        whatsappUrl: whatsappLink(`Hello Glance of Gold, I have a question about order ${order.order_number}.`, settings.whatsapp),
+        whatsappUrl: whatsappLink(`Hello Little Luxe Glow, I have a question about order ${order.order_number}.`, settings.whatsapp),
       }),
     );
   } catch (err) {

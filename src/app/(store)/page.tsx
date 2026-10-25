@@ -30,13 +30,13 @@ export default async function Home() {
   const slides: HeroSlide[] = banners.length
     ? banners.map((b) => ({
         id: b.id,
-        heading: b.heading || "Glance of Gold",
+        heading: b.heading || "Little Luxe Glow",
         subheading: b.subheading,
         ctaLabel: b.ctaLabel || "Shop the collection",
         ctaUrl: b.ctaUrl || "/shop",
         image: b.imageUrl,
         mobileImage: b.mobileImageUrl,
-        alt: b.heading || "Glance of Gold jewellery",
+        alt: b.heading || "Little Luxe Glow jewellery",
       }))
     : defaultSlides;
 
@@ -200,7 +200,7 @@ export default async function Home() {
             <p className="mt-2 text-muted-foreground">Message us and we will help you find the right piece.</p>
           </div>
           <Button
-            href={whatsappLink("Hello Glance of Gold, I need some help.", settings.whatsapp)}
+            href={whatsappLink("Hello Little Luxe Glow, I need some help.", settings.whatsapp)}
             target="_blank"
             rel="noopener noreferrer"
             variant="outline"

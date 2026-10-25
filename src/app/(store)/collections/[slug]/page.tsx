@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!category) return {};
   return {
     title: category.name,
-    description: category.description ?? `Shop ${category.name} from Glance of Gold.`,
+    description: category.description ?? `Shop ${category.name} from Little Luxe Glow.`,
     alternates: { canonical: `/collections/${slug}` },
   };
 }

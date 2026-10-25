@@ -4,7 +4,7 @@ import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "The terms that govern your use of Glance of Gold.",
+  description: "The terms that govern your use of Little Luxe Glow.",
   alternates: { canonical: "/terms" },
 };
 
@@ -12,9 +12,9 @@ export default function TermsPage() {
   return (
     <PolicyPage
       title="Terms of Service"
-      subtitle="The terms that govern your use of Glance of Gold."
+      subtitle="The terms that govern your use of Little Luxe Glow."
       intro={
-        'These Terms of Service ("Terms") govern your use of the Glance of Gold website and related services. By accessing or placing an order through our website, you agree to comply with and be bound by these Terms.'
+        'These Terms of Service ("Terms") govern your use of the Little Luxe Glow website and related services. By accessing or placing an order through our website, you agree to comply with and be bound by these Terms.'
       }
     >
       <PolicySection title="1. Use of the Website">
@@ -25,15 +25,15 @@ export default function TermsPage() {
       </PolicySection>
       <PolicySection title="2. Intellectual Property">
         <p>
-          All content on this website, including text, images, logos, graphics, and design, is the property of Glance
-          of Gold and is protected by applicable copyright and intellectual property laws. Unauthorized use,
+          All content on this website, including text, images, logos, graphics, and design, is the property of Little
+          Luxe Glow and is protected by applicable copyright and intellectual property laws. Unauthorized use,
           reproduction, or distribution is not permitted.
         </p>
       </PolicySection>
       <PolicySection title="3. Product Information & Pricing">
         <p>
           We strive to ensure all product descriptions, images, and prices are accurate. However, errors may
-          occasionally occur. Glance of Gold reserves the right to correct any errors and to cancel or refuse orders
+          occasionally occur. Little Luxe Glow reserves the right to correct any errors and to cancel or refuse orders
           placed at incorrect prices.
         </p>
       </PolicySection>
@@ -47,7 +47,7 @@ export default function TermsPage() {
       </PolicySection>
       <PolicySection title="5. Limitation of Liability">
         <p>
-          Glance of Gold shall not be liable for any indirect, incidental, or consequential damages resulting from the
+          Little Luxe Glow shall not be liable for any indirect, incidental, or consequential damages resulting from the
           use of our website or products, to the fullest extent permitted by law.
         </p>
       </PolicySection>

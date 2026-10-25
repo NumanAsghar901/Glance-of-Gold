@@ -5,7 +5,7 @@ import { readShopParams } from "@/lib/shop-params";
 
 export const metadata: Metadata = {
   title: "Shop all jewellery",
-  description: "Browse necklaces, earrings, rings, bangles and bridal sets from Glance of Gold.",
+  description: "Browse necklaces, earrings, rings, bangles and bridal sets from Little Luxe Glow.",
   alternates: { canonical: "/shop" },
 };
 
