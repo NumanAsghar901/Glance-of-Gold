@@ -165,6 +165,7 @@ export default async function OrderPage({ params }: { params: Promise<{ token: s
             </div>
           )}
           <p className="text-xs text-muted-foreground">
+            {order.email && <>We sent a confirmation to {order.email}. If you cannot find it, check your spam folder and mark it as not spam. </>}
             Questions? Call {settings.helpline} or email {settings.email}. Bookmark this page to check your order any time.
           </p>
         </aside>

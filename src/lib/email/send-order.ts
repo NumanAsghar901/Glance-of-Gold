@@ -35,14 +35,13 @@ const fromAddress = () => process.env.MAIL_FROM_EMAIL || process.env.SMTP_USER;
 type Mail = { subject: string; html: string; text: string };
 
 /**
- * Headers that mark these as one-to-one transactional messages. Together with a plain-text part,
- * a real reply-to and a subject without sales language, they help mailbox providers file the
- * message as an order notification rather than as promotion.
+ * A unique reference per message, so mailbox providers do not fold repeated order emails into one thread.
+ * (Auto-Submitted and auto-response headers are left out on purpose: they describe auto-replies and
+ * out-of-office notices, not order confirmations.) A plain-text part, a real reply-to and a subject
+ * without sales language help the message be filed as an order notification rather than promotion.
  */
 function transactionalHeaders(orderId: number | null) {
   return {
-    "Auto-Submitted": "auto-generated",
-    "X-Auto-Response-Suppress": "OOF, AutoReply",
     "X-Entity-Ref-ID": `gog-${orderId ?? "msg"}-${Date.now()}`,
   };
 }

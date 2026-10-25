@@ -149,7 +149,7 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
             <Field id="phone" label="Mobile number" error={fe.phone} hint="We confirm your order on this number.">
               <input id="phone" name="phone" defaultValue={v.phone} type="tel" inputMode="tel" autoComplete="tel" placeholder="0300 1234567" required aria-invalid={!!fe.phone} aria-describedby={fe.phone ? "phone-error" : "phone-hint"} className={inputClass(fe.phone)} />
             </Field>
-            <Field id="email" label="Email (optional)" error={fe.email} hint="For your order confirmation.">
+            <Field id="email" label="Email (optional)" error={fe.email} hint="For your order confirmation. If it does not arrive, please check your spam folder.">
               <input id="email" name="email" defaultValue={v.email} type="email" inputMode="email" autoComplete="email" aria-invalid={!!fe.email} aria-describedby={fe.email ? "email-error" : "email-hint"} className={inputClass(fe.email)} />
             </Field>
           </div>
