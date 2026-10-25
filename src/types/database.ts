@@ -15,6 +15,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_checkouts: {
+        Row: {
+          address: string | null
+          city: string | null
+          contacted_at: string | null
+          created_at: string
+          customer_name: string | null
+          email: string | null
+          id: number
+          items: Json
+          landmark: string | null
+          order_id: number | null
+          payment_method: string | null
+          phone: string
+          province: string | null
+          status: string
+          subtotal: number
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          contacted_at?: string | null
+          created_at?: string
+          customer_name?: string | null
+          email?: string | null
+          id?: never
+          items?: Json
+          landmark?: string | null
+          order_id?: number | null
+          payment_method?: string | null
+          phone: string
+          province?: string | null
+          status?: string
+          subtotal?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          contacted_at?: string | null
+          created_at?: string
+          customer_name?: string | null
+          email?: string | null
+          id?: never
+          items?: Json
+          landmark?: string | null
+          order_id?: number | null
+          payment_method?: string | null
+          phone?: string
+          province?: string | null
+          status?: string
+          subtotal?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abandoned_checkouts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcements: {
         Row: {
           coupon_code: string | null

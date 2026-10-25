@@ -13,6 +13,7 @@ import {
   useCartSync,
   useCartTotals,
 } from "@/components/cart/cart-parts";
+import { useCheckoutDraft } from "@/components/checkout/use-checkout-draft";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 import { piecesLabel } from "@/lib/order-text";
@@ -91,6 +92,14 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
   const fe = state.fieldErrors ?? {};
   const v = state.values ?? {};
 
+  // Saves the details as they are typed (once there is a phone number) so the owner can follow up on unfinished orders.
+  const draft = useCheckoutDraft(cart.lines, method, "checkout-form");
+  const resumeDraft = draft.resume;
+  useEffect(() => {
+    // The server answered (for example with a field error): the customer is still here, so saving resumes.
+    resumeDraft();
+  }, [state, resumeDraft]);
+
   useEffect(() => {
     if (cart.count > 0) {
       track("InitiateCheckout", { value: cart.total, currency: "PKR", num_items: cart.count });
@@ -119,7 +128,10 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
     <div className="grid gap-10 lg:grid-cols-[1.25fr_1fr] lg:gap-16">
       <form
         id="checkout-form"
+        onChange={draft.schedule}
+        onBlur={draft.schedule}
         action={(formData) => {
+          draft.stop();
           submissionId.current ??= uuid();
           formData.set("submissionId", submissionId.current);
           formAction(formData);
@@ -153,6 +165,9 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
               <input id="email" name="email" defaultValue={v.email} type="email" inputMode="email" autoComplete="email" aria-invalid={!!fe.email} aria-describedby={fe.email ? "email-error" : "email-hint"} className={inputClass(fe.email)} />
             </Field>
           </div>
+          <p className="text-xs text-muted-foreground">
+            We keep what you enter here so we can help if your order does not go through.
+          </p>
         </fieldset>
 
         <fieldset className="min-w-0 space-y-5">

@@ -10,6 +10,7 @@ import {
   Megaphone,
   Settings,
   ShoppingBag,
+  ShoppingCart,
   Star,
   Tags,
 } from "lucide-react";
@@ -25,6 +26,7 @@ const groups: { label?: string; items: Item[] }[] = [
     items: [
       { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
       { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
+      { href: "/admin/abandoned", label: "Abandoned checkouts", icon: ShoppingCart },
     ],
   },
   {

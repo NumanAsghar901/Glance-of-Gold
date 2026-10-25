@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { sendOrderEmails } from "@/lib/email/send-order";
 import { readMetaContext, sendMetaPurchase } from "@/lib/meta-server";
 import { describeOrderError } from "@/lib/order-errors";
+import { normalizePhone } from "@/lib/pakistan";
 import { rateLimit } from "@/lib/rate-limit";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { cartPayloadSchema, checkoutSchema } from "@/lib/validators";
@@ -51,6 +52,19 @@ async function applyChosenNames(
     );
   } catch (err) {
     console.error("[order] could not write the chosen names:", err);
+  }
+}
+
+/** Marks the customer's saved checkout (if any) as recovered. Never throws: it must not affect the order. */
+async function markCheckoutRecovered(supabase: ReturnType<typeof createServiceClient>, phone: string, orderId: number) {
+  try {
+    await supabase
+      .from("abandoned_checkouts")
+      .update({ status: "recovered", order_id: orderId, updated_at: new Date().toISOString() })
+      .eq("phone", phone)
+      .in("status", ["open", "contacted"]);
+  } catch (err) {
+    console.error("[checkout-draft] could not mark recovered:", err);
   }
 }
 
@@ -149,6 +163,8 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
 
   after(async () => {
     await Promise.all([
+      // The details saved while this customer was typing are no longer an abandoned checkout.
+      markCheckoutRecovered(supabase, normalizePhone(input.phone) ?? input.phone, order.id),
       sendOrderEmails(order.id),
       sendMetaPurchase(
         {
