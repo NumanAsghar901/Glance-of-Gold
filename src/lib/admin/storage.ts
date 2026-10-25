@@ -67,7 +67,10 @@ export async function prepareImage(file: File, slot: ImageSlot): Promise<{ probl
   if (!size) return { problem: `${file.name} could not be read as a picture.` };
 
   const maxEdge = MAX_EDGE[slot];
-  if (Math.max(size.width, size.height) > maxEdge) {
+  // A PNG photo is 5 to 10 times heavier than the same photo as a high quality JPEG, which makes pages slow
+  // and makes Next's image resizer time out while fetching it. Photos have no use for transparency, so it is
+  // saved as JPEG (over white) however small it is.
+  if (Math.max(size.width, size.height) > maxEdge || file.type === "image/png") {
     const { data: body, info } = await sharp(buffer)
       .rotate()
       .resize({ width: maxEdge, height: maxEdge, fit: "inside", withoutEnlargement: true })

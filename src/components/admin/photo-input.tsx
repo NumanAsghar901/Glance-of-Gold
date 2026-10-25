@@ -32,7 +32,8 @@ async function prepare(file: File, slot: ImageSlot, budget: number): Promise<{ f
   const long = Math.max(width, height);
   const maxEdge = MAX_EDGE[slot];
 
-  if (long <= maxEdge && file.size <= budget) {
+  // PNG photos are always re-saved as JPEG: the same picture is several times lighter.
+  if (long <= maxEdge && file.size <= budget && file.type !== "image/png") {
     bitmap.close();
     return { file };
   }
