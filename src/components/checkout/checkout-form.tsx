@@ -165,9 +165,6 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
               <input id="email" name="email" defaultValue={v.email} type="email" inputMode="email" autoComplete="email" aria-invalid={!!fe.email} aria-describedby={fe.email ? "email-error" : "email-hint"} className={inputClass(fe.email)} />
             </Field>
           </div>
-          <p className="text-xs text-muted-foreground">
-            We keep what you enter here so we can help if your order does not go through.
-          </p>
         </fieldset>
 
         <fieldset className="min-w-0 space-y-5">

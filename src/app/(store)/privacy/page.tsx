@@ -21,11 +21,6 @@ export default function PrivacyPage() {
           order details to process and deliver your purchases. We also collect limited technical data (such as browser
           type and device information) to improve our website performance and user experience.
         </p>
-        <p>
-          If you start checking out but do not place your order, we keep the details you entered (such as your name,
-          phone number, address and the items in your bag) so that we can contact you and help you finish your order.
-          Contact us if you would like these details removed.
-        </p>
       </PolicySection>
       <PolicySection title="How We Use Your Information">
         <p>
