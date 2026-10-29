@@ -1,5 +1,5 @@
 /** The live store. Used whenever no other address is configured, so production never falls back to localhost. */
-export const PRODUCTION_URL = "https://glance-of-gold.vercel.app";
+export const PRODUCTION_URL = "https://www.littleluxeglow.com";
 
 const trimSlash = (u: string) => u.replace(/\/+$/, "");
 

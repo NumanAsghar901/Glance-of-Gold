@@ -1,4 +1,5 @@
 import { MessageCircle, RotateCcw, Truck, Wallet } from "lucide-react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { HeroBanner } from "@/components/store/hero-banner";
@@ -12,8 +13,11 @@ import { getCategories, getProducts } from "@/lib/data/catalog";
 import { getFeaturedReviews } from "@/lib/data/reviews";
 import { getBanners, getGiftOffer, getSettings } from "@/lib/data/site";
 import { defaultSlides, type HeroSlide } from "@/lib/hero-defaults";
-import { whatsappLink } from "@/lib/site";
+import { site, whatsappLink } from "@/lib/site";
 import { cn, formatPKR } from "@/lib/utils";
+
+// The home page names itself as the main address of the site, which also tells search engines that other addresses are copies.
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default async function Home() {
   const [banners, categories, newest, featured, giftOffer, settings, reviews] = await Promise.all([
@@ -47,8 +51,12 @@ export default async function Home() {
     { icon: MessageCircle, title: "WhatsApp support", text: `Helpline ${settings.helpline}` },
   ];
 
+  // Tells search engines the site's name, so results say "Little Luxe Glow".
+  const siteData = JSON.stringify({ "@context": "https://schema.org", "@type": "WebSite", name: site.name, url: site.url }).replace(/</g, "\\u003c");
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: siteData }} />
       {/* Hero banner carousel ---------------------------------------------------- */}
       <HeroBanner slides={slides} />
 
