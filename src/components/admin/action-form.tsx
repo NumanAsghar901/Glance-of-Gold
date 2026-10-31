@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, type ReactNode } from "react";
+import { useActionState, useEffect, useEffectEvent, useRef, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import type { ActionState } from "@/lib/admin/auth";
@@ -35,20 +35,25 @@ export function ActionForm({
   className,
   submitLabel = "Save changes",
   hideSubmit,
+  onSaved,
 }: {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   children: ReactNode;
   className?: string;
   submitLabel?: string;
   hideSubmit?: boolean;
+  /** Called once each time the action reports success (for example to empty a list of just-uploaded photos). */
+  onSaved?: () => void;
 }) {
   const [state, formAction] = useActionState(action, {});
   const notice = useRef<HTMLParagraphElement>(null);
+  const notifySaved = useEffectEvent(() => onSaved?.());
 
   // The result appears right under the button that was pressed. If that is near the edge of the screen
   // (long forms, phones), nudge it fully into view.
   useEffect(() => {
     notice.current?.scrollIntoView({ block: "nearest" });
+    if (state.ok) notifySaved();
   }, [state]);
 
   return (

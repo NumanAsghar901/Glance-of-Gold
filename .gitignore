@@ -46,3 +46,6 @@ next-env.d.ts
 
 # separate build folders for automated checks
 /.next-*/
+
+# migration script logs
+/logs/

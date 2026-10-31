@@ -4,7 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { saveProduct } from "@/app/actions/admin-catalog";
 import { ActionForm } from "@/components/admin/action-form";
-import { PhotoInput } from "@/components/admin/photo-input";
+import { CloudinaryUploader } from "@/components/admin/cloudinary-uploader";
 import { Check, Field, Input, Panel, Select, Textarea } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { composeVariantName } from "@/lib/variant-name";
@@ -68,6 +68,8 @@ export function ProductForm({
   const [allowMultiple, setAllowMultiple] = useState(product.allowMultiple);
   const [gen, setGen] = useState({ colours: "", designs: "", sizes: "", stock: "10", price: "" });
   const [genNote, setGenNote] = useState("");
+  // Changing the key empties the photo list once the product is saved: those photos now belong to the product.
+  const [uploaderKey, setUploaderKey] = useState(0);
   // What this product comes in. Each one ticked gets its own box on every variant and its own picker on the
   // product page. Sizes and designs are independent of each other.
   const [uses, setUses] = useState(() => ({
@@ -127,7 +129,11 @@ export function ProductForm({
   }
 
   return (
-    <ActionForm action={saveProduct} submitLabel={product.id ? "Save product" : "Create product"}>
+    <ActionForm
+      action={saveProduct}
+      submitLabel={product.id ? "Save product" : "Create product"}
+      onSaved={() => setUploaderKey((k) => k + 1)}
+    >
       {product.id && <input type="hidden" name="id" value={product.id} />}
       <input
         type="hidden"
@@ -385,9 +391,9 @@ export function ProductForm({
         <Field
           label="Upload photos"
           htmlFor="images"
-          hint="Portrait photos look best, such as 1200 x 1500. Any size works, so use the original from your camera: very large photos are reduced for you. The first photo is the main image; the second appears when someone hovers over the product."
+          hint="Portrait photos look best, such as 1200 x 1500. Use the original from your camera: photos go straight to our image storage and are kept at up to 2000 pixels on the longest side. The first photo is the main image; the second appears when someone hovers over the product."
         >
-          <PhotoInput id="images" name="images" slot="product" multiple />
+          <CloudinaryUploader key={uploaderKey} id="images" />
         </Field>
       </Panel>
     </ActionForm>

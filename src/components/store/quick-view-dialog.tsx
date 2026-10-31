@@ -1,11 +1,11 @@
 "use client";
 
 import { Check, ShoppingBag, X } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { getQuickView } from "@/app/actions/catalog";
 import { WishlistButton } from "@/components/store/card-actions";
+import { ProductPhoto } from "@/components/store/product-photo";
 import { useVariantSelection } from "@/components/store/use-variant-selection";
 import { choiceNoun, SelectionPrice, VariantPicker } from "@/components/store/variant-picker";
 import { Button } from "@/components/ui/button";
@@ -110,7 +110,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
       <div className="min-w-0 bg-sand">
         <div className="relative overflow-hidden rounded-sm" style={{ aspectRatio: photoRatio(product.images[0]) }}>
           {image && (
-            <Image
+            <ProductPhoto
               key={image.url}
               src={image.url}
               alt={image.alt || product.name}
@@ -135,7 +135,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
                     i === imageIndex ? "ring-1 ring-gold" : "opacity-60 hover:opacity-100",
                   )}
                 >
-                  <Image src={img.url} alt="" fill sizes="48px" quality={60} className="object-contain" />
+                  <ProductPhoto src={img.url} alt="" fill sizes="48px" quality={60} className="object-contain" />
                 </button>
               </li>
             ))}

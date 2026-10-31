@@ -637,6 +637,7 @@ export type Database = {
         Row: {
           alt: string
           blur_data_url: string | null
+          cloudinary_public_id: string | null
           height: number | null
           id: number
           product_id: number
@@ -647,6 +648,7 @@ export type Database = {
         Insert: {
           alt?: string
           blur_data_url?: string | null
+          cloudinary_public_id?: string | null
           height?: number | null
           id?: never
           product_id: number
@@ -657,6 +659,7 @@ export type Database = {
         Update: {
           alt?: string
           blur_data_url?: string | null
+          cloudinary_public_id?: string | null
           height?: number | null
           id?: never
           product_id?: number

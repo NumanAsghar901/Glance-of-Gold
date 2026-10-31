@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { HeroBanner } from "@/components/store/hero-banner";
+import { ProductPhoto } from "@/components/store/product-photo";
 import { ReviewsMarquee } from "@/components/store/reviews-marquee";
 import { ProductGrid } from "@/components/store/product-grid";
 import { ArchFrame } from "@/components/ui/arch";
@@ -135,7 +136,7 @@ export default async function Home() {
                 <li key={o.variantId} className="w-28 text-center sm:w-36">
                   <div className="relative aspect-square overflow-hidden rounded-full bg-sand ring-1 ring-gold ring-offset-4 ring-offset-blush">
                     {o.image && (
-                      <Image src={o.image} alt="" fill sizes="(min-width: 640px) 144px, 112px" quality={75} className="object-cover" />
+                      <ProductPhoto src={o.image} alt="" fit="fill" ratio={1} fill sizes="(min-width: 640px) 144px, 112px" quality={75} className="object-cover" />
                     )}
                   </div>
                   <p className="mt-4 text-sm leading-snug">{o.productName}</p>

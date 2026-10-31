@@ -1,9 +1,9 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
 import { useCallback, useRef, useState } from "react";
 import { LogoMark } from "@/components/brand/logo";
+import { ProductPhoto } from "@/components/store/product-photo";
 import type { ProductImage } from "@/lib/data/types";
 import { photoRatio } from "@/lib/image-ratio";
 import { cn } from "@/lib/utils";
@@ -52,7 +52,7 @@ export function ProductGallery({ images, name }: { images: ProductImage[]; name:
                 )}
                 style={{ aspectRatio: photoRatio(img) }}
               >
-                <Image src={img.url} alt="" fill sizes="72px" quality={60} className="object-contain" />
+                <ProductPhoto src={img.url} alt="" fill sizes="72px" quality={60} className="object-contain" />
               </button>
             </li>
           ))}
@@ -80,7 +80,7 @@ export function ProductGallery({ images, name }: { images: ProductImage[]; name:
               aria-roledescription="slide"
               aria-label={`${i + 1} of ${images.length}`}
             >
-              <Image
+              <ProductPhoto
                 src={img.url}
                 alt={img.alt || `${name}, image ${i + 1}`}
                 fill

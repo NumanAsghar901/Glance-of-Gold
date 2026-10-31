@@ -1,14 +1,15 @@
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { deleteImage, deleteProduct, makePrimaryImage } from "@/app/actions/admin-catalog";
 import { ActionButton } from "@/components/admin/action-form";
 import { ProductForm } from "@/components/admin/product-form";
+import { ProductPhoto } from "@/components/store/product-photo";
 import { PageHeader, Panel, Pill } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin/auth";
+import { photoSrc } from "@/lib/cloudinary";
 
 export const metadata: Metadata = { title: "Edit product" };
 
@@ -51,7 +52,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
               {images.map((img, i) => (
                 <li key={img.id} className="space-y-2">
                   <div className="relative aspect-[4/5] overflow-hidden bg-sand">
-                    <Image src={img.url} alt={img.alt} fill sizes="200px" quality={60} className="object-contain" />
+                    <ProductPhoto src={photoSrc(img)} alt={img.alt} fill sizes="200px" quality={60} className="object-contain" />
                     {i === 0 && (
                       <span className="absolute left-2 top-2">
                         <Pill tone="good">Main</Pill>

@@ -4,7 +4,9 @@ import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin, type ActionState } from "@/lib/admin/auth";
-import { prepareImage, removeStoredImages, uploadPreparedImage, uploadPublicImage } from "@/lib/admin/storage";
+import { removeStoredImages, uploadPublicImage } from "@/lib/admin/storage";
+import { cloudinarySrc, PRODUCT_FOLDER, PUBLIC_ID_PATTERN } from "@/lib/cloudinary";
+import { destroyAssets } from "@/lib/cloudinary-server";
 import { randomSuffix, slugify } from "@/lib/slug";
 import { composeVariantName } from "@/lib/variant-name";
 import type { Database } from "@/types/database";
@@ -31,6 +33,28 @@ function storagePath(url: string) {
 function filesFrom(formData: FormData, key: string) {
   return formData.getAll(key).filter((f): f is File => f instanceof File && f.size > 0);
 }
+
+/** Deletes a product photo's stored files: the Cloudinary asset and, for photos not yet copied across, the Supabase file. */
+async function removePhotoFiles(
+  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
+  photos: { url: string; cloudinary_public_id?: string | null }[],
+) {
+  const cloud = photos.flatMap((p) => (p.cloudinary_public_id ? [p.cloudinary_public_id] : []));
+  const paths = photos.flatMap((p) => storagePath(p.url) ?? []);
+  const [leftOver] = await Promise.all([destroyAssets(cloud), paths.length ? supabase.storage.from(BUCKET).remove(paths) : null]);
+  if (leftOver.length) console.error("Cloudinary assets could not be deleted:", leftOver.join(", "));
+}
+
+/** Photos the browser already sent to Cloudinary: only addresses inside our own folder are accepted. */
+const uploadedPhotosSchema = z
+  .array(
+    z.object({
+      publicId: z.string().regex(PUBLIC_ID_PATTERN).startsWith(`${PRODUCT_FOLDER}/`),
+      width: z.number().int().min(1).max(10_000),
+      height: z.number().int().min(1).max(10_000),
+    }),
+  )
+  .max(30);
 
 // Products -----------------------------------------------------------------------
 
@@ -106,11 +130,16 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     return { error: "Two variants are the same. Each needs its own colour, design or size." };
   }
 
-  // Photos are checked (unreadable ones are turned away) and reduced if huge before anything is saved.
-  const checked = await Promise.all(filesFrom(formData, "images").map((f) => prepareImage(f, "product")));
-  const images = checked.flatMap((c) => ("image" in c ? [c.image] : []));
-  const rejected = checked.find((c) => "problem" in c);
-  if (rejected && "problem" in rejected) return { error: rejected.problem };
+  // Photos were already sent by the browser straight to Cloudinary; the form only carries where they are.
+  let uploadedRaw: unknown;
+  try {
+    uploadedRaw = JSON.parse(String(formData.get("uploadedImages") || "[]"));
+  } catch {
+    return { error: "The photos could not be read. Remove them and add them again." };
+  }
+  const uploaded = uploadedPhotosSchema.safeParse(uploadedRaw);
+  if (!uploaded.success) return { error: "The photos could not be read. Remove them and add them again." };
+  const images = uploaded.data;
 
   const row = {
     name: v.name,
@@ -205,34 +234,29 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     );
   }
 
-  // Photos: stored side by side, then added to the product in one call. Anything stored that cannot be
-  // recorded is removed again, so the bucket never keeps files no product points to.
+  // Photos: the files are already on Cloudinary, so this only records them, in one call, after the ones already there.
+  // If they cannot be recorded they are deleted again, so Cloudinary never keeps files no product points to.
   const savePhotos = async (): Promise<string | null> => {
     if (!images.length) return null;
-    const [{ count }, uploads] = await Promise.all([
-      supabase.from("product_images").select("id", { count: "exact", head: true }).eq("product_id", pid),
-      Promise.allSettled(images.map((img) => uploadPreparedImage(supabase, String(pid), img))),
-    ]);
-    const stored = uploads.flatMap((u, i) => (u.status === "fulfilled" ? [{ url: u.value, image: images[i] }] : []));
-    if (stored.length) {
-      const rows = (withSize: boolean) =>
-        stored.map(({ url, image }, i) => ({
-          product_id: pid,
-          url,
-          alt: v.name,
-          sort: (count ?? 0) + i,
-          ...(withSize ? { width: image.width, height: image.height } : {}),
-        }));
-      let { error } = await supabase.from("product_images").insert(rows(true));
-      // Before the photo size migration has been run the columns do not exist: save without them.
-      if (error && /width|height|schema cache/i.test(error.message)) ({ error } = await supabase.from("product_images").insert(rows(false)));
-      if (error) {
-        await removeStoredImages(supabase, ...stored.map((s) => s.url));
-        return error.message;
-      }
+    const { count } = await supabase.from("product_images").select("id", { count: "exact", head: true }).eq("product_id", pid);
+    const { error } = await supabase.from("product_images").insert(
+      images.map((img, i) => ({
+        product_id: pid,
+        url: cloudinarySrc(img.publicId),
+        cloudinary_public_id: img.publicId,
+        alt: v.name,
+        sort: (count ?? 0) + i,
+        width: img.width,
+        height: img.height,
+      })),
+    );
+    if (error) {
+      await destroyAssets(images.map((img) => img.publicId));
+      return /cloudinary_public_id|schema cache/i.test(error.message)
+        ? "The database needs one update before photos can be saved (the Cloudinary migration). Run it in the Supabase SQL editor, then add the photos again."
+        : error.message;
     }
-    const failed = uploads.find((u) => u.status === "rejected");
-    return failed ? (failed.reason instanceof Error ? failed.reason.message : "upload error") : null;
+    return null;
   };
 
   const [variantErrors, photoError] = await Promise.all([Promise.all(variantWrites), savePhotos()]);
@@ -256,9 +280,8 @@ export async function deleteProduct(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = idSchema.parse(formData.get("id"));
 
-  const { data: imgs } = await supabase.from("product_images").select("url").eq("product_id", id);
-  const paths = (imgs ?? []).flatMap((i) => storagePath(i.url) ?? []);
-  if (paths.length) await supabase.storage.from(BUCKET).remove(paths);
+  const { data: imgs } = await supabase.from("product_images").select("*").eq("product_id", id);
+  await removePhotoFiles(supabase, imgs ?? []);
 
   await supabase.from("products").delete().eq("id", id);
   refreshCatalog();
@@ -268,10 +291,9 @@ export async function deleteProduct(formData: FormData) {
 export async function deleteImage(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = idSchema.parse(formData.get("id"));
-  const { data: img } = await supabase.from("product_images").select("url, product_id").eq("id", id).maybeSingle();
+  const { data: img } = await supabase.from("product_images").select("*").eq("id", id).maybeSingle();
   if (!img) return;
-  const path = storagePath(img.url);
-  if (path) await supabase.storage.from(BUCKET).remove([path]);
+  await removePhotoFiles(supabase, [img]);
   await supabase.from("product_images").delete().eq("id", id);
   refreshCatalog();
   revalidatePath(`/admin/products/${img.product_id}`);

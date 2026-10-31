@@ -1,12 +1,13 @@
 import { Plus } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { deleteSampleProducts } from "@/app/actions/admin-catalog";
 import { ActionButton } from "@/components/admin/action-form";
+import { ProductPhoto } from "@/components/store/product-photo";
 import { Empty, Input, PageHeader, Pager, Pill, TableWrap, td, th } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/admin/auth";
+import { photoSrc } from "@/lib/cloudinary";
 import { formatPKR } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Products" };
@@ -21,7 +22,7 @@ type Row = {
   is_featured: boolean;
   is_sample: boolean;
   category: { name: string } | null;
-  images: { url: string; sort: number }[];
+  images: { url: string; sort: number; cloudinary_public_id?: string | null }[];
   variants: { stock: number }[];
 };
 
@@ -33,7 +34,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
   let query = supabase
     .from("products")
-    .select("id, name, price, is_active, is_featured, is_sample, category:categories(name), images:product_images(url, sort), variants:product_variants(stock)", { count: "exact" })
+    .select("id, name, price, is_active, is_featured, is_sample, category:categories(name), images:product_images(*), variants:product_variants(stock)", { count: "exact" })
     .order("created_at", { ascending: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
   if (q) query = query.ilike("name", `%${q}%`);
@@ -95,7 +96,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                     <td className={td}>
                       <Link prefetch={false} href={`/admin/products/${p.id}`} className="flex items-center gap-3">
                         <span className="relative h-14 w-11 shrink-0 overflow-hidden bg-sand">
-                          {img && <Image src={img.url} alt="" fill sizes="44px" quality={60} className="object-contain" />}
+                          {img && <ProductPhoto src={photoSrc(img)} alt="" fill sizes="44px" quality={60} className="object-contain" />}
                         </span>
                         <span className="font-medium underline-offset-4 hover:underline">{p.name}</span>
                       </Link>

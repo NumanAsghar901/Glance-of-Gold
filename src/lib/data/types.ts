@@ -1,5 +1,8 @@
 export type ProductImage = {
+  /** Where the photo is served from: the Cloudinary address when `publicId` is set, otherwise the Supabase Storage file. */
   url: string;
+  /** Cloudinary public_id, set for photos stored on Cloudinary. */
+  publicId: string | null;
   alt: string;
   blur_data_url: string | null;
   /** Pixel size of the photo, so cards and galleries take its shape. Null for photos not measured yet. */

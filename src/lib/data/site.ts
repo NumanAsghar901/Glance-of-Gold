@@ -1,4 +1,6 @@
 import { unstable_cache } from "next/cache";
+import { photoSrc } from "@/lib/cloudinary";
+import { cloudAvailable } from "@/lib/data/catalog";
 import { createPublicClient } from "@/lib/supabase/public";
 import type {
   Announcement,
@@ -99,7 +101,7 @@ type RawGiftRow = {
       id: number;
       name: string;
       stock: number;
-      product: { name: string; images: { url: string; sort: number }[] } | null;
+      product: { name: string; images: { url: string; sort: number; cloudinary_public_id?: string | null }[] } | null;
     } | null;
   }[];
 };
@@ -107,10 +109,11 @@ type RawGiftRow = {
 export const getGiftOffer = unstable_cache(
   async (): Promise<GiftOffer | null> => {
     const supabase = createPublicClient();
+    const cloud = await cloudAvailable();
     const { data, error } = await supabase
       .from("gift_offers")
       .select(
-        "id, name, min_items, pool:gift_offer_products(variant:product_variants(id, name, stock, product:products(name, images:product_images(url, sort))))",
+        `id, name, min_items, pool:gift_offer_products(variant:product_variants(id, name, stock, product:products(name, images:product_images(url, sort${cloud ? ", cloudinary_public_id" : ""}))))`,
       )
       .order("min_items", { ascending: true })
       .limit(1);
@@ -121,7 +124,8 @@ export const getGiftOffer = unstable_cache(
 
     const options = offer.pool.flatMap(({ variant }) => {
       if (!variant || !variant.product || variant.stock < 1) return [];
-      const image = [...variant.product.images].sort((a, b) => a.sort - b.sort)[0]?.url ?? null;
+      const first = [...variant.product.images].sort((a, b) => a.sort - b.sort)[0];
+      const image = first ? photoSrc(first) : null;
       return [
         {
           variantId: variant.id,
@@ -134,7 +138,7 @@ export const getGiftOffer = unstable_cache(
     if (options.length === 0) return null;
     return { id: offer.id, name: offer.name, minItems: offer.min_items, options };
   },
-  ["gift-offer"],
+  ["gift-offer-v2"],
   { tags: ["marketing"], revalidate: 300 },
 );
 

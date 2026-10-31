@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { LogoMark } from "@/components/brand/logo";
 import { CardActions } from "@/components/store/card-actions";
+import { ProductPhoto } from "@/components/store/product-photo";
 import { discountPercent, Price } from "@/components/ui/price";
 import { StarRating } from "@/components/ui/star-rating";
 import { StockTag } from "@/components/ui/stock-tag";
@@ -38,9 +38,11 @@ export function ProductCard({
         <Link href={href} tabIndex={-1} aria-hidden="true" className="absolute inset-0">
           {first ? (
             <>
-              <Image
+              <ProductPhoto
                 src={first.url}
                 alt=""
+                fit="fill"
+                ratio={ratio}
                 fill
                 sizes={SIZES}
                 quality={75}
@@ -51,9 +53,11 @@ export function ProductCard({
                 )}
               />
               {second && (
-                <Image
+                <ProductPhoto
                   src={second.url}
                   alt=""
+                  fit="fill"
+                  ratio={ratio}
                   fill
                   sizes={SIZES}
                   quality={75}

@@ -7,6 +7,7 @@ import type {
   ProductSummary,
   ProductVariant,
 } from "@/lib/data/types";
+import { photoSrc } from "@/lib/cloudinary";
 import { stockStatus } from "@/lib/stock";
 import { composeVariantName, variantLabel } from "@/lib/variant-name";
 
@@ -35,7 +36,12 @@ type RawProduct = {
   option_label?: string | null;
   allow_multiple?: boolean | null;
   category: { name: string; slug: string } | null;
-  images: (Omit<ProductImage, "width" | "height"> & { width?: number | null; height?: number | null; sort: number })[];
+  images: (Omit<ProductImage, "width" | "height" | "publicId"> & {
+    width?: number | null;
+    height?: number | null;
+    cloudinary_public_id?: string | null;
+    sort: number;
+  })[];
   variants: {
     id: number;
     name: string;
@@ -50,8 +56,8 @@ type RawProduct = {
 
 const BASE_COLUMNS = "id, slug, name, price, compare_at_price, is_featured";
 const STATS = "rating_avg, rating_count, sold_count";
-const relations = (options: boolean, attrs: boolean, sizes: boolean) =>
-  `images:product_images(url, alt, sort, blur_data_url${sizes ? ", width, height" : ""}), variants:product_variants(id, name, stock, price_override, sort${options ? ", color" : ""}${attrs ? ", design, size" : ""})`;
+const relations = (options: boolean, attrs: boolean, sizes: boolean, cloud: boolean) =>
+  `images:product_images(url, alt, sort, blur_data_url${sizes ? ", width, height" : ""}${cloud ? ", cloudinary_public_id" : ""}), variants:product_variants(id, name, stock, price_override, sort${options ? ", color" : ""}${attrs ? ", design, size" : ""})`;
 
 /**
  * Some columns come from later migrations (ratings and sold counts, then colours and options, then
@@ -70,12 +76,20 @@ const statsAvailable = () => columnAvailable("stats", "products", "sold_count");
 const optionsAvailable = () => columnAvailable("options", "products", "allow_multiple");
 const attrsAvailable = () => columnAvailable("attrs", "product_variants", "design");
 const sizesAvailable = () => columnAvailable("photo-sizes", "product_images", "width");
+export const cloudAvailable = () => columnAvailable("photo-cloudinary", "product_images", "cloudinary_public_id");
 
-const summarySelect = (inner: boolean, stats: boolean, options = false, attrs = false, sizes = false) =>
-  `${BASE_COLUMNS}${stats ? `, ${STATS}` : ""}, category:categories${inner ? "!inner" : ""}(name, slug), ${relations(options, attrs, sizes)}`;
+/** The optional photo columns (pixel size, Cloudinary public_id) that exist in this database. */
+type PhotoColumns = { sizes: boolean; cloud: boolean };
+const photoColumns = async (): Promise<PhotoColumns> => {
+  const [sizes, cloud] = await Promise.all([sizesAvailable(), cloudAvailable()]);
+  return { sizes, cloud };
+};
+
+const summarySelect = (inner: boolean, stats: boolean, options = false, attrs = false, photos: PhotoColumns = { sizes: false, cloud: false }) =>
+  `${BASE_COLUMNS}${stats ? `, ${STATS}` : ""}, category:categories${inner ? "!inner" : ""}(name, slug), ${relations(options, attrs, photos.sizes, photos.cloud)}`;
 // option_label is only needed to sort older products (saved before designs and sizes had their own columns).
-const detailSelect = (stats: boolean, options: boolean, attrs: boolean, sizes: boolean) =>
-  `${summarySelect(false, stats, options, attrs, sizes)}, description, material, tags${options ? `, allow_multiple${attrs ? "" : ", option_label"}` : ""}`;
+const detailSelect = (stats: boolean, options: boolean, attrs: boolean, photos: PhotoColumns) =>
+  `${summarySelect(false, stats, options, attrs, photos)}, description, material, tags${options ? `, allow_multiple${attrs ? "" : ", option_label"}` : ""}`;
 
 /**
  * Products saved before designs and sizes had their own columns kept both in one label. Same rules as the
@@ -92,7 +106,15 @@ function legacyAttributes(name: string, color: string | null, optionLabel: strin
 function toSummary(r: RawProduct): ProductSummary {
   const images = [...r.images]
     .sort((a, b) => a.sort - b.sort)
-    .map(({ url, alt, blur_data_url, width, height }) => ({ url, alt, blur_data_url, width: width ?? null, height: height ?? null }));
+    .map(({ url, alt, blur_data_url, width, height, cloudinary_public_id }) => ({
+      // A photo on Cloudinary is served from there; the saved `url` is only the fallback (the Supabase original).
+      url: photoSrc({ url, cloudinary_public_id }),
+      publicId: cloudinary_public_id ?? null,
+      alt,
+      blur_data_url,
+      width: width ?? null,
+      height: height ?? null,
+    }));
   const unitsLeft = r.variants.reduce((n, v) => n + Math.max(0, v.stock), 0);
   const status = stockStatus(unitsLeft);
   return {
@@ -165,8 +187,8 @@ export const getProducts = unstable_cache(
     const pageSize = query.pageSize ?? PAGE_SIZE;
     const page = Math.max(1, query.page ?? 1);
 
-    const [stats, sizes] = await Promise.all([statsAvailable(), sizesAvailable()]);
-    let q = supabase.from("products").select(summarySelect(!!query.category, stats, false, false, sizes), { count: "exact" });
+    const [stats, photos] = await Promise.all([statsAvailable(), photoColumns()]);
+    let q = supabase.from("products").select(summarySelect(!!query.category, stats, false, false, photos), { count: "exact" });
 
     if (query.category) q = q.eq("categories.slug", query.category);
     if (query.featuredOnly) q = q.eq("is_featured", true);
@@ -201,19 +223,19 @@ export const getProducts = unstable_cache(
   },
   // The key carries a version: bump it whenever the shape of a cached product changes, because the
   // data cache survives deployments and would otherwise hand old-shaped objects to new code.
-  ["products-v3"],
+  ["products-v4"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 
 export const getProduct = unstable_cache(
   async (slug: string): Promise<ProductDetail | null> => {
     const supabase = createPublicClient();
-    const [stats, options, attrs, sizes] = await Promise.all([statsAvailable(), optionsAvailable(), attrsAvailable(), sizesAvailable()]);
-    const { data, error } = await supabase.from("products").select(detailSelect(stats, options, attrs, sizes)).eq("slug", slug).maybeSingle();
+    const [stats, options, attrs, photos] = await Promise.all([statsAvailable(), optionsAvailable(), attrsAvailable(), photoColumns()]);
+    const { data, error } = await supabase.from("products").select(detailSelect(stats, options, attrs, photos)).eq("slug", slug).maybeSingle();
     if (error) throw new Error(`getProduct: ${error.message}`);
     return data ? toDetail(data as unknown as RawProduct) : null;
   },
-  ["product-v5"],
+  ["product-v6"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 
@@ -222,7 +244,7 @@ export const getRelatedProducts = unstable_cache(
     const supabase = createPublicClient();
     let q = supabase
       .from("products")
-      .select(summarySelect(!!categorySlug, await statsAvailable(), false, false, await sizesAvailable()))
+      .select(summarySelect(!!categorySlug, await statsAvailable(), false, false, await photoColumns()))
       .neq("id", excludeId)
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -231,7 +253,7 @@ export const getRelatedProducts = unstable_cache(
     if (error) throw new Error(`getRelatedProducts: ${error.message}`);
     return (data as unknown as RawProduct[]).map(toSummary);
   },
-  ["related-v3"],
+  ["related-v4"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 
@@ -257,13 +279,13 @@ export const searchProducts = unstable_cache(
     if (!hits.length) return [];
 
     const ids = hits.map((h) => h.id);
-    const { data, error: e2 } = await supabase.from("products").select(summarySelect(false, await statsAvailable(), false, false, await sizesAvailable())).in("id", ids);
+    const { data, error: e2 } = await supabase.from("products").select(summarySelect(false, await statsAvailable(), false, false, await photoColumns())).in("id", ids);
     if (e2) throw new Error(`searchProducts: ${e2.message}`);
 
     const byId = new Map((data as unknown as RawProduct[]).map((p) => [p.id, toSummary(p)]));
     return ids.flatMap((id) => byId.get(id) ?? []);
   },
-  ["search-v3"],
+  ["search-v4"],
   { tags: ["catalog"], revalidate: 120 },
 );
 

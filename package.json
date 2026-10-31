@@ -10,6 +10,7 @@
     "create-admin": "tsx --env-file=.env.local scripts/create-admin.ts",
     "optimize-images": "tsx --env-file=.env.local scripts/optimize-existing-images.ts",
     "backfill-image-sizes": "tsx --env-file=.env.local scripts/backfill-image-sizes.ts",
+    "migrate-images-to-cloudinary": "tsx --env-file=.env.local scripts/migrate-images-to-cloudinary.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
