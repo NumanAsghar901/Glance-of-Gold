@@ -1,15 +1,15 @@
 import { MessageCircle, RotateCcw, Truck, Wallet } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { HeroBanner } from "@/components/store/hero-banner";
-import { ProductPhoto } from "@/components/store/product-photo";
+import { Photo } from "@/components/ui/photo";
 import { ReviewsMarquee } from "@/components/store/reviews-marquee";
 import { ProductGrid } from "@/components/store/product-grid";
 import { ArchFrame } from "@/components/ui/arch";
 import { Button } from "@/components/ui/button";
 import { RevealCover } from "@/components/ui/reveal-cover-lazy";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { STORY_PHOTO } from "@/lib/cloudinary";
 import { getCategories, getProducts } from "@/lib/data/catalog";
 import { getFeaturedReviews } from "@/lib/data/reviews";
 import { getBanners, getGiftOffer, getSettings } from "@/lib/data/site";
@@ -90,7 +90,7 @@ export default async function Home() {
                     i === 0 ? "aspect-[16/11] lg:aspect-auto lg:min-h-full" : "aspect-[4/5]",
                   )}
                 >
-                  <Image
+                  <Photo
                     src={c.image_url ?? `/placeholders/${c.slug}-${i % 2 ? "b" : "a"}.svg`}
                     alt=""
                     fill
@@ -136,7 +136,7 @@ export default async function Home() {
                 <li key={o.variantId} className="w-28 text-center sm:w-36">
                   <div className="relative aspect-square overflow-hidden rounded-full bg-sand ring-1 ring-gold ring-offset-4 ring-offset-blush">
                     {o.image && (
-                      <ProductPhoto src={o.image} alt="" fit="fill" ratio={1} fill sizes="(min-width: 640px) 144px, 112px" quality={75} className="object-cover" />
+                      <Photo src={o.image} alt="" fit="fill" ratio={1} fill sizes="(min-width: 640px) 144px, 112px" quality={75} className="object-cover" />
                     )}
                   </div>
                   <p className="mt-4 text-sm leading-snug">{o.productName}</p>
@@ -175,8 +175,8 @@ export default async function Home() {
       <section className="wrap grid items-center gap-14 pt-28 lg:grid-cols-12 lg:gap-10 lg:pt-36">
         <div className="reveal mx-auto w-full max-w-[24rem] pr-3 sm:pr-5 lg:col-span-5 lg:max-w-none">
           <ArchFrame>
-            <Image
-              src="/story/glance-story.jpg"
+            <Photo
+              src={STORY_PHOTO}
               alt="Layered gold necklaces and stacked gold rings on a cream display stand, beside dried flowers"
               fill
               sizes="(min-width: 1024px) 38vw, 90vw"

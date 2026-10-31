@@ -68,8 +68,6 @@ export function ProductForm({
   const [allowMultiple, setAllowMultiple] = useState(product.allowMultiple);
   const [gen, setGen] = useState({ colours: "", designs: "", sizes: "", stock: "10", price: "" });
   const [genNote, setGenNote] = useState("");
-  // Changing the key empties the photo list once the product is saved: those photos now belong to the product.
-  const [uploaderKey, setUploaderKey] = useState(0);
   // What this product comes in. Each one ticked gets its own box on every variant and its own picker on the
   // product page. Sizes and designs are independent of each other.
   const [uses, setUses] = useState(() => ({
@@ -129,11 +127,7 @@ export function ProductForm({
   }
 
   return (
-    <ActionForm
-      action={saveProduct}
-      submitLabel={product.id ? "Save product" : "Create product"}
-      onSaved={() => setUploaderKey((k) => k + 1)}
-    >
+    <ActionForm action={saveProduct} submitLabel={product.id ? "Save product" : "Create product"}>
       {product.id && <input type="hidden" name="id" value={product.id} />}
       <input
         type="hidden"
@@ -393,7 +387,7 @@ export function ProductForm({
           htmlFor="images"
           hint="Portrait photos look best, such as 1200 x 1500. Use the original from your camera: photos go straight to our image storage and are kept at up to 2000 pixels on the longest side. The first photo is the main image; the second appears when someone hovers over the product."
         >
-          <CloudinaryUploader key={uploaderKey} id="images" />
+          <CloudinaryUploader id="images" />
         </Field>
       </Panel>
     </ActionForm>

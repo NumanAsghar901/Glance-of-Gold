@@ -3,7 +3,8 @@
 import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { requireAdmin, type ActionState } from "@/lib/admin/auth";
-import { removeStoredImages, uploadPublicImage } from "@/lib/admin/storage";
+import { cloudinarySrc, FOLDERS, ownPublicId } from "@/lib/cloudinary";
+import { removeCloudinaryImages } from "@/lib/cloudinary-server";
 import { fromPktInput } from "@/lib/datetime";
 
 const idSchema = z.coerce.number().int().positive();
@@ -217,33 +218,23 @@ export async function saveBanner(_prev: ActionState, formData: FormData): Promis
   const v = parsed.data;
   if (v.ctaUrl && !/^(\/|https?:\/\/)/.test(v.ctaUrl)) return { error: "The button link must start with / or https://" };
 
-  const desktopFile = formData.get("image");
-  const mobileFile = formData.get("mobileImage");
-  const removeMobile = formData.get("removeMobileImage") === "on";
-
-  // The current row is read while the new photos upload, since neither waits on the other.
-  const [{ data: existing }, [wide, tall]] = await Promise.all([
-    v.id
-      ? supabase.from("banners").select("image_url, mobile_image_url").eq("id", v.id).maybeSingle()
-      : Promise.resolve({ data: null }),
-    Promise.allSettled([
-      desktopFile instanceof File && desktopFile.size > 0
-        ? uploadPublicImage(supabase, "banners", desktopFile, "banner-wide")
-        : Promise.resolve(undefined),
-      mobileFile instanceof File && mobileFile.size > 0
-        ? uploadPublicImage(supabase, "banners", mobileFile, "banner-tall")
-        : Promise.resolve(undefined),
-    ]),
-  ]);
-  const uploaded = [wide, tall].flatMap((r) => (r.status === "fulfilled" && r.value ? [r.value] : []));
-  const failure = [wide, tall].find((r) => r.status === "rejected");
-  if (failure) {
-    await removeStoredImages(supabase, ...uploaded);
-    return { error: failure.reason instanceof Error ? failure.reason.message : "Image upload failed." };
+  // The photos were already sent to Cloudinary by the browser; the form carries only where they are.
+  const wideSent = formData.get("image");
+  const tallSent = formData.get("mobileImage");
+  const wideId = ownPublicId(wideSent, FOLDERS.banner);
+  const tallId = ownPublicId(tallSent, FOLDERS.banner);
+  if ((typeof wideSent === "string" && wideSent && !wideId) || (typeof tallSent === "string" && tallSent && !tallId)) {
+    return { error: "A photo could not be read. Remove it and add it again." };
   }
-  const imageUrl = wide.status === "fulfilled" ? wide.value : undefined;
-  const mobileUrl = tall.status === "fulfilled" ? tall.value : undefined;
+  const removeMobile = formData.get("removeMobileImage") === "on";
+  const imageUrl = wideId ? cloudinarySrc(wideId) : undefined;
+  const mobileUrl = tallId ? cloudinarySrc(tallId) : undefined;
+  const uploaded = [imageUrl, mobileUrl].flatMap((u) => (u ? [u] : []));
   if (!v.id && !imageUrl) return { error: "Upload an image for the banner." };
+
+  const { data: existing } = v.id
+    ? await supabase.from("banners").select("image_url, mobile_image_url").eq("id", v.id).maybeSingle()
+    : { data: null };
 
   const row = {
     heading: v.heading ?? null,
@@ -259,14 +250,14 @@ export async function saveBanner(_prev: ActionState, formData: FormData): Promis
     ? await supabase.from("banners").update(row).eq("id", v.id)
     : await supabase.from("banners").insert({ ...row, image_url: imageUrl! });
   if (error) {
-    await removeStoredImages(supabase, ...uploaded);
+    await removeCloudinaryImages(...uploaded);
     return { error: error.message };
   }
 
-  // Files that were replaced or removed are no longer used anywhere, so delete them from storage.
+  // Photos that were replaced or removed are no longer used anywhere, so delete them from Cloudinary.
   if (existing) {
-    if (imageUrl) await removeStoredImages(supabase, existing.image_url);
-    if (mobileUrl || removeMobile) await removeStoredImages(supabase, existing.mobile_image_url);
+    if (imageUrl && existing.image_url !== imageUrl) await removeCloudinaryImages(existing.image_url);
+    if ((mobileUrl || removeMobile) && existing.mobile_image_url !== mobileUrl) await removeCloudinaryImages(existing.mobile_image_url);
   }
 
   refreshMarketing("/admin/banners");
@@ -278,6 +269,6 @@ export async function deleteBanner(formData: FormData) {
   const id = idSchema.parse(formData.get("id"));
   const { data: banner } = await supabase.from("banners").select("image_url, mobile_image_url").eq("id", id).maybeSingle();
   await supabase.from("banners").delete().eq("id", id);
-  await removeStoredImages(supabase, banner?.image_url, banner?.mobile_image_url);
+  await removeCloudinaryImages(banner?.image_url, banner?.mobile_image_url);
   refreshMarketing("/admin/banners");
 }

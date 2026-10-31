@@ -3,6 +3,8 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
+import { cloudinaryConfigured, createProofTicket } from "@/lib/cloudinary-server";
+import { FOLDERS, ownPublicId, type UploadTicket } from "@/lib/cloudinary";
 import { sendOwnerNote } from "@/lib/email/send-order";
 import { getOrder, type OrderView } from "@/lib/orders";
 import { rateLimit } from "@/lib/rate-limit";
@@ -13,8 +15,38 @@ import { paymentProofSchema, trackSchema } from "@/lib/validators";
 
 export type ProofState = { error?: string; ok?: boolean };
 
-const MAX_FILE = 5 * 1024 * 1024;
-const FILE_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+/** Looks up the order a payment proof may be sent for, with the reason when it may not. */
+async function orderForProof(token: string) {
+  const supabase = createServiceClient();
+  const { data: order } = await supabase
+    .from("orders")
+    .select("id, order_number, payment_method, payment_status, order_status, total")
+    .eq("access_token", token)
+    .maybeSingle();
+
+  if (!order || order.payment_method === "cod") return { error: "We could not find this order." } as const;
+  if (order.order_status === "cancelled") return { error: "This order has been cancelled." } as const;
+  if (order.payment_status === "paid") return { error: "This order is already marked as paid. Thank you!" } as const;
+  return { order, supabase } as const;
+}
+
+/**
+ * A one-use ticket for the customer's browser to send a payment screenshot straight to Cloudinary, as a private file
+ * that only the admin can open. Only someone holding the order's own link can ask for one, and only for that order.
+ */
+export async function getProofTicket(token: string): Promise<{ ticket: UploadTicket; publicId: string } | { error: string }> {
+  if (!(await rateLimit("proof-ticket", 8, 10 * 60_000))) {
+    return { error: "Too many attempts. Please wait a few minutes and try again." };
+  }
+  const parsed = paymentProofSchema.pick({ token: true }).safeParse({ token });
+  if (!parsed.success) return { error: "We could not find this order." };
+  const found = await orderForProof(parsed.data.token);
+  if (found.error) return { error: found.error };
+  if (!cloudinaryConfigured()) return { error: "We could not upload screenshots right now. You can send it on WhatsApp instead." };
+
+  const publicId = `${FOLDERS.proof}/${found.order.id}-${randomUUID().replace(/-/g, "").slice(0, 16)}`;
+  return { ticket: createProofTicket(publicId), publicId };
+}
 
 export async function submitPaymentProof(_prev: ProofState, formData: FormData): Promise<ProofState> {
   if (!(await rateLimit("proof", 6, 10 * 60_000))) {
@@ -27,32 +59,15 @@ export async function submitPaymentProof(_prev: ProofState, formData: FormData):
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
 
-  const supabase = createServiceClient();
-  const { data: order } = await supabase
-    .from("orders")
-    .select("id, order_number, payment_method, payment_status, order_status, total")
-    .eq("access_token", parsed.data.token)
-    .maybeSingle();
+  const found = await orderForProof(parsed.data.token);
+  if (found.error) return { error: found.error };
+  const { order, supabase } = found;
 
-  if (!order || order.payment_method === "cod") return { error: "We could not find this order." };
-  if (order.order_status === "cancelled") return { error: "This order has been cancelled." };
-  if (order.payment_status === "paid") return { error: "This order is already marked as paid. Thank you!" };
-
-  let screenshotPath: string | null = null;
-  const file = formData.get("screenshot");
-  if (file instanceof File && file.size > 0) {
-    const ext = FILE_TYPES[file.type];
-    if (!ext) return { error: "Please upload a JPG, PNG or WebP screenshot." };
-    if (file.size > MAX_FILE) return { error: "That image is too large. Please upload one under 5 MB." };
-
-    screenshotPath = `${order.id}/${randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("payment-proofs")
-      .upload(screenshotPath, file, { contentType: file.type, upsert: false });
-    if (uploadError) {
-      console.error("[proof] upload failed:", uploadError.message);
-      return { error: "We could not upload your screenshot. Please try again, or send it on WhatsApp." };
-    }
+  // The screenshot was already sent to Cloudinary by the browser. Its id must be one issued for this very order.
+  const sent = formData.get("screenshot");
+  const screenshotPath = ownPublicId(sent, FOLDERS.proof);
+  if (typeof sent === "string" && sent && (!screenshotPath || !screenshotPath.startsWith(`${FOLDERS.proof}/${order.id}-`))) {
+    return { error: "We could not read your screenshot. Please add it again, or send it on WhatsApp." };
   }
 
   const { error: insertError } = await supabase.from("payment_proofs").insert({

@@ -13,14 +13,12 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [60, 75, 85],
-    // Product photos are uploaded to Supabase Storage; allow that project only.
+    // Every image is served by Cloudinary through its own loader (components/ui/photo.tsx), not by this optimiser.
+    // This entry only keeps old Supabase Storage addresses working (for example in a returning customer's saved bag).
+    // Remove it once the Supabase buckets have been deleted.
     remotePatterns: supabaseHost
       ? [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }]
       : [],
-  },
-  experimental: {
-    // Product photos (admin) and payment screenshots are uploaded through server actions.
-    serverActions: { bodySizeLimit: "25mb" },
   },
   async headers() {
     return [

@@ -1,7 +1,7 @@
 "use client";
 
 import { Banknote, Landmark, Lock, Smartphone } from "lucide-react";
-import { ProductPhoto } from "@/components/store/product-photo";
+import { Photo } from "@/components/ui/photo";
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -262,7 +262,7 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
             {cart.lines.map((l) => (
               <li key={l.variantId} className="flex items-center gap-4 py-4 first:pt-0">
                 <div className="relative h-20 w-16 shrink-0 overflow-hidden bg-sand">
-                  {l.image && <ProductPhoto src={l.image} alt="" fill sizes="64px" quality={60} className="object-contain" />}
+                  {l.image && <Photo src={l.image} alt="" fill sizes="64px" quality={60} className="object-contain" />}
                   <span className="absolute -right-0 -top-0 grid min-w-5 place-items-center bg-foreground px-1 text-[0.6875rem] text-background">{l.qty}</span>
                 </div>
                 <div className="min-w-0 flex-1">

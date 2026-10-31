@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
+import { Photo } from "@/components/ui/photo";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { HeroSlide } from "@/lib/hero-defaults";
@@ -80,7 +80,7 @@ export function HeroBanner({ slides }: { slides: HeroSlide[] }) {
             )}
           >
             <div className={cn("hero-drift absolute inset-0", active && !reduced && "hero-drift-on")}>
-              <Image
+              <Photo
                 src={s.image}
                 alt={s.alt}
                 fill
@@ -90,7 +90,7 @@ export function HeroBanner({ slides }: { slides: HeroSlide[] }) {
                 className={cn("object-cover object-[70%_center]", s.mobileImage && "hidden md:block")}
               />
               {s.mobileImage && (
-                <Image
+                <Photo
                   src={s.mobileImage}
                   alt={s.alt}
                   fill

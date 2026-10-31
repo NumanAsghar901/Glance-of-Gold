@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { Photo } from "@/components/ui/photo";
 import { ArchFrame } from "@/components/ui/arch";
 import { Button } from "@/components/ui/button";
+import { STORY_PHOTO } from "@/lib/cloudinary";
 
 export const metadata: Metadata = {
   title: "About us",
@@ -28,8 +29,8 @@ export default function AboutPage() {
         </div>
         <div className="arch-in order-1 mx-auto w-full max-w-[24rem] pr-3 sm:pr-5 lg:order-2 lg:col-span-5 lg:max-w-none">
           <ArchFrame>
-            <Image
-              src="/story/glance-story.jpg"
+            <Photo
+              src={STORY_PHOTO}
               alt="Layered gold necklaces and stacked gold rings on a cream display stand, beside dried flowers"
               fill
               priority

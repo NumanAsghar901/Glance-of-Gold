@@ -2,27 +2,59 @@
  * Cloudinary delivery, shared by the browser and the server. Nothing here is secret: the cloud name is public,
  * and the API secret only ever lives in `cloudinary-server.ts`.
  *
- * Product photos are stored once (limited to 2000 px on the longest side when they are uploaded) and every
- * size the store shows is made on the fly by Cloudinary from the URL, so Vercel's image optimiser is not used.
+ * Every image is stored once (limited to 2000 px on the longest side when it is uploaded, a little more for wide
+ * banners) and every size the store shows is made on the fly by Cloudinary from the URL, so Vercel's image
+ * optimiser is not used.
  */
 
 export const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? "";
 
-/** Where product photos live in the Cloudinary media library. */
-export const PRODUCT_FOLDER = "little-luxe-glow/products";
-/** The longest side a stored photo may have: Cloudinary reduces anything larger as it is uploaded. */
-export const MAX_STORED_EDGE = 2000;
-/** Incoming transformation applied to every upload (signed, so the browser cannot change it). */
-export const INCOMING_TRANSFORMATION = `c_limit,w_${MAX_STORED_EDGE},h_${MAX_STORED_EDGE}`;
+/** Where each kind of image lives in the Cloudinary media library. */
+export const FOLDERS = {
+  product: "little-luxe-glow/products",
+  category: "little-luxe-glow/categories",
+  banner: "little-luxe-glow/banners",
+  /** Customers' payment screenshots: stored as private ("authenticated") assets, only the admin gets a link. */
+  proof: "little-luxe-glow/payment-proofs",
+  /** Pictures that are part of the design (the story photo), not content the owner edits. */
+  site: "little-luxe-glow/site",
+} as const;
+export const PRODUCT_FOLDER = FOLDERS.product;
+
+/** The kinds of image the admin uploads, each with its folder and the longest side Cloudinary keeps (larger ones are reduced on arrival). */
+export type UploadSlot = "product" | "category" | "banner-wide" | "banner-tall";
+export const SLOTS: Record<UploadSlot, { folder: string; edge: number }> = {
+  product: { folder: FOLDERS.product, edge: 2000 },
+  category: { folder: FOLDERS.category, edge: 2000 },
+  "banner-wide": { folder: FOLDERS.banner, edge: 2560 },
+  "banner-tall": { folder: FOLDERS.banner, edge: 2000 },
+};
+/** The longest side of a product photo as stored. */
+export const MAX_STORED_EDGE = SLOTS.product.edge;
+/** Incoming transformation applied to an upload (signed, so the browser cannot change it). */
+export const incomingTransformation = (edge: number) => `c_limit,w_${edge},h_${edge}`;
+/** Longest side of a payment screenshot as stored (a tall phone screenshot fits whole). */
+export const PROOF_EDGE = 2600;
+
+/** Everything the browser needs to send one image straight to Cloudinary. */
+export type UploadTicket = { url: string; fields: Record<string, string> };
+
+/** An image the browser has already sent to Cloudinary. */
+export type UploadedPhoto = { publicId: string; width: number; height: number };
 
 const DELIVERY = "https://res.cloudinary.com";
 /** The widths Cloudinary is asked for. Next asks for many; snapping keeps the number of generated copies small. */
-const WIDTHS = [160, 320, 480, 640, 828, 1080, 1440, MAX_STORED_EDGE];
+const WIDTHS = [160, 320, 480, 640, 828, 1080, 1440, 2000, 2560];
 
-const snapWidth = (w: number) => WIDTHS.find((x) => x >= w) ?? MAX_STORED_EDGE;
+const snapWidth = (w: number) => WIDTHS.find((x) => x >= w) ?? 2560;
 
 /** A public_id as the store saves it: folder names and a file name, nothing else. */
 export const PUBLIC_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_\-/]{0,198}[A-Za-z0-9]$/;
+
+/** A public_id sent by a form, accepted only if it is well formed and inside the given folder. Empty or anything else gives null. */
+export function ownPublicId(value: unknown, folder: string): string | null {
+  return typeof value === "string" && PUBLIC_ID_PATTERN.test(value) && value.startsWith(`${folder}/`) ? value : null;
+}
 
 /** The plain address of the stored photo (no transformation). Used as the photo's `src`; the loader adds the sizing. */
 export function cloudinarySrc(publicId: string) {
@@ -30,8 +62,8 @@ export function cloudinarySrc(publicId: string) {
 }
 
 /**
- * The address to show a stored product photo from: Cloudinary when it has a public_id, otherwise the saved `url`
- * (the Supabase file). Without a cloud name configured the saved `url` is used, so a missing setting never breaks pictures.
+ * The address to show a stored product photo from: Cloudinary when it has a public_id, otherwise the saved `url`.
+ * Without a cloud name configured the saved `url` is used, so a missing setting never breaks pictures.
  */
 export function photoSrc(photo: { url: string; cloudinary_public_id?: string | null }) {
   return photo.cloudinary_public_id && CLOUD_NAME ? cloudinarySrc(photo.cloudinary_public_id) : photo.url;
@@ -66,3 +98,6 @@ export function fillLoader(ratio: number) {
 /** Next's `loader` for photos shown whole (product page, quick view, bag): never cropped, never enlarged. */
 export const limitLoader = ({ src, width }: { src: string; width: number }) =>
   deliver(src, `f_auto,q_auto,c_limit,w_${snapWidth(width)}`);
+
+/** The story photo on the home and About pages. Falls back to the copy in /public when Cloudinary is not configured. */
+export const STORY_PHOTO = CLOUD_NAME ? cloudinarySrc(`${FOLDERS.site}/glance-story`) : "/story/glance-story.jpg";

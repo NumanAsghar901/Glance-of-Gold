@@ -12,6 +12,8 @@ import {
 import { ActionButton, ActionForm } from "@/components/admin/action-form";
 import { Check, Field, Input, orderTone, paymentTone, Panel, Pill, Select } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin/auth";
+import { FOLDERS } from "@/lib/cloudinary";
+import { privateImageUrl } from "@/lib/cloudinary-server";
 import { PAYMENT_LABEL } from "@/lib/email/templates";
 import { messageToCustomer, piecesIn, piecesLabel } from "@/lib/order-text";
 import { variantLines } from "@/lib/variant-name";
@@ -37,14 +39,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   ]);
   if (!order) notFound();
 
-  // Payment screenshots live in a private bucket; hand out short-lived links.
-  const proofsWithUrls = await Promise.all(
-    (proofs ?? []).map(async (p) => {
-      if (!p.screenshot_path) return { ...p, url: null as string | null };
-      const { data } = await supabase.storage.from("payment-proofs").createSignedUrl(p.screenshot_path, 600);
-      return { ...p, url: data?.signedUrl ?? null };
-    }),
-  );
+  // Payment screenshots are private files on Cloudinary; the admin gets a signed link that outsiders cannot guess.
+  const proofsWithUrls = (proofs ?? []).map((p) => ({
+    ...p,
+    url: p.screenshot_path?.startsWith(`${FOLDERS.proof}/`) ? privateImageUrl(p.screenshot_path) : null,
+  }));
 
   const customerWa = whatsappLink(
     messageToCustomer({ ...order, items: items ?? [] }, PAYMENT_LABEL[order.payment_method]),

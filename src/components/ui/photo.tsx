@@ -18,7 +18,7 @@ type Props = Omit<ImageProps, "loader" | "unoptimized"> & {
  * (f_auto, q_auto), so they never use Vercel's image optimiser and `quality` is ignored. Older photos still on
  * Supabase Storage keep using Next's optimiser, with `quality`, until `npm run migrate-images-to-cloudinary` has copied them.
  */
-export function ProductPhoto({ fit = "contain", ratio = 4 / 5, src, quality, alt, ...rest }: Props) {
+export function Photo({ fit = "contain", ratio = 4 / 5, src, quality, alt, ...rest }: Props) {
   if (typeof src === "string" && isCloudinarySrc(src)) {
     return <Image src={src} alt={alt} loader={fit === "fill" ? fillLoader(ratio) : limitLoader} {...rest} />;
   }

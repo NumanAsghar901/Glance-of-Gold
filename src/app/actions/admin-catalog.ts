@@ -4,14 +4,11 @@ import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin, type ActionState } from "@/lib/admin/auth";
-import { removeStoredImages, uploadPublicImage } from "@/lib/admin/storage";
-import { cloudinarySrc, PRODUCT_FOLDER, PUBLIC_ID_PATTERN } from "@/lib/cloudinary";
-import { destroyAssets } from "@/lib/cloudinary-server";
+import { cloudinarySrc, FOLDERS, ownPublicId, PRODUCT_FOLDER, PUBLIC_ID_PATTERN } from "@/lib/cloudinary";
+import { destroyAssets, removeCloudinaryImages } from "@/lib/cloudinary-server";
 import { randomSuffix, slugify } from "@/lib/slug";
 import { composeVariantName } from "@/lib/variant-name";
 import type { Database } from "@/types/database";
-
-const BUCKET = "product-images";
 
 const idSchema = z.coerce.number().int().positive();
 
@@ -24,24 +21,10 @@ function refreshCatalog() {
 
 // Images -------------------------------------------------------------------------
 
-function storagePath(url: string) {
-  const marker = `/${BUCKET}/`;
-  const i = url.indexOf(marker);
-  return i === -1 ? null : url.slice(i + marker.length);
-}
-
-function filesFrom(formData: FormData, key: string) {
-  return formData.getAll(key).filter((f): f is File => f instanceof File && f.size > 0);
-}
-
-/** Deletes a product photo's stored files: the Cloudinary asset and, for photos not yet copied across, the Supabase file. */
-async function removePhotoFiles(
-  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
-  photos: { url: string; cloudinary_public_id?: string | null }[],
-) {
-  const cloud = photos.flatMap((p) => (p.cloudinary_public_id ? [p.cloudinary_public_id] : []));
-  const paths = photos.flatMap((p) => storagePath(p.url) ?? []);
-  const [leftOver] = await Promise.all([destroyAssets(cloud), paths.length ? supabase.storage.from(BUCKET).remove(paths) : null]);
+/** Deletes the Cloudinary assets behind product photos. */
+async function removePhotoFiles(photos: { cloudinary_public_id?: string | null }[]) {
+  const ids = photos.flatMap((p) => (p.cloudinary_public_id ? [p.cloudinary_public_id] : []));
+  const leftOver = await destroyAssets(ids);
   if (leftOver.length) console.error("Cloudinary assets could not be deleted:", leftOver.join(", "));
 }
 
@@ -281,7 +264,7 @@ export async function deleteProduct(formData: FormData) {
   const id = idSchema.parse(formData.get("id"));
 
   const { data: imgs } = await supabase.from("product_images").select("*").eq("product_id", id);
-  await removePhotoFiles(supabase, imgs ?? []);
+  await removePhotoFiles(imgs ?? []);
 
   await supabase.from("products").delete().eq("id", id);
   refreshCatalog();
@@ -293,7 +276,7 @@ export async function deleteImage(formData: FormData) {
   const id = idSchema.parse(formData.get("id"));
   const { data: img } = await supabase.from("product_images").select("*").eq("id", id).maybeSingle();
   if (!img) return;
-  await removePhotoFiles(supabase, [img]);
+  await removePhotoFiles([img]);
   await supabase.from("product_images").delete().eq("id", id);
   refreshCatalog();
   revalidatePath(`/admin/products/${img.product_id}`);
@@ -312,12 +295,7 @@ export async function makePrimaryImage(formData: FormData) {
 
 export async function deleteSampleProducts() {
   const { supabase } = await requireAdmin();
-  const { data: imgs } = await supabase
-    .from("product_images")
-    .select("url, products!inner(is_sample)")
-    .eq("products.is_sample", true);
-  const paths = (imgs ?? []).flatMap((i) => storagePath(i.url) ?? []);
-  if (paths.length) await supabase.storage.from(BUCKET).remove(paths);
+  // Sample products use the built-in pictures in /public, so there are no stored files to remove.
   await supabase.from("products").delete().eq("is_sample", true);
   refreshCatalog();
 }
@@ -356,24 +334,15 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
   if (!row.slug) return { error: "Enter a valid name." };
 
   const removeImage = formData.get("removeImage") === "on";
-  const file = filesFrom(formData, "image")[0];
+  // The photo was already sent to Cloudinary by the browser; the form carries only where it is.
+  const sent = formData.get("image");
+  const newId = ownPublicId(sent, FOLDERS.category);
+  if (typeof sent === "string" && sent && !newId) return { error: "The photo could not be read. Remove it and add it again." };
+  const imageUrl = newId ? cloudinarySrc(newId) : undefined;
 
-  const uploadPhoto = async (): Promise<{ url?: string; error?: string }> => {
-    if (!file) return {};
-    try {
-      return { url: await uploadPublicImage(supabase, "categories", file, "category") };
-    } catch (e) {
-      return { error: e instanceof Error ? e.message : "Image upload failed." };
-    }
-  };
-
-  // The current row is read while the new photo uploads, since neither waits on the other.
-  const [{ data: existing }, upload] = await Promise.all([
-    v.id ? supabase.from("categories").select("image_url").eq("id", v.id).maybeSingle() : Promise.resolve({ data: null }),
-    uploadPhoto(),
-  ]);
-  if (upload.error) return { error: upload.error };
-  const imageUrl = upload.url;
+  const { data: existing } = v.id
+    ? await supabase.from("categories").select("image_url").eq("id", v.id).maybeSingle()
+    : { data: null };
 
   // New photo wins; otherwise "remove" clears it; otherwise leave the current one untouched.
   const imagePatch = imageUrl ? { image_url: imageUrl } : removeImage ? { image_url: null } : {};
@@ -381,12 +350,12 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
     ? await supabase.from("categories").update({ ...row, ...imagePatch }).eq("id", v.id)
     : await supabase.from("categories").insert({ ...row, image_url: imageUrl ?? null });
   if (error) {
-    // The row was not saved, so the freshly uploaded file would be an orphan.
-    if (imageUrl) await removeStoredImages(supabase, imageUrl);
+    // The row was not saved, so the freshly uploaded photo would be an orphan.
+    if (imageUrl) await removeCloudinaryImages(imageUrl);
     return { error: error.code === "23505" ? "A category with that URL name already exists." : error.message };
   }
-  // The row now points elsewhere, so the old file is no longer used anywhere.
-  if (existing?.image_url && (imageUrl || removeImage)) await removeStoredImages(supabase, existing.image_url);
+  // The row now points elsewhere, so the old photo is no longer used anywhere.
+  if (existing?.image_url && (imageUrl || removeImage) && existing.image_url !== imageUrl) await removeCloudinaryImages(existing.image_url);
 
   refreshCatalog();
   return { ok: v.id ? "Category saved." : "Category added." };
@@ -397,6 +366,6 @@ export async function deleteCategory(formData: FormData) {
   const id = idSchema.parse(formData.get("id"));
   const { data: cat } = await supabase.from("categories").select("image_url").eq("id", id).maybeSingle();
   await supabase.from("categories").delete().eq("id", id);
-  await removeStoredImages(supabase, cat?.image_url);
+  await removeCloudinaryImages(cat?.image_url);
   refreshCatalog();
 }

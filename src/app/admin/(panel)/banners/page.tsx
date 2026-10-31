@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { deleteBanner, saveBanner } from "@/app/actions/admin-marketing";
 import { ActionButton, ActionForm } from "@/components/admin/action-form";
-import { PhotoInput } from "@/components/admin/photo-input";
+import { CloudinaryPhotoField } from "@/components/admin/cloudinary-photo-field";
 import { Check, Field, Input, PageHeader, Panel, Pill } from "@/components/admin/ui";
+import { Photo } from "@/components/ui/photo";
 import { requireAdmin } from "@/lib/admin/auth";
 
 export const metadata: Metadata = { title: "Home banner" };
@@ -26,23 +26,23 @@ function Fields({ b, p }: { b: B; p: string }) {
       {b.id && <input type="hidden" name="id" value={b.id} />}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Wide photo (computers and tablets)" htmlFor={`${p}-img`} hint="Landscape, about twice as wide as tall, such as 2400 x 1200. Any size works. Keep the left half calm because the headline sits there.">
-          <PhotoInput id={`${p}-img`} name="image" slot="banner-wide" required={!b.id} />
+          <CloudinaryPhotoField id={`${p}-img`} name="image" slot="banner-wide" required={!b.id} />
         </Field>
         <Field label="Tall photo (phones, optional)" htmlFor={`${p}-mimg`} hint="Portrait like a phone screen, such as 1080 x 1920, with the subject in the top half. Any size works. Without it the wide photo is cropped to fit, and a phone shows only a narrow slice of it.">
-          <PhotoInput id={`${p}-mimg`} name="mobileImage" slot="banner-tall" />
+          <CloudinaryPhotoField id={`${p}-mimg`} name="mobileImage" slot="banner-tall" />
         </Field>
       </div>
       {b.id && (b.image_url || b.mobile_image_url) && (
         <div className="flex flex-wrap items-center gap-4 border border-border p-3">
           {b.image_url && (
             <span className="relative block h-16 w-32 overflow-hidden bg-sand">
-              <Image src={b.image_url} alt="Current wide photo" fill sizes="128px" quality={60} className="object-cover" />
+              <Photo src={b.image_url} alt="Current wide photo" fill sizes="128px" quality={60} className="object-cover" />
             </span>
           )}
           {b.mobile_image_url && (
             <>
               <span className="relative block h-16 w-12 overflow-hidden bg-sand">
-                <Image src={b.mobile_image_url} alt="Current tall photo" fill sizes="48px" quality={60} className="object-cover" />
+                <Photo src={b.mobile_image_url} alt="Current tall photo" fill sizes="48px" quality={60} className="object-cover" />
               </span>
               <Check name="removeMobileImage" label="Remove the tall photo" hint="Deletes it from storage. Uploading a new one above replaces it instead." />
             </>
@@ -106,7 +106,7 @@ export default async function BannersPage() {
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 [&::-webkit-details-marker]:hidden">
                 <span className="flex min-w-0 items-center gap-3">
                   <span className="relative h-14 w-24 shrink-0 overflow-hidden bg-sand">
-                    <Image src={b.image_url} alt="" fill sizes="96px" quality={60} className="object-cover" />
+                    <Photo src={b.image_url} alt="" fill sizes="96px" quality={60} className="object-cover" />
                   </span>
                   <span className="truncate font-heading text-xl">{b.heading || "Default headline"}</span>
                 </span>

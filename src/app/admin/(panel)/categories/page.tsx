@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { deleteCategory, saveCategory } from "@/app/actions/admin-catalog";
 import { ActionButton, ActionForm } from "@/components/admin/action-form";
-import { PhotoInput } from "@/components/admin/photo-input";
+import { CloudinaryPhotoField } from "@/components/admin/cloudinary-photo-field";
 import { Check, Field, Input, PageHeader, Panel, Pill, Textarea } from "@/components/admin/ui";
+import { Photo } from "@/components/ui/photo";
 import { requireAdmin } from "@/lib/admin/auth";
 
 export const metadata: Metadata = { title: "Categories" };
@@ -30,14 +30,14 @@ function Fields({ c, prefix }: { c: Cat; prefix: string }) {
           <Input id={`${prefix}-sort`} name="sort" type="number" min={0} defaultValue={c.sort} />
         </Field>
         <Field label="Home page photo" htmlFor={`${prefix}-image`} hint="Optional. Shown on the home page category tiles. Portrait is best, such as 1200 x 1500. Any size works.">
-          <PhotoInput id={`${prefix}-image`} name="image" slot="category" />
+          <CloudinaryPhotoField id={`${prefix}-image`} name="image" slot="category" />
         </Field>
       </div>
       {c.image_url && (
         <div className="space-y-2 border border-border p-3">
           <div className="flex items-center gap-4">
             <span className="relative h-20 w-16 shrink-0 overflow-hidden bg-sand">
-              <Image src={c.image_url} alt="" fill sizes="64px" quality={60} className="object-cover" />
+              <Photo src={c.image_url} alt="" fill sizes="64px" quality={60} className="object-cover" />
             </span>
             <Check
               name="removeImage"
@@ -78,7 +78,7 @@ export default async function CategoriesPage() {
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 [&::-webkit-details-marker]:hidden">
                 <span className="flex min-w-0 items-center gap-3">
                   <span className="relative size-12 shrink-0 overflow-hidden bg-sand">
-                    {c.image_url && <Image src={c.image_url} alt="" fill sizes="48px" quality={60} className="object-cover" />}
+                    {c.image_url && <Photo src={c.image_url} alt="" fill sizes="48px" quality={60} className="object-cover" />}
                   </span>
                   <span className="min-w-0">
                     <span className="block font-heading text-xl">{c.name}</span>

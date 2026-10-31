@@ -1,10 +1,20 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { CLOUD_NAME, INCOMING_TRANSFORMATION, PRODUCT_FOLDER } from "@/lib/cloudinary";
+import {
+  CLOUD_NAME,
+  incomingTransformation,
+  isCloudinarySrc,
+  PROOF_EDGE,
+  publicIdFromSrc,
+  SLOTS,
+  type UploadSlot,
+  type UploadTicket,
+} from "@/lib/cloudinary";
 
 /**
- * Server side of Cloudinary: signs browser uploads and deletes assets. The API secret never leaves this file.
- * No SDK is used, so nothing extra is shipped: Cloudinary's signature is a SHA-1 of the sorted parameters plus the secret.
+ * Server side of Cloudinary: signs browser uploads, deletes assets and links to private ones. The API secret never
+ * leaves this file. No SDK is used, so nothing extra is shipped: Cloudinary's signature is a SHA-1 of the sorted
+ * parameters plus the secret.
  */
 
 const API_KEY = process.env.CLOUDINARY_API_KEY ?? "";
@@ -22,47 +32,46 @@ export function sign(params: Record<string, string | number>, secret = API_SECRE
   return createHash("sha1").update(text + secret).digest("hex");
 }
 
-/** Everything the browser needs to send one photo straight to Cloudinary. */
-export type UploadTicket = {
-  url: string;
-  fields: { api_key: string; timestamp: string; signature: string; folder: string; transformation: string; allowed_formats: string };
-};
-
-const ALLOWED_FORMATS = "jpg,jpeg,png,webp,avif";
-
-export function createUploadTicket(): UploadTicket {
-  const signed = {
-    allowed_formats: ALLOWED_FORMATS,
-    folder: PRODUCT_FOLDER,
-    timestamp: Math.floor(Date.now() / 1000),
-    transformation: INCOMING_TRANSFORMATION,
-  };
+function ticketFor(signed: Record<string, string | number>): UploadTicket {
+  const params = { ...signed, timestamp: Math.floor(Date.now() / 1000) };
   return {
     url: `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
     fields: {
+      ...Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])),
       api_key: API_KEY,
-      timestamp: String(signed.timestamp),
-      signature: sign(signed),
-      folder: signed.folder,
-      transformation: signed.transformation,
-      allowed_formats: signed.allowed_formats,
+      signature: sign(params),
     },
   };
 }
 
+/** A signed ticket for the admin to upload one image of this kind straight to Cloudinary. */
+export function createUploadTicket(slot: UploadSlot): UploadTicket {
+  const { folder, edge } = SLOTS[slot];
+  return ticketFor({ allowed_formats: "jpg,jpeg,png,webp,avif", folder, transformation: incomingTransformation(edge) });
+}
+
+/** A signed ticket for a customer to upload one payment screenshot. It can only create this one private asset. */
+export function createProofTicket(publicId: string): UploadTicket {
+  return ticketFor({
+    allowed_formats: "jpg,jpeg,png,webp",
+    public_id: publicId,
+    transformation: incomingTransformation(PROOF_EDGE),
+    type: "authenticated",
+  });
+}
+
 /** Deletes assets from Cloudinary. Returns the ones that could not be deleted (an asset that is already gone counts as deleted). */
-export async function destroyAssets(publicIds: string[]): Promise<string[]> {
+export async function destroyAssets(publicIds: string[], type: "upload" | "authenticated" = "upload"): Promise<string[]> {
   if (!publicIds.length) return [];
   if (!cloudinaryConfigured()) return publicIds;
   const results = await Promise.all(
     publicIds.map(async (publicId) => {
-      const timestamp = Math.floor(Date.now() / 1000);
+      // Every parameter except the key goes into the signature, "invalidate" (clears the CDN's copy) included.
+      const params = { public_id: publicId, timestamp: Math.floor(Date.now() / 1000), type, invalidate: "true" };
       const body = new URLSearchParams({
-        public_id: publicId,
-        timestamp: String(timestamp),
+        ...Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])),
         api_key: API_KEY,
-        signature: sign({ public_id: publicId, timestamp }),
-        invalidate: "true",
+        signature: sign(params),
       });
       try {
         const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/destroy`, { method: "POST", body });
@@ -74,4 +83,17 @@ export async function destroyAssets(publicIds: string[]): Promise<string[]> {
     }),
   );
   return results.flatMap((r) => (r ? [r] : []));
+}
+
+/** Deletes the Cloudinary assets behind stored image addresses. Anything that is not a Cloudinary address is ignored. */
+export async function removeCloudinaryImages(...urls: (string | null | undefined)[]) {
+  const ids = urls.flatMap((u) => (u && isCloudinarySrc(u) ? (publicIdFromSrc(u) ?? []) : []));
+  const leftOver = await destroyAssets([...new Set(ids)]);
+  if (leftOver.length) console.error("Cloudinary assets could not be deleted:", leftOver.join(", "));
+}
+
+/** A signed link to a private asset (a payment screenshot). Only someone holding this link can open it. */
+export function privateImageUrl(publicId: string) {
+  const signature = createHash("sha1").update(publicId + API_SECRET).digest("base64url").slice(0, 8);
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/authenticated/s--${signature}--/${publicId}`;
 }

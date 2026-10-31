@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { deleteSampleProducts } from "@/app/actions/admin-catalog";
 import { ActionButton } from "@/components/admin/action-form";
-import { ProductPhoto } from "@/components/store/product-photo";
+import { Photo } from "@/components/ui/photo";
 import { Empty, Input, PageHeader, Pager, Pill, TableWrap, td, th } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/admin/auth";
@@ -96,7 +96,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                     <td className={td}>
                       <Link prefetch={false} href={`/admin/products/${p.id}`} className="flex items-center gap-3">
                         <span className="relative h-14 w-11 shrink-0 overflow-hidden bg-sand">
-                          {img && <ProductPhoto src={photoSrc(img)} alt="" fill sizes="44px" quality={60} className="object-contain" />}
+                          {img && <Photo src={photoSrc(img)} alt="" fill sizes="44px" quality={60} className="object-contain" />}
                         </span>
                         <span className="font-medium underline-offset-4 hover:underline">{p.name}</span>
                       </Link>

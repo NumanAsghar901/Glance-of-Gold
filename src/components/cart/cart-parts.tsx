@@ -1,7 +1,7 @@
 "use client";
 
 import { Gift, Minus, Plus, X } from "lucide-react";
-import { ProductPhoto } from "@/components/store/product-photo";
+import { Photo } from "@/components/ui/photo";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { getCartSnapshot, previewCoupon } from "@/app/actions/cart";
@@ -102,7 +102,7 @@ export function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?
         onClick={onNavigate}
         className="relative block h-24 w-[4.75rem] shrink-0 overflow-hidden bg-sand"
       >
-        {line.image && <ProductPhoto src={line.image} alt="" fill sizes="80px" quality={60} className="object-contain" />}
+        {line.image && <Photo src={line.image} alt="" fill sizes="80px" quality={60} className="object-contain" />}
       </Link>
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-start justify-between gap-3">
@@ -208,7 +208,7 @@ export function GiftPicker({ className }: { className?: string }) {
               />
               <span className="absolute inset-0 border-2 border-transparent peer-focus-visible:border-gold" aria-hidden="true" />
               <span className="relative block aspect-[4/5] overflow-hidden bg-sand">
-                {o.image && <ProductPhoto src={o.image} alt="" fit="fill" fill sizes="120px" quality={75} className="object-cover" />}
+                {o.image && <Photo src={o.image} alt="" fit="fill" fill sizes="120px" quality={75} className="object-cover" />}
               </span>
               <span className="mt-2 block text-xs leading-snug">{o.productName}</span>
               <span className={cn("mt-1 block text-xs", selected ? "text-gold-hover" : "text-muted-foreground")}>

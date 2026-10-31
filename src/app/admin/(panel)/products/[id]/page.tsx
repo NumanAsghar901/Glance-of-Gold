@@ -6,7 +6,7 @@ import { z } from "zod";
 import { deleteImage, deleteProduct, makePrimaryImage } from "@/app/actions/admin-catalog";
 import { ActionButton } from "@/components/admin/action-form";
 import { ProductForm } from "@/components/admin/product-form";
-import { ProductPhoto } from "@/components/store/product-photo";
+import { Photo } from "@/components/ui/photo";
 import { PageHeader, Panel, Pill } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin/auth";
 import { photoSrc } from "@/lib/cloudinary";
@@ -52,7 +52,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
               {images.map((img, i) => (
                 <li key={img.id} className="space-y-2">
                   <div className="relative aspect-[4/5] overflow-hidden bg-sand">
-                    <ProductPhoto src={photoSrc(img)} alt={img.alt} fill sizes="200px" quality={60} className="object-contain" />
+                    <Photo src={photoSrc(img)} alt={img.alt} fill sizes="200px" quality={60} className="object-contain" />
                     {i === 0 && (
                       <span className="absolute left-2 top-2">
                         <Pill tone="good">Main</Pill>
