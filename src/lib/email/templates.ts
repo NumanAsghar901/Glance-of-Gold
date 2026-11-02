@@ -1,6 +1,6 @@
 import { orderBreakdownLines, piecesIn, piecesLabel } from "@/lib/order-text";
 import { formatPKR } from "@/lib/utils";
-import { variantLines } from "@/lib/variant-name";
+import { optionLines } from "@/lib/option-label";
 
 /**
  * Order emails. Inline styles and table layout only, since email clients ignore
@@ -77,7 +77,7 @@ function itemsTable(o: EmailOrder) {
   const rows = o.items
     .map(
       (i) => `<tr>
-<td style="padding:10px 0;border-bottom:1px solid ${C.sand};font-size:14px;">${esc(i.name)}${variantLines(i.variant_name)
+<td style="padding:10px 0;border-bottom:1px solid ${C.sand};font-size:14px;">${esc(i.name)}${optionLines(i.variant_name)
         .map((part) => `<br><span style="color:${C.muted};font-size:12px;">${esc(part)}</span>`)
         .join("")}${
         !i.is_gift && i.qty > 1

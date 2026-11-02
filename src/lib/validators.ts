@@ -23,15 +23,17 @@ export const cartPayloadSchema = z.object({
   items: z
     .array(
       z.object({
-        variantId: z.number().int().positive(),
+        productId: z.number().int().positive(),
         qty: z.number().int().min(1).max(20),
-        // Which of colour, size and design the customer chose. The order says only those.
-        parts: z.array(z.enum(["colour", "size", "design"])).max(3).optional(),
+        // What was chosen from the product's variant groups. The server checks each against the product itself.
+        group: z.string().trim().max(60).nullable().optional(),
+        size: z.string().trim().max(60).nullable().optional(),
+        colour: z.string().trim().max(60).nullable().optional(),
       }),
     )
     .min(1, "Your bag is empty")
     .max(50),
-  giftVariantId: z.number().int().positive().nullable().optional(),
+  giftProductId: z.number().int().positive().nullable().optional(),
   couponCode: z.string().trim().max(32).nullable().optional(),
 });
 

@@ -23,7 +23,7 @@ type Row = {
   is_sample: boolean;
   category: { name: string } | null;
   images: { url: string; sort: number; cloudinary_public_id?: string | null }[];
-  variants: { stock: number }[];
+  stock: number;
 };
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
@@ -34,7 +34,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
   let query = supabase
     .from("products")
-    .select("id, name, price, is_active, is_featured, is_sample, category:categories(name), images:product_images(*), variants:product_variants(stock)", { count: "exact" })
+    .select("id, name, price, is_active, is_featured, is_sample, category:categories(name), stock, images:product_images(*)", { count: "exact" })
     .order("created_at", { ascending: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
   if (q) query = query.ilike("name", `%${q}%`);
@@ -90,7 +90,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
             <tbody>
               {products.map((p) => {
                 const img = [...p.images].sort((a, b) => a.sort - b.sort)[0];
-                const stock = p.variants.reduce((n, v) => n + v.stock, 0);
+                const stock = p.stock;
                 return (
                   <tr key={p.id} className="transition-colors hover:bg-sand/40">
                     <td className={td}>

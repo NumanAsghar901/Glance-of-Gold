@@ -6,8 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { getQuickView } from "@/app/actions/catalog";
 import { WishlistButton } from "@/components/store/card-actions";
 import { Photo } from "@/components/ui/photo";
-import { useVariantSelection } from "@/components/store/use-variant-selection";
-import { choiceNoun, OfferPrice, SelectionPrice, VariantPicker } from "@/components/store/variant-picker";
+import { choiceNoun, OptionPicker, SelectionPrice } from "@/components/store/option-picker";
+import { useOptionSelection } from "@/components/store/use-option-selection";
 import { Button } from "@/components/ui/button";
 import { StockTag } from "@/components/ui/stock-tag";
 import { photoRatio } from "@/lib/image-ratio";
@@ -91,15 +91,13 @@ export function QuickViewDialog() {
 }
 
 function QuickViewBody({ product }: { product: ProductDetail }) {
-  const sel = useVariantSelection(product);
+  const sel = useOptionSelection(product);
   const [imageIndex, setImageIndex] = useState(0);
   const [added, setAdded] = useState(false);
 
   const count = sel.pieces;
-  const needsChoice = sel.hasChoice && count === 0;
+  const needsChoice = sel.hasGroups && sel.lines.length === 0;
   const image = product.images[imageIndex];
-  // An offer of several pieces is chosen piece by piece on the product page.
-  const offer = product.bundleSize > 1;
 
   function add() {
     if (sel.add() === 0) return;
@@ -148,54 +146,35 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
       <div className="flex min-w-0 flex-col p-5 sm:p-6 md:p-8">
         {product.category && <p className="text-sm text-muted-foreground">{product.category.name}</p>}
         <h2 className="mt-1 pr-10 font-heading text-4xl leading-tight">{product.name}</h2>
-        {offer ? (
-          <div className="mt-3">
-            <OfferPrice product={product} className="text-lg" />
-          </div>
-        ) : (
-          <SelectionPrice product={product} sel={sel} className="mt-3 text-lg" />
-        )}
+        <SelectionPrice product={product} sel={sel} className="mt-3 text-lg" />
         <StockTag inStock={product.inStock} lowStock={product.lowStock} className="mt-3 inline-block self-start" />
 
         {product.description && (
           <p className="mt-5 line-clamp-4 text-[0.9375rem] leading-relaxed text-muted-foreground">{product.description}</p>
         )}
 
-        {offer ? (
-          <div className="mt-6 space-y-4">
-            <p className="text-sm text-muted-foreground">
-              This offer is for {piecesLabel(product.bundleSize)}. You choose the size and colour of each one on the product page.
-            </p>
-            <Button href={`/product/${product.slug}`} onClick={quickView.close} size="lg" className="w-full">
-              Choose your pieces
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="mt-6">
-              <VariantPicker product={product} sel={sel} idPrefix="qv" />
-            </div>
+        <div className="mt-6">
+          <OptionPicker product={product} sel={sel} idPrefix="qv" />
+        </div>
 
-            <div className="mt-8 flex gap-3">
-              <Button size="lg" onClick={add} disabled={sel.soldOut || needsChoice || !sel.canAdd || added} className="flex-1">
-                {sel.soldOut ? (
-                  "Out of stock"
-                ) : needsChoice ? (
-                  `Select ${choiceNoun(sel)}`
-                ) : added ? (
-                  <>
-                    <Check /> Added to cart
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag /> {count > 1 ? `Add ${piecesLabel(count)} to cart` : "Add to cart"}
-                  </>
-                )}
-              </Button>
-              <WishlistButton slug={product.slug} name={product.name} className="size-14 border border-border bg-surface" />
-            </div>
-          </>
-        )}
+        <div className="mt-8 flex gap-3">
+          <Button size="lg" onClick={add} disabled={!sel.canAdd || added} className="flex-1">
+            {sel.soldOut ? (
+              "Out of stock"
+            ) : needsChoice ? (
+              `Select ${choiceNoun(sel)}`
+            ) : added ? (
+              <>
+                <Check /> Added to cart
+              </>
+            ) : (
+              <>
+                <ShoppingBag /> {count > 1 ? `Add ${piecesLabel(count)} to cart` : "Add to cart"}
+              </>
+            )}
+          </Button>
+          <WishlistButton slug={product.slug} name={product.name} className="size-14 border border-border bg-surface" />
+        </div>
 
         <Link href={`/product/${product.slug}`} onClick={quickView.close} className="link-draw mt-6 self-start text-[0.9375rem]">
           View full details

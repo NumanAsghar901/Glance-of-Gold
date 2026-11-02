@@ -16,7 +16,7 @@ import { FOLDERS } from "@/lib/cloudinary";
 import { privateImageUrl } from "@/lib/cloudinary-server";
 import { PAYMENT_LABEL } from "@/lib/email/templates";
 import { messageToCustomer, piecesIn, piecesLabel } from "@/lib/order-text";
-import { variantLines } from "@/lib/variant-name";
+import { optionLines } from "@/lib/option-label";
 import { whatsappLink } from "@/lib/site";
 import { formatPKR } from "@/lib/utils";
 
@@ -78,7 +78,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 <li key={i.id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                   <div className="min-w-0">
                     <p className="text-sm">{i.name}</p>
-                    {variantLines(i.variant_name).map((part) => (
+                    {optionLines(i.variant_name).map((part) => (
                       <p key={part} className="text-xs text-muted-foreground">
                         {part}
                       </p>

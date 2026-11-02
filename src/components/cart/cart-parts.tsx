@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { getCartSnapshot, previewCoupon } from "@/app/actions/cart";
 import { useStore } from "@/components/store/store-provider";
 import { Button } from "@/components/ui/button";
-import { cartActions, lineDetails, lineKey, useCart, type CartLine } from "@/lib/cart-store";
+import { canAddMore, cartActions, lineDetails, useCart, type CartLine } from "@/lib/cart-store";
 import { piecesLabel } from "@/lib/order-text";
 import { amountToFreeShipping, shippingFor } from "@/lib/pricing";
 import { cn, formatPKR } from "@/lib/utils";
@@ -17,10 +17,8 @@ import { cn, formatPKR } from "@/lib/utils";
 /** Refresh price/stock of cart lines from the server while `active`. */
 export function useCartSync(active: boolean) {
   const { lines } = useCart();
-  // Every variant in the bag, including each piece of an offer set.
-  const key = [...new Set(lines.flatMap((l) => (l.bundle ? l.bundle.map((p) => p.variantId) : [l.variantId])))]
-    .sort((a, b) => a - b)
-    .join(",");
+  // Every product in the bag, once.
+  const key = [...new Set(lines.map((l) => l.productId))].sort((a, b) => a - b).join(",");
 
   useEffect(() => {
     if (!active || !key) return;
@@ -49,8 +47,8 @@ export function useCartTotals() {
   const delivery = shippingFor(cart.subtotal, shipping, coupon?.freeShipping ?? false);
   const giftEligible = !!giftOffer && cart.count >= giftOffer.minItems;
   const gift =
-    giftEligible && cart.giftVariantId
-      ? (giftOffer.options.find((o) => o.variantId === cart.giftVariantId) ?? null)
+    giftEligible && cart.giftProductId
+      ? (giftOffer.options.find((o) => o.productId === cart.giftProductId) ?? null)
       : null;
   return {
     ...cart,
@@ -66,13 +64,14 @@ export function useCartTotals() {
 // Quantity --------------------------------------------------------------------
 
 export function QtyStepper({ line, size = "md" }: { line: CartLine; size?: "sm" | "md" }) {
+  const { lines } = useCart();
   const btn = cn(
     "grid place-items-center transition-colors duration-200 hover:bg-sand disabled:opacity-40 disabled:hover:bg-transparent",
     size === "sm" ? "size-8" : "size-10",
   );
   return (
     <div className="inline-flex items-center border border-border" role="group" aria-label={`Quantity for ${line.name}`}>
-      <button type="button" className={btn} aria-label="Decrease quantity" onClick={() => cartActions.setQty(lineKey(line), line.qty - 1)}>
+      <button type="button" className={btn} aria-label="Decrease quantity" onClick={() => cartActions.setQty(line.key, line.qty - 1)}>
         <Minus className="size-3.5" strokeWidth={1.5} />
       </button>
       <span className="min-w-8 text-center text-sm tabular-nums" aria-live="polite">
@@ -82,8 +81,8 @@ export function QtyStepper({ line, size = "md" }: { line: CartLine; size?: "sm" 
         type="button"
         className={btn}
         aria-label="Increase quantity"
-        disabled={line.qty >= line.stock}
-        onClick={() => cartActions.setQty(lineKey(line), line.qty + 1)}
+        disabled={!canAddMore(lines, line)}
+        onClick={() => cartActions.setQty(line.key, line.qty + 1)}
       >
         <Plus className="size-3.5" strokeWidth={1.5} />
       </button>
@@ -114,16 +113,12 @@ export function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?
                 {part}
               </p>
             ))}
-            {line.qty > 1 && (
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {formatPKR(line.price)} {line.bundle ? "per set" : "each"}
-              </p>
-            )}
+            {line.qty > 1 && <p className="mt-0.5 text-xs text-muted-foreground">{formatPKR(line.price)} each</p>}
           </div>
           <button
             type="button"
             aria-label={`Remove ${line.name}`}
-            onClick={() => cartActions.remove(lineKey(line))}
+            onClick={() => cartActions.remove(line.key)}
             className="-mr-2 -mt-1 grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-sand hover:text-foreground"
           >
             <X className="size-4" strokeWidth={1.5} />
@@ -171,7 +166,7 @@ export function FreeShippingBar({ className }: { className?: string }) {
 // Free gift -------------------------------------------------------------------
 
 export function GiftPicker({ className }: { className?: string }) {
-  const { giftOffer, giftEligible, count, giftVariantId } = useCartTotals();
+  const { giftOffer, giftEligible, count, giftProductId } = useCartTotals();
   if (!giftOffer) return null;
 
   if (!giftEligible) {
@@ -193,10 +188,10 @@ export function GiftPicker({ className }: { className?: string }) {
       </legend>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {giftOffer.options.map((o) => {
-          const selected = giftVariantId === o.variantId;
+          const selected = giftProductId === o.productId;
           return (
             <label
-              key={o.variantId}
+              key={o.productId}
               className={cn(
                 "relative block cursor-pointer border bg-surface p-2 transition-[border-color,transform] duration-200 ease-(--ease-out) active:scale-[0.98]",
                 selected ? "border-gold" : "border-border hover:border-gold",
@@ -207,7 +202,7 @@ export function GiftPicker({ className }: { className?: string }) {
                 name="gift"
                 className="peer sr-only"
                 checked={selected}
-                onChange={() => cartActions.setGift(o.variantId)}
+                onChange={() => cartActions.setGift(o.productId)}
               />
               <span className="absolute inset-0 border-2 border-transparent peer-focus-visible:border-gold" aria-hidden="true" />
               <span className="relative block aspect-[4/5] overflow-hidden bg-sand">
@@ -221,7 +216,7 @@ export function GiftPicker({ className }: { className?: string }) {
           );
         })}
       </div>
-      {giftVariantId && (
+      {giftProductId && (
         <button type="button" onClick={() => cartActions.setGift(null)} className="mt-3 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground">
           Skip the gift
         </button>

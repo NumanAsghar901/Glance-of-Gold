@@ -80,11 +80,12 @@ export function CardActions({ product, showAdd = true }: { product: ProductSumma
           onClick={() => {
             if (!qa) return quickView.open(product.slug);
             cartActions.add({
-              variantId: qa.variantId,
               productId: product.id,
               slug: product.slug,
               name: product.name,
-              variantName: qa.variantName,
+              group: null,
+              size: null,
+              colour: null,
               price: product.price,
               image: product.images[0]?.url ?? null,
               stock: qa.stock,

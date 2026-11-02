@@ -7,26 +7,21 @@ import { createServiceClient } from "@/lib/supabase/admin";
 
 const idsSchema = z.array(z.number().int().positive()).max(50);
 
-export type CartSnapshotItem = { variantId: number; price: number; stock: number } | null;
+export type CartSnapshotItem = { productId: number; price: number; stock: number } | null;
 
-/** Current price and stock for cart lines, so the cart never shows stale data. RLS hides inactive items. */
-export async function getCartSnapshot(variantIds: number[]) {
-  const ids = idsSchema.safeParse(variantIds);
+/** Current price and stock for the products in the cart, so the cart never shows stale data. RLS hides inactive products. */
+export async function getCartSnapshot(productIds: number[]) {
+  const ids = idsSchema.safeParse(productIds);
   if (!ids.success || ids.data.length === 0) return {} as Record<number, CartSnapshotItem>;
 
   const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("product_variants")
-    .select("id, stock, price_override, product:products(price, is_active)")
-    .in("id", ids.data);
+  const { data, error } = await supabase.from("products").select("id, price, stock").in("id", ids.data);
+  // If the lookup fails the bag is left as it is: a hiccup must not empty a customer's bag.
+  if (error) return {} as Record<number, CartSnapshotItem>;
 
   const result: Record<number, CartSnapshotItem> = {};
   for (const id of ids.data) result[id] = null;
-  for (const row of data ?? []) {
-    const product = row.product as unknown as { price: number; is_active: boolean } | null;
-    if (!product?.is_active) continue;
-    result[row.id] = { variantId: row.id, price: row.price_override ?? product.price, stock: row.stock };
-  }
+  for (const row of data ?? []) result[row.id] = { productId: row.id, price: row.price, stock: row.stock };
   return result;
 }
 

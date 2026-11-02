@@ -10,7 +10,6 @@ import {
   useCartSync,
   useCartTotals,
 } from "@/components/cart/cart-parts";
-import { lineKey } from "@/lib/cart-store";
 import { Button } from "@/components/ui/button";
 
 export function CartPageView() {
@@ -34,7 +33,7 @@ export function CartPageView() {
         <FreeShippingBar className="mb-2" />
         <ul className="divide-y divide-border border-y border-border" aria-label="Items in your bag">
           {cart.lines.map((l) => (
-            <CartLineItem key={lineKey(l)} line={l} />
+            <CartLineItem key={l.key} line={l} />
           ))}
         </ul>
         <GiftPicker className="mt-6" />

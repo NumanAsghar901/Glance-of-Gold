@@ -1,12 +1,11 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
-import { useBundleSelection, type BundleSelection } from "@/components/store/use-bundle-selection";
-import { useVariantSelection, type VariantSelection } from "@/components/store/use-variant-selection";
-import { OfferPrice, SelectionPrice } from "@/components/store/variant-picker";
+import { SelectionPrice } from "@/components/store/option-picker";
+import { useOptionSelection, type OptionSelection } from "@/components/store/use-option-selection";
 import type { ProductDetail } from "@/lib/data/types";
 
-type Purchase = { product: ProductDetail; sel: VariantSelection; bundle: BundleSelection };
+type Purchase = { product: ProductDetail; sel: OptionSelection };
 
 const PurchaseContext = createContext<Purchase | null>(null);
 
@@ -15,10 +14,8 @@ const PurchaseContext = createContext<Purchase | null>(null);
  * buttons further down always agree. The server-rendered text in between is passed in as children.
  */
 export function PurchaseProvider({ product, children }: { product: ProductDetail; children: ReactNode }) {
-  const sel = useVariantSelection(product);
-  // Only used for an offer of several pieces (bundleSize above 1); inert for every other product.
-  const bundle = useBundleSelection(product);
-  return <PurchaseContext.Provider value={{ product, sel, bundle }}>{children}</PurchaseContext.Provider>;
+  const sel = useOptionSelection(product);
+  return <PurchaseContext.Provider value={{ product, sel }}>{children}</PurchaseContext.Provider>;
 }
 
 export function usePurchase() {
@@ -27,9 +24,8 @@ export function usePurchase() {
   return ctx;
 }
 
-/** Price that follows the customer's choice (a size with its own price, or the total of several). */
+/** Price that follows the customer's choice: one piece, or the total of everything chosen. */
 export function LivePrice({ className }: { className?: string }) {
   const { product, sel } = usePurchase();
-  if (product.bundleSize > 1) return <OfferPrice product={product} className={className} />;
   return <SelectionPrice product={product} sel={sel} className={className} />;
 }

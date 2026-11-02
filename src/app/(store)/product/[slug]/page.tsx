@@ -14,7 +14,6 @@ import { StockTag } from "@/components/ui/stock-tag";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { getAllProductSlugs, getProduct, getRelatedProducts } from "@/lib/data/catalog";
 import { getProductReviews } from "@/lib/data/reviews";
-import type { ProductVariant } from "@/lib/data/types";
 import { getPaymentAccounts, getSettings } from "@/lib/data/site";
 import { site } from "@/lib/site";
 import { formatPKR } from "@/lib/utils";
@@ -95,13 +94,9 @@ export default async function ProductPage({ params }: Props) {
 
   const transfers = accounts.length > 0;
 
-  // For the Product information dropdown: the colours, designs and sizes on offer.
-  const distinct = (pick: (v: ProductVariant) => string | null) => [
-    ...new Set(product.variants.flatMap((v) => (pick(v) ? [pick(v) as string] : []))),
-  ];
-  const colours = distinct((v) => v.color);
-  const designs = distinct((v) => v.design);
-  const sizes = distinct((v) => v.size);
+  // For the Product information dropdown: the colours and sizes on offer, across all the variant groups.
+  const colours = [...new Set(product.groups.flatMap((g) => g.colours))];
+  const sizes = [...new Set(product.groups.flatMap((g) => g.sizes))];
 
   return (
     <div className="wrap py-6 lg:py-10">
@@ -187,7 +182,6 @@ export default async function ProductPage({ params }: Props) {
                 {product.material && <li>Finish: {product.material}</li>}
                 {product.category && <li>Category: {product.category.name}</li>}
                 {colours.length > 0 && <li>{colours.length === 1 ? "Colour" : "Colours"}: {colours.join(", ")}</li>}
-                {designs.length > 0 && <li>{designs.length === 1 ? "Design" : "Designs"}: {designs.join(", ")}</li>}
                 {sizes.length > 0 && <li>{sizes.length === 1 ? "Size" : "Sizes"}: {sizes.join(", ")}</li>}
               </ul>
             </Detail>

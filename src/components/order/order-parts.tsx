@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 import type { OrderView } from "@/lib/orders";
 import { PAYMENT_LABEL } from "@/lib/email/templates";
 import { piecesLabel } from "@/lib/order-text";
-import { variantLines } from "@/lib/variant-name";
+import { optionLines } from "@/lib/option-label";
 import { cn, formatPKR } from "@/lib/utils";
 
 export const STATUS_LABEL: Record<OrderView["order_status"], string> = {
@@ -80,7 +80,7 @@ export function OrderLines({ order }: { order: Pick<OrderView, "items"> }) {
         <li key={idx} className="flex items-center gap-4 py-4 first:pt-0">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm">{i.name}</p>
-            {variantLines(i.variant_name).map((part) => (
+            {optionLines(i.variant_name).map((part) => (
               <p key={part} className="text-xs text-muted-foreground">
                 {part}
               </p>

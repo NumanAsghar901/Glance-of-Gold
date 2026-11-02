@@ -7,8 +7,6 @@ import { requireAdmin, type ActionState } from "@/lib/admin/auth";
 import { cloudinarySrc, FOLDERS, ownPublicId, PRODUCT_FOLDER, PUBLIC_ID_PATTERN } from "@/lib/cloudinary";
 import { destroyAssets, removeCloudinaryImages } from "@/lib/cloudinary-server";
 import { randomSuffix, slugify } from "@/lib/slug";
-import { composeVariantName } from "@/lib/variant-name";
-import type { Database } from "@/types/database";
 
 const idSchema = z.coerce.number().int().positive();
 
@@ -41,17 +39,25 @@ const uploadedPhotosSchema = z
 
 // Products -----------------------------------------------------------------------
 
-const variantSchema = z.object({
+/** A list of sizes or colours: trimmed, no blanks, no repeats (ignoring capitals), kept in the order entered. */
+const listSchema = z
+  .array(z.string().trim().max(40, "A size or colour is too long"))
+  .max(40, "Too many sizes or colours in one group")
+  .transform((list) => {
+    const seen = new Set<string>();
+    return list.filter((x) => {
+      const key = x.toLowerCase();
+      if (!x || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  });
+
+const groupSchema = z.object({
   id: z.number().int().positive().nullable().optional(),
-  // The full name. Only sent by the older form (before designs and sizes had their own boxes); otherwise it is built from the three below.
-  name: z.string().trim().max(100).optional(),
-  color: z.string().trim().max(30).nullable().optional(),
-  design: z.string().trim().max(30).nullable().optional(),
-  size: z.string().trim().max(30).nullable().optional(),
-  sku: z.string().trim().max(40).optional(),
-  stock: z.coerce.number().int().min(0, "Stock cannot be negative").max(100000),
-  priceOverride: z.coerce.number().int().min(0).max(10_000_000).nullable().optional(),
-  isActive: z.boolean(),
+  heading: z.string().trim().min(1, "Give every variant group a heading").max(60, "A heading is too long"),
+  sizes: listSchema,
+  colours: listSchema,
 });
 
 const productSchema = z.object({
@@ -62,25 +68,23 @@ const productSchema = z.object({
   description: z.string().trim().max(3000).optional(),
   price: z.coerce.number().int("Price must be a whole number of rupees").min(0).max(10_000_000),
   compareAtPrice: z.coerce.number().int().min(0).max(10_000_000).nullable(),
+  // One stock number for the whole product, whatever sizes and colours are chosen.
+  stock: z.coerce.number().int("Stock must be a whole number").min(0, "Stock cannot be negative").max(1_000_000),
   material: z.string().trim().max(80).optional(),
   tags: z.string().trim().max(200).optional(),
   isActive: z.boolean(),
   isFeatured: z.boolean(),
-  variants: z.array(variantSchema).min(1, "Add at least one variant").max(40),
-  allowMultiple: z.boolean().optional(),
-  // An offer sells this many pieces together for the product price (1 is a normal product).
-  bundleSize: z.coerce.number().int().min(1).max(6).optional(),
-  pieceName: z.string().trim().max(40).optional(),
+  groups: z.array(groupSchema).max(20, "Too many variant groups"),
 });
 
 export async function saveProduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const { supabase } = await requireAdmin();
 
-  let variantsRaw: unknown;
+  let groupsRaw: unknown;
   try {
-    variantsRaw = JSON.parse(String(formData.get("variants") ?? "[]"));
+    groupsRaw = JSON.parse(String(formData.get("groups") ?? "[]"));
   } catch {
-    return { error: "The variants could not be read. Reload the page and try again." };
+    return { error: "The variant groups could not be read. Reload the page and try again." };
   }
 
   const parsed = productSchema.safeParse({
@@ -91,16 +95,12 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     description: formData.get("description") || undefined,
     price: formData.get("price"),
     compareAtPrice: formData.get("compareAtPrice") || null,
+    stock: formData.get("stock") || 0,
     material: formData.get("material") || undefined,
     tags: formData.get("tags") || undefined,
     isActive: formData.get("isActive") === "on",
     isFeatured: formData.get("isFeatured") === "on",
-    variants: variantsRaw,
-    // The form only sends the marker "attrs" once the design and size migration has been run, so older databases still save.
-    allowMultiple: formData.has("attrs") ? formData.get("allowMultiple") === "on" : undefined,
-    // Only sent once the offers migration has been run, so older databases still save.
-    bundleSize: formData.has("bundle") ? formData.get("bundleSize") || 1 : undefined,
-    pieceName: formData.has("bundle") ? formData.get("pieceName") || undefined : undefined,
+    groups: groupsRaw,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check the product details." };
   const v = parsed.data;
@@ -109,15 +109,11 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     return { error: "The original price must be higher than the selling price, or left empty." };
   }
 
-  // Colour, design, size and "select several" exist once the design and size migration has been run.
-  const withAttrs = formData.has("attrs");
-  const variantNames = v.variants.map((x) =>
-    // Before the design and size migration the form has one name box, kept exactly as typed.
-    withAttrs ? composeVariantName({ color: x.color, design: x.design, size: x.size }) : x.name?.trim() || "Standard",
-  );
-  if (new Set(variantNames.map((n) => n.toLowerCase())).size !== variantNames.length) {
-    return { error: "Two variants are the same. Each needs its own colour, design or size." };
-  }
+  // The order looks a group up by its heading, so headings must differ; and a group with neither sizes nor colours has nothing to choose.
+  const headings = v.groups.map((g) => g.heading.toLowerCase());
+  if (new Set(headings).size !== headings.length) return { error: "Two variant groups have the same heading. Give each its own." };
+  const empty = v.groups.find((g) => g.sizes.length + g.colours.length === 0);
+  if (empty) return { error: `Add at least one size or colour to "${empty.heading}", or remove the group.` };
 
   // Photos were already sent by the browser straight to Cloudinary; the form only carries where they are.
   let uploadedRaw: unknown;
@@ -143,21 +139,19 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
       .filter(Boolean),
     is_active: v.isActive,
     is_featured: v.isFeatured,
-    // An offer of several pieces is chosen piece by piece, so choosing several sizes at once does not apply to it.
-    ...(withAttrs ? { allow_multiple: (v.bundleSize ?? 1) > 1 ? false : (v.allowMultiple ?? false) } : {}),
-    ...(formData.has("bundle") ? { bundle_size: v.bundleSize ?? 1, piece_name: (v.bundleSize ?? 1) > 1 ? (v.pieceName ?? null) : null } : {}),
+    stock: v.stock,
   };
 
   // Create or update the product, retrying once with a different slug if it is taken.
   // Every database call below that does not depend on another runs at the same time: each one is a
-  // round trip, and a product with many variants and photos used to wait for them one after another.
+  // round trip, and a product with several groups and photos used to wait for them one after another.
   let productId = v.id;
   let existingIds: number[] = [];
   if (productId) {
     const patch = v.slug ? { ...row, slug: slugify(v.slug) } : row;
     const [{ error }, { data: existing }] = await Promise.all([
       supabase.from("products").update(patch).eq("id", productId),
-      supabase.from("product_variants").select("id").eq("product_id", productId),
+      supabase.from("product_option_groups").select("id").eq("product_id", productId),
     ]);
     if (error) return { error: error.code === "23505" ? "Another product already uses that URL name." : error.message };
     existingIds = (existing ?? []).map((x) => x.id);
@@ -175,54 +169,24 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
   }
   const pid = productId;
 
-  // Variants: update the ones with ids, insert the new ones in a single call, remove the ones that were dropped.
-  const keep = new Set(v.variants.flatMap((x) => (x.id ? [x.id] : [])));
+  // Variant groups: update the ones that exist, insert the new ones in a single call, remove the ones that were dropped.
+  const keep = new Set(v.groups.flatMap((g) => (g.id ? [g.id] : [])));
   const drop = existingIds.filter((id) => !keep.has(id));
+  const groupWrites: PromiseLike<string | null>[] = [];
   if (drop.length) {
-    // First, so a new variant can reuse the SKU of one that was just removed.
-    const { error } = await supabase.from("product_variants").delete().in("id", drop);
-    if (error) return { error: error.message };
+    groupWrites.push(supabase.from("product_option_groups").delete().in("id", drop).then(({ error }) => error?.message ?? null));
   }
-  const skuTaken = (label: string) => `The SKU for "${label}" is already in use.`;
-  const variantWrites: PromiseLike<string | null>[] = [];
-  const newRows: Database["public"]["Tables"]["product_variants"]["Insert"][] = [];
-  for (const [i, x] of v.variants.entries()) {
-    const fullName = variantNames[i];
-    const fields = {
-      name: fullName,
-      ...(withAttrs
-        ? { color: x.color?.trim() || null, design: x.design?.trim() || null, size: x.size?.trim() || null }
-        : {}),
-      stock: x.stock,
-      price_override: x.priceOverride ?? null,
-      is_active: x.isActive,
-      sort: i,
-    };
-    if (x.id) {
-      variantWrites.push(
-        supabase
-          .from("product_variants")
-          .update({ ...fields, ...(x.sku ? { sku: x.sku } : {}) })
-          .eq("id", x.id)
-          .then(({ error }) => (error ? (error.code === "23505" ? skuTaken(fullName) : error.message) : null)),
-      );
+  const newGroups: { product_id: number; heading: string; sizes: string[]; colours: string[]; sort: number }[] = [];
+  for (const [i, g] of v.groups.entries()) {
+    const fields = { heading: g.heading, sizes: g.sizes, colours: g.colours, sort: i };
+    if (g.id && existingIds.includes(g.id)) {
+      groupWrites.push(supabase.from("product_option_groups").update(fields).eq("id", g.id).then(({ error }) => error?.message ?? null));
     } else {
-      newRows.push({
-        ...fields,
-        product_id: pid,
-        sku: x.sku || `GG-${pid}-${slugify(fullName).toUpperCase().slice(0, 12) || "STD"}-${randomSuffix(3).toUpperCase()}`,
-      });
+      newGroups.push({ product_id: pid, ...fields });
     }
   }
-  if (newRows.length) {
-    variantWrites.push(
-      supabase
-        .from("product_variants")
-        .insert(newRows)
-        .then(({ error }) =>
-          error ? (error.code === "23505" ? "A SKU you entered is already used by another variant." : error.message) : null,
-        ),
-    );
+  if (newGroups.length) {
+    groupWrites.push(supabase.from("product_option_groups").insert(newGroups).then(({ error }) => error?.message ?? null));
   }
 
   // Photos: the files are already on Cloudinary, so this only records them, in one call, after the ones already there.
@@ -250,11 +214,11 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     return null;
   };
 
-  const [variantErrors, photoError] = await Promise.all([Promise.all(variantWrites), savePhotos()]);
-  const variantError = variantErrors.find((e) => e !== null);
-  if (variantError) {
+  const [groupErrors, photoError] = await Promise.all([Promise.all(groupWrites), savePhotos()]);
+  const groupError = groupErrors.find((e) => e !== null);
+  if (groupError) {
     refreshCatalog();
-    return { error: variantError };
+    return { error: groupError };
   }
   if (photoError) {
     refreshCatalog();

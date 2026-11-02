@@ -133,7 +133,7 @@ export default async function Home() {
             </div>
             <ul className="flex flex-wrap justify-center gap-6 lg:justify-end">
               {giftOffer.options.slice(0, 3).map((o) => (
-                <li key={o.variantId} className="w-28 text-center sm:w-36">
+                <li key={o.productId} className="w-28 text-center sm:w-36">
                   <div className="relative aspect-square overflow-hidden rounded-full bg-sand ring-1 ring-gold ring-offset-4 ring-offset-blush">
                     {o.image && (
                       <Photo src={o.image} alt="" fit="fill" ratio={1} fill sizes="(min-width: 640px) 144px, 112px" quality={75} className="object-cover" />

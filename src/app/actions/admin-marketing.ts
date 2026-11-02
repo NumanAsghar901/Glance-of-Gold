@@ -96,7 +96,7 @@ const giftSchema = z.object({
   name: z.string().trim().min(2, "Give the offer a name").max(80),
   minItems: z.coerce.number().int().min(1).max(20),
   isActive: z.boolean(),
-  variantIds: z.array(idSchema).max(60),
+  productIds: z.array(idSchema).max(60),
 });
 
 export async function saveGiftOffer(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -106,11 +106,11 @@ export async function saveGiftOffer(_prev: ActionState, formData: FormData): Pro
     name: formData.get("name"),
     minItems: formData.get("minItems") || 2,
     isActive: formData.get("isActive") === "on",
-    variantIds: formData.getAll("variantIds"),
+    productIds: formData.getAll("productIds"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check the offer details." };
   const v = parsed.data;
-  if (v.isActive && v.variantIds.length === 0) return { error: "Choose at least one gift before switching the offer on." };
+  if (v.isActive && v.productIds.length === 0) return { error: "Choose at least one gift before switching the offer on." };
 
   const row = {
     name: v.name,
@@ -130,13 +130,13 @@ export async function saveGiftOffer(_prev: ActionState, formData: FormData): Pro
     offerId = data.id;
   }
 
-  const { data: current } = await supabase.from("gift_offer_products").select("variant_id").eq("offer_id", offerId);
-  const have = new Set((current ?? []).map((c) => c.variant_id));
-  const want = new Set(v.variantIds);
+  const { data: current } = await supabase.from("gift_offer_products").select("product_id").eq("offer_id", offerId);
+  const have = new Set((current ?? []).map((c) => c.product_id));
+  const want = new Set(v.productIds);
   const remove = [...have].filter((x) => !want.has(x));
   const add = [...want].filter((x) => !have.has(x));
-  if (remove.length) await supabase.from("gift_offer_products").delete().eq("offer_id", offerId).in("variant_id", remove);
-  if (add.length) await supabase.from("gift_offer_products").insert(add.map((variant_id) => ({ offer_id: offerId!, variant_id })));
+  if (remove.length) await supabase.from("gift_offer_products").delete().eq("offer_id", offerId).in("product_id", remove);
+  if (add.length) await supabase.from("gift_offer_products").insert(add.map((product_id) => ({ offer_id: offerId!, product_id })));
 
   refreshMarketing("/admin/gifts");
   return { ok: "Free gift offer saved." };

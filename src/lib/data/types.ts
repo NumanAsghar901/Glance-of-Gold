@@ -10,16 +10,15 @@ export type ProductImage = {
   height: number | null;
 };
 
-export type ProductVariant = {
+/**
+ * A variant group: a heading ("Nose Ring 1") with the sizes and colours a customer can choose from. A product can
+ * have several groups. The customer chooses sizes and colours from each, with a quantity for every choice.
+ */
+export type OptionGroup = {
   id: number;
-  /** Full label used in the bag and on orders, for example "Gold, Design A, Size 6". */
-  name: string;
-  /** What kind of piece this variant is. Each is optional, and each gets its own picker on the product page. */
-  color: string | null;
-  design: string | null;
-  size: string | null;
-  stock: number;
-  priceOverride: number | null;
+  heading: string;
+  sizes: string[];
+  colours: string[];
 };
 
 export type ProductSummary = {
@@ -31,31 +30,24 @@ export type ProductSummary = {
   isFeatured: boolean;
   category: { name: string; slug: string } | null;
   images: ProductImage[];
+  /** Pieces in stock: one number for the whole product, whatever sizes and colours are chosen. */
+  stock: number;
   inStock: boolean;
-  /** True when the pieces left across all variants are few (see LOW_STOCK_THRESHOLD) but not zero. */
+  /** True when the pieces left are few (see LOW_STOCK_THRESHOLD) but not zero. */
   lowStock: boolean;
   /** Average star rating (0 when there are no reviews yet), review count and units sold. */
   rating: number;
   ratingCount: number;
   soldCount: number;
-  /**
-   * Pieces sold together for the product price. 1 for a normal product; 2 for "any 2 for one price", where the
-   * customer chooses a size and colour for each piece.
-   */
-  bundleSize: number;
-  /** What one piece of an offer is called ("Nosering"), used in "Nosering size 1". */
-  pieceName: string | null;
-  /** Set when the product has exactly one variant, so cards can offer quick add. */
-  quickAdd: { variantId: number; variantName: string; stock: number } | null;
+  /** Set when the product has no variant groups (nothing to choose), so cards can offer quick add. */
+  quickAdd: { stock: number } | null;
 };
 
 export type ProductDetail = ProductSummary & {
   description: string | null;
   material: string | null;
   tags: string[];
-  variants: ProductVariant[];
-  /** Whether a customer may pick several designs or sizes at once, each with its own quantity. */
-  allowMultiple: boolean;
+  groups: OptionGroup[];
 };
 
 export type Review = {
@@ -89,9 +81,8 @@ export type SiteSettings = {
 };
 
 export type GiftOption = {
-  variantId: number;
+  productId: number;
   productName: string;
-  variantName: string;
   image: string | null;
 };
 

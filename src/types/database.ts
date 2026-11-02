@@ -319,15 +319,18 @@ export type Database = {
       gift_offer_products: {
         Row: {
           offer_id: number
-          variant_id: number
+          product_id: number
+          variant_id: number | null
         }
         Insert: {
           offer_id: number
-          variant_id: number
+          product_id: number
+          variant_id?: number | null
         }
         Update: {
           offer_id?: number
-          variant_id?: number
+          product_id?: number
+          variant_id?: number | null
         }
         Relationships: [
           {
@@ -677,6 +680,44 @@ export type Database = {
           },
         ]
       }
+      product_option_groups: {
+        Row: {
+          colours: string[]
+          created_at: string
+          heading: string
+          id: number
+          product_id: number
+          sizes: string[]
+          sort: number
+        }
+        Insert: {
+          colours?: string[]
+          created_at?: string
+          heading: string
+          id?: never
+          product_id: number
+          sizes?: string[]
+          sort?: number
+        }
+        Update: {
+          colours?: string[]
+          created_at?: string
+          heading?: string
+          id?: never
+          product_id?: number
+          sizes?: string[]
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_option_groups_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_variants: {
         Row: {
           color: string | null
@@ -730,7 +771,6 @@ export type Database = {
       products: {
         Row: {
           allow_multiple: boolean
-          bundle_size: number
           category_id: number | null
           compare_at_price: number | null
           created_at: string
@@ -742,19 +782,18 @@ export type Database = {
           material: string | null
           name: string
           option_label: string
-          piece_name: string | null
           price: number
           rating_avg: number
           rating_count: number
           search: unknown
           slug: string
           sold_count: number
+          stock: number
           tags: string[]
           updated_at: string
         }
         Insert: {
           allow_multiple?: boolean
-          bundle_size?: number
           category_id?: number | null
           compare_at_price?: number | null
           created_at?: string
@@ -766,19 +805,18 @@ export type Database = {
           material?: string | null
           name: string
           option_label?: string
-          piece_name?: string | null
           price: number
           rating_avg?: number
           rating_count?: number
           search?: unknown
           slug: string
           sold_count?: number
+          stock?: number
           tags?: string[]
           updated_at?: string
         }
         Update: {
           allow_multiple?: boolean
-          bundle_size?: number
           category_id?: number | null
           compare_at_price?: number | null
           created_at?: string
@@ -790,13 +828,13 @@ export type Database = {
           material?: string | null
           name?: string
           option_label?: string
-          piece_name?: string | null
           price?: number
           rating_avg?: number
           rating_count?: number
           search?: unknown
           slug?: string
           sold_count?: number
+          stock?: number
           tags?: string[]
           updated_at?: string
         }

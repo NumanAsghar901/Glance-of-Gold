@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { saveCheckoutDraft } from "@/app/actions/checkout-draft";
-import type { CartLine } from "@/lib/cart-store";
+import { lineLabel, type CartLine } from "@/lib/cart-store";
 import { normalizePhone } from "@/lib/pakistan";
 
 const DELAY_MS = 1500;
@@ -38,7 +38,7 @@ export function useCheckoutDraft(lines: CartLine[], method: string, formId: stri
       address: field("address"),
       landmark: field("landmark"),
       paymentMethod: bag.current.method,
-      items: bag.current.lines.map((l) => ({ name: l.name, variantName: l.variantName, qty: l.qty, price: l.price })),
+      items: bag.current.lines.map((l) => ({ name: l.name, variantName: lineLabel(l), qty: l.qty, price: l.price })),
     };
     const key = JSON.stringify(payload);
     if (key === lastSent.current) return;

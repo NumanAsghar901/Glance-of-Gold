@@ -1,15 +1,8 @@
 import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
-import type {
-  Category,
-  ProductDetail,
-  ProductImage,
-  ProductSummary,
-  ProductVariant,
-} from "@/lib/data/types";
+import type { Category, OptionGroup, ProductDetail, ProductImage, ProductSummary } from "@/lib/data/types";
 import { photoSrc } from "@/lib/cloudinary";
 import { stockStatus } from "@/lib/stock";
-import { composeVariantName, variantLabel } from "@/lib/variant-name";
 
 /**
  * Public catalogue reads. Everything goes through the cookie-less anon client
@@ -27,16 +20,13 @@ type RawProduct = {
   price: number;
   compare_at_price: number | null;
   is_featured: boolean;
+  stock?: number | null;
   description?: string | null;
   material?: string | null;
   tags?: string[];
   rating_avg?: number | null;
   rating_count?: number | null;
   sold_count?: number | null;
-  option_label?: string | null;
-  allow_multiple?: boolean | null;
-  bundle_size?: number | null;
-  piece_name?: string | null;
   category: { name: string; slug: string } | null;
   images: (Omit<ProductImage, "width" | "height" | "publicId"> & {
     width?: number | null;
@@ -44,74 +34,52 @@ type RawProduct = {
     cloudinary_public_id?: string | null;
     sort: number;
   })[];
-  variants: {
-    id: number;
-    name: string;
-    color?: string | null;
-    design?: string | null;
-    size?: string | null;
-    stock: number;
-    price_override: number | null;
-    sort: number;
-  }[];
+  groups?: { id: number; heading?: string; sizes?: string[]; colours?: string[]; sort?: number }[];
 };
 
 const BASE_COLUMNS = "id, slug, name, price, compare_at_price, is_featured";
 const STATS = "rating_avg, rating_count, sold_count";
-const relations = (options: boolean, attrs: boolean, sizes: boolean, cloud: boolean) =>
-  `images:product_images(url, alt, sort, blur_data_url${sizes ? ", width, height" : ""}${cloud ? ", cloudinary_public_id" : ""}), variants:product_variants(id, name, stock, price_override, sort${options ? ", color" : ""}${attrs ? ", design, size" : ""})`;
 
 /**
- * Some columns come from later migrations (ratings and sold counts, then colours and options, then
- * separate designs and sizes). Until a migration has been run on the database the shop must keep working,
- * so the queries leave those columns out. A missing column is re-checked at most every 30 seconds.
+ * Some columns and tables come from later migrations (ratings and sold counts, photo sizes, Cloudinary ids, one
+ * stock number per product, variant groups). Until a migration has been run on the database the shop must keep
+ * working, so the queries leave those parts out. A missing one is re-checked at most every 30 seconds.
  */
 const probes = new Map<string, { ok: boolean; at: number }>();
-async function columnAvailable(key: string, table: "products" | "product_variants" | "product_images", column: string): Promise<boolean> {
+async function available(key: string, table: "products" | "product_images" | "product_option_groups", column: string): Promise<boolean> {
   const hit = probes.get(key);
   if (hit && (hit.ok || Date.now() - hit.at < 30_000)) return hit.ok;
   const { error } = await createPublicClient().from(table).select(column).limit(1);
   probes.set(key, { ok: !error, at: Date.now() });
   return !error;
 }
-const statsAvailable = () => columnAvailable("stats", "products", "sold_count");
-const optionsAvailable = () => columnAvailable("options", "products", "allow_multiple");
-const attrsAvailable = () => columnAvailable("attrs", "product_variants", "design");
-const sizesAvailable = () => columnAvailable("photo-sizes", "product_images", "width");
-export const cloudAvailable = () => columnAvailable("photo-cloudinary", "product_images", "cloudinary_public_id");
+export const cloudAvailable = () => available("photo-cloudinary", "product_images", "cloudinary_public_id");
 
-const bundleAvailable = () => columnAvailable("bundle", "products", "bundle_size");
-
-/** The optional columns (photo pixel size, Cloudinary public_id, offers with pieces) that exist in this database. */
-type PhotoColumns = { sizes: boolean; cloud: boolean; bundle: boolean };
-const photoColumns = async (): Promise<PhotoColumns> => {
-  const [sizes, cloud, bundle] = await Promise.all([sizesAvailable(), cloudAvailable(), bundleAvailable()]);
-  return { sizes, cloud, bundle };
+/** Which optional parts of the database exist. */
+type Columns = { stats: boolean; stock: boolean; groups: boolean; sizes: boolean; cloud: boolean };
+const columns = async (): Promise<Columns> => {
+  const [stats, stock, groups, sizes, cloud] = await Promise.all([
+    available("stats", "products", "sold_count"),
+    available("stock", "products", "stock"),
+    available("groups", "product_option_groups", "heading"),
+    available("photo-sizes", "product_images", "width"),
+    cloudAvailable(),
+  ]);
+  return { stats, stock, groups, sizes, cloud };
 };
 
-const summarySelect = (inner: boolean, stats: boolean, options = false, attrs = false, photos: PhotoColumns = { sizes: false, cloud: false, bundle: false }) =>
-  `${BASE_COLUMNS}${stats ? `, ${STATS}` : ""}${photos.bundle ? ", bundle_size, piece_name" : ""}, category:categories${inner ? "!inner" : ""}(name, slug), ${relations(options, attrs, photos.sizes, photos.cloud)}`;
-// option_label is only needed to sort older products (saved before designs and sizes had their own columns).
-const detailSelect = (stats: boolean, options: boolean, attrs: boolean, photos: PhotoColumns) =>
-  `${summarySelect(false, stats, options, attrs, photos)}, description, material, tags${options ? `, allow_multiple${attrs ? "" : ", option_label"}` : ""}`;
-
-/**
- * Products saved before designs and sizes had their own columns kept both in one label. Same rules as the
- * database migration: a label starting with "Size" is a size, a product labelled Design holds designs,
- * anything else is a size, and "Standard" means nothing.
- */
-function legacyAttributes(name: string, color: string | null, optionLabel: string | null | undefined) {
-  const label = variantLabel(name, color);
-  if (!label || label.toLowerCase() === "standard") return { design: null, size: null };
-  const isDesign = optionLabel === "Design" && !/^size/i.test(label);
-  return isDesign ? { design: label, size: null } : { design: null, size: label };
-}
+const summarySelect = (inner: boolean, c: Columns, full = false) =>
+  `${BASE_COLUMNS}${c.stats ? `, ${STATS}` : ""}${c.stock ? ", stock" : ""}, category:categories${inner ? "!inner" : ""}(name, slug), ` +
+  `images:product_images(url, alt, sort, blur_data_url${c.sizes ? ", width, height" : ""}${c.cloud ? ", cloudinary_public_id" : ""})` +
+  // Cards only need to know whether there are groups; the product page needs them in full.
+  `${c.groups ? `, groups:product_option_groups(${full ? "id, heading, sizes, colours, sort" : "id"})` : ""}`;
+const detailSelect = (c: Columns) => `${summarySelect(false, c, true)}, description, material, tags`;
 
 function toSummary(r: RawProduct): ProductSummary {
   const images = [...r.images]
     .sort((a, b) => a.sort - b.sort)
     .map(({ url, alt, blur_data_url, width, height, cloudinary_public_id }) => ({
-      // A photo on Cloudinary is served from there; the saved `url` is only the fallback (the Supabase original).
+      // A photo on Cloudinary is served from there; the saved `url` is only the fallback.
       url: photoSrc({ url, cloudinary_public_id }),
       publicId: cloudinary_public_id ?? null,
       alt,
@@ -119,8 +87,8 @@ function toSummary(r: RawProduct): ProductSummary {
       width: width ?? null,
       height: height ?? null,
     }));
-  const unitsLeft = r.variants.reduce((n, v) => n + Math.max(0, v.stock), 0);
-  const status = stockStatus(unitsLeft);
+  const stock = Math.max(0, r.stock ?? 0);
+  const status = stockStatus(stock);
   return {
     id: r.id,
     slug: r.slug,
@@ -130,42 +98,30 @@ function toSummary(r: RawProduct): ProductSummary {
     isFeatured: r.is_featured,
     category: r.category,
     images,
+    stock,
     inStock: status !== "out",
     lowStock: status === "low",
     rating: Number(r.rating_avg ?? 0),
     ratingCount: r.rating_count ?? 0,
     soldCount: r.sold_count ?? 0,
-    bundleSize: r.bundle_size ?? 1,
-    pieceName: r.piece_name ?? null,
-    // A piece of an offer is only sold as part of a set, so there is no one-tap add.
-    quickAdd:
-      r.variants.length === 1 && (r.bundle_size ?? 1) === 1
-        ? { variantId: r.variants[0].id, variantName: r.variants[0].name, stock: r.variants[0].stock }
-        : null,
+    // A product with no variant groups needs no choice, so cards can add it in one tap.
+    quickAdd: (r.groups ?? []).length === 0 ? { stock } : null,
   };
 }
 
+function toGroups(r: RawProduct): OptionGroup[] {
+  return [...(r.groups ?? [])]
+    .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0) || a.id - b.id)
+    .map((g) => ({ id: g.id, heading: g.heading ?? "", sizes: g.sizes ?? [], colours: g.colours ?? [] }));
+}
+
 function toDetail(r: RawProduct): ProductDetail {
-  // The design and size columns are only present once their migration has been run.
-  const hasAttrs = r.variants.some((v) => "design" in v || "size" in v);
-  const variants: ProductVariant[] = [...r.variants]
-    .sort((a, b) => a.sort - b.sort)
-    .map((v) => ({
-      id: v.id,
-      // Built from the separate values, so it always reads "Size 6, Design 2" even if the saved name is older.
-      name: hasAttrs ? composeVariantName({ color: v.color, design: v.design, size: v.size }) : v.name,
-      color: v.color ?? null,
-      ...(hasAttrs ? { design: v.design ?? null, size: v.size ?? null } : legacyAttributes(v.name, v.color ?? null, r.option_label)),
-      stock: v.stock,
-      priceOverride: v.price_override,
-    }));
   return {
     ...toSummary(r),
     description: r.description ?? null,
     material: r.material ?? null,
     tags: r.tags ?? [],
-    variants,
-    allowMultiple: r.allow_multiple ?? false,
+    groups: toGroups(r),
   };
 }
 
@@ -194,8 +150,8 @@ export const getProducts = unstable_cache(
     const pageSize = query.pageSize ?? PAGE_SIZE;
     const page = Math.max(1, query.page ?? 1);
 
-    const [stats, photos] = await Promise.all([statsAvailable(), photoColumns()]);
-    let q = supabase.from("products").select(summarySelect(!!query.category, stats, false, false, photos), { count: "exact" });
+    const cols = await columns();
+    let q = supabase.from("products").select(summarySelect(!!query.category, cols), { count: "exact" });
 
     if (query.category) q = q.eq("categories.slug", query.category);
     if (query.featuredOnly) q = q.eq("is_featured", true);
@@ -230,19 +186,18 @@ export const getProducts = unstable_cache(
   },
   // The key carries a version: bump it whenever the shape of a cached product changes, because the
   // data cache survives deployments and would otherwise hand old-shaped objects to new code.
-  ["products-v5"],
+  ["products-v6"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 
 export const getProduct = unstable_cache(
   async (slug: string): Promise<ProductDetail | null> => {
     const supabase = createPublicClient();
-    const [stats, options, attrs, photos] = await Promise.all([statsAvailable(), optionsAvailable(), attrsAvailable(), photoColumns()]);
-    const { data, error } = await supabase.from("products").select(detailSelect(stats, options, attrs, photos)).eq("slug", slug).maybeSingle();
+    const { data, error } = await supabase.from("products").select(detailSelect(await columns())).eq("slug", slug).maybeSingle();
     if (error) throw new Error(`getProduct: ${error.message}`);
     return data ? toDetail(data as unknown as RawProduct) : null;
   },
-  ["product-v7"],
+  ["product-v8"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 
@@ -251,7 +206,7 @@ export const getRelatedProducts = unstable_cache(
     const supabase = createPublicClient();
     let q = supabase
       .from("products")
-      .select(summarySelect(!!categorySlug, await statsAvailable(), false, false, await photoColumns()))
+      .select(summarySelect(!!categorySlug, await columns()))
       .neq("id", excludeId)
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -260,7 +215,7 @@ export const getRelatedProducts = unstable_cache(
     if (error) throw new Error(`getRelatedProducts: ${error.message}`);
     return (data as unknown as RawProduct[]).map(toSummary);
   },
-  ["related-v5"],
+  ["related-v6"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 
@@ -286,13 +241,13 @@ export const searchProducts = unstable_cache(
     if (!hits.length) return [];
 
     const ids = hits.map((h) => h.id);
-    const { data, error: e2 } = await supabase.from("products").select(summarySelect(false, await statsAvailable(), false, false, await photoColumns())).in("id", ids);
+    const { data, error: e2 } = await supabase.from("products").select(summarySelect(false, await columns())).in("id", ids);
     if (e2) throw new Error(`searchProducts: ${e2.message}`);
 
     const byId = new Map((data as unknown as RawProduct[]).map((p) => [p.id, toSummary(p)]));
     return ids.flatMap((id) => byId.get(id) ?? []);
   },
-  ["search-v5"],
+  ["search-v6"],
   { tags: ["catalog"], revalidate: 120 },
 );
 

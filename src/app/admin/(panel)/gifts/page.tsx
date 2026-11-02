@@ -7,23 +7,18 @@ import { toPktInput } from "@/lib/datetime";
 
 export const metadata: Metadata = { title: "Free gift offer" };
 
-type VariantRow = { id: number; name: string; stock: number; product: { name: string } | null };
+type ProductRow = { id: number; name: string; stock: number };
 
 export default async function GiftsPage() {
   const { supabase } = await requireAdmin();
 
-  const [{ data: offer }, { data: variantsRaw }] = await Promise.all([
-    supabase.from("gift_offers").select("*, pool:gift_offer_products(variant_id)").order("id").limit(1).maybeSingle(),
-    supabase
-      .from("product_variants")
-      .select("id, name, stock, product:products(name)")
-      .eq("is_active", true)
-      .order("product_id")
-      .order("sort"),
+  const [{ data: offer }, { data: productsRaw }] = await Promise.all([
+    supabase.from("gift_offers").select("*, pool:gift_offer_products(product_id)").order("id").limit(1).maybeSingle(),
+    supabase.from("products").select("id, name, stock").eq("is_active", true).order("name"),
   ]);
 
-  const variants = (variantsRaw ?? []) as unknown as VariantRow[];
-  const selected = new Set((offer?.pool ?? []).map((p: { variant_id: number }) => p.variant_id));
+  const products = (productsRaw ?? []) as ProductRow[];
+  const selected = new Set((offer?.pool ?? []).map((p: { product_id: number }) => p.product_id));
 
   return (
     <>
@@ -55,17 +50,17 @@ export default async function GiftsPage() {
 
           <fieldset>
             <legend className="mb-3 text-sm">Gifts customers can choose from</legend>
-            {variants.length === 0 ? (
+            {products.length === 0 ? (
               <p className="text-sm text-muted-foreground">Add products first, then choose which ones can be gifts.</p>
             ) : (
               <ul className="grid max-h-96 gap-px overflow-y-auto border border-border bg-border sm:grid-cols-2">
-                {variants.map((v) => (
-                  <li key={v.id} className="bg-surface">
+                {products.map((p) => (
+                  <li key={p.id} className="bg-surface">
                     <label className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-sand/50">
-                      <input type="checkbox" name="variantIds" value={v.id} defaultChecked={selected.has(v.id)} className="size-4 shrink-0 accent-[var(--gold)]" />
+                      <input type="checkbox" name="productIds" value={p.id} defaultChecked={selected.has(p.id)} className="size-4 shrink-0 accent-[var(--gold)]" />
                       <span className="min-w-0">
-                        <span className="block truncate">{v.product?.name ?? "Product"}{v.name !== "Standard" && `, ${v.name}`}</span>
-                        <span className="block text-xs text-muted-foreground">{v.stock} in stock</span>
+                        <span className="block truncate">{p.name}</span>
+                        <span className="block text-xs text-muted-foreground">{p.stock} in stock</span>
                       </span>
                     </label>
                   </li>

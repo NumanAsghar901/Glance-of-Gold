@@ -97,11 +97,12 @@ type RawGiftRow = {
   name: string;
   min_items: number;
   pool: {
-    variant: {
+    product: {
       id: number;
       name: string;
       stock: number;
-      product: { name: string; images: { url: string; sort: number; cloudinary_public_id?: string | null }[] } | null;
+      is_active: boolean;
+      images: { url: string; sort: number; cloudinary_public_id?: string | null }[];
     } | null;
   }[];
 };
@@ -113,32 +114,30 @@ export const getGiftOffer = unstable_cache(
     const { data, error } = await supabase
       .from("gift_offers")
       .select(
-        `id, name, min_items, pool:gift_offer_products(variant:product_variants(id, name, stock, product:products(name, images:product_images(url, sort${cloud ? ", cloudinary_public_id" : ""}))))`,
+        `id, name, min_items, pool:gift_offer_products(product:products(id, name, stock, is_active, images:product_images(url, sort${cloud ? ", cloudinary_public_id" : ""})))`,
       )
       .order("min_items", { ascending: true })
       .limit(1);
-    if (error) throw new Error(`getGiftOffer: ${error.message}`);
+    // The free gift is a bonus, never a reason for a page to fail (before the variant groups migration the gifts
+    // cannot be read yet, and the home page and bag simply show no offer).
+    if (error) {
+      console.error(`getGiftOffer: ${error.message}`);
+      return null;
+    }
 
     const offer = (data as unknown as RawGiftRow[])[0];
     if (!offer) return null;
 
-    const options = offer.pool.flatMap(({ variant }) => {
-      if (!variant || !variant.product || variant.stock < 1) return [];
-      const first = [...variant.product.images].sort((a, b) => a.sort - b.sort)[0];
-      const image = first ? photoSrc(first) : null;
-      return [
-        {
-          variantId: variant.id,
-          productName: variant.product.name,
-          variantName: variant.name,
-          image,
-        },
-      ];
+    // The gifts are products. One that is sold out (or switched off) is not offered.
+    const options = offer.pool.flatMap(({ product }) => {
+      if (!product || !product.is_active || product.stock < 1) return [];
+      const first = [...product.images].sort((a, b) => a.sort - b.sort)[0];
+      return [{ productId: product.id, productName: product.name, image: first ? photoSrc(first) : null }];
     });
     if (options.length === 0) return null;
     return { id: offer.id, name: offer.name, minItems: offer.min_items, options };
   },
-  ["gift-offer-v2"],
+  ["gift-offer-v3"],
   { tags: ["marketing"], revalidate: 300 },
 );
 

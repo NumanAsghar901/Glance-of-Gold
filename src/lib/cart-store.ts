@@ -1,67 +1,58 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
+import { composeOptionLabel, optionLines } from "@/lib/option-label";
 import { MAX_QTY_PER_LINE } from "@/lib/pricing";
-import { variantLines, type VariantPart } from "@/lib/variant-name";
 
 /**
  * Cart kept in localStorage. Prices stored here are only for display; the
  * server re-prices every line when the order is placed.
+ *
+ * A line is one choice: a product, and (when it has variant groups) the group, size and colour chosen from it.
+ * The same product can have several lines (6mm gold x 2, 8mm silver x 1); they all draw on the product's one
+ * stock number.
  */
 
-/** One piece of an offer set ("any 2 noserings"): its own variant, named for the order, with what was chosen. */
-export type BundlePiece = { variantId: number; heading: string; label: string };
-
 export type CartLine = {
-  /** Identifies the line in the bag. Bags saved before offers existed have none: use `lineKey`. */
-  key?: string;
-  /** For a set, the variant of its first piece. */
-  variantId: number;
+  /** Identifies the line: the product and what was chosen from its groups. See `lineKey`. */
+  key: string;
   productId: number;
   slug: string;
   name: string;
-  variantName: string;
-  /** Which of colour, size and design the customer chose. Left out means all of them. */
-  parts?: VariantPart[];
-  /** For a set, the price of the whole set. */
+  /** The variant group, size and colour chosen. Null for a product with no groups. */
+  group: string | null;
+  size: string | null;
+  colour: string | null;
   price: number;
   image: string | null;
-  /** For a set, how many of these sets. */
   qty: number;
-  /** For a set, how many sets the stock allows. */
+  /** Pieces of the product in stock, shared by all its lines. */
   stock: number;
-  /** The pieces of an offer set, each with the choices made for it. Absent for a normal line. */
-  bundle?: BundlePiece[];
 };
-
-/** The identity of a line in the bag: a normal line is one variant, a set is one product with these exact pieces. */
-export const lineKey = (l: Pick<CartLine, "key" | "variantId">) => l.key ?? `v${l.variantId}`;
-
-/** What to show under a line's name: one line per choice ("Size 6"), or for a set one line per piece ("Nosering 1: Size 6mm, silver"). */
-export function lineDetails(l: Pick<CartLine, "variantName" | "bundle">): string[] {
-  return l.bundle ? l.bundle.map((p) => `${p.heading}: ${p.label}`) : variantLines(l.variantName);
-}
-
-/** How many sets the stock allows, when the same variant may appear in several pieces. */
-function setsAllowed(pieces: BundlePiece[], stockOf: (variantId: number) => number) {
-  const uses = new Map<number, number>();
-  pieces.forEach((p) => uses.set(p.variantId, (uses.get(p.variantId) ?? 0) + 1));
-  let most = MAX_QTY_PER_LINE;
-  for (const [id, n] of uses) most = Math.min(most, Math.floor(stockOf(id) / n));
-  return Math.max(0, most);
-}
 
 export type AppliedCoupon = { code: string; discount: number; freeShipping: boolean };
 
 type CartState = {
   lines: CartLine[];
-  giftVariantId: number | null;
+  giftProductId: number | null;
   coupon: AppliedCoupon | null;
   drawerOpen: boolean;
 };
 
-const STORAGE_KEY = "gog-cart-v1";
-const EMPTY: CartState = { lines: [], giftVariantId: null, coupon: null, drawerOpen: false };
+/** Changing the shape of a line means a new key: an older bag is ignored rather than misread. */
+const STORAGE_KEY = "gog-cart-v2";
+const EMPTY: CartState = { lines: [], giftProductId: null, coupon: null, drawerOpen: false };
+
+type Choice = Pick<CartLine, "productId" | "group" | "size" | "colour">;
+
+/** The identity of a line: the product plus what was chosen from its groups. */
+export const lineKey = (c: Choice) => `p${c.productId}|${c.group ?? ""}|${c.size ?? ""}|${c.colour ?? ""}`;
+
+/** The choice written out for the bag, checkout and orders: "Nose Ring 1, Size 6mm, gold". */
+export const lineLabel = (l: Pick<CartLine, "group" | "size" | "colour">) => composeOptionLabel(l);
+
+/** What to show under a line's name, one line per part. */
+export const lineDetails = (l: Pick<CartLine, "group" | "size" | "colour">) => optionLines(lineLabel(l));
 
 let state: CartState = EMPTY;
 let hydrated = false;
@@ -73,12 +64,15 @@ function emit() {
 
 function persist() {
   try {
-    const { lines, giftVariantId, coupon } = state;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ lines, giftVariantId, coupon }));
+    const { lines, giftProductId, coupon } = state;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ lines, giftProductId, coupon }));
   } catch {
     /* storage unavailable (private mode): cart still works for this visit */
   }
 }
+
+const isLine = (l: unknown): l is CartLine =>
+  !!l && typeof l === "object" && typeof (l as CartLine).key === "string" && typeof (l as CartLine).productId === "number";
 
 function load() {
   try {
@@ -87,8 +81,8 @@ function load() {
     const parsed = JSON.parse(raw) as Partial<CartState>;
     if (Array.isArray(parsed.lines)) {
       state = {
-        lines: parsed.lines,
-        giftVariantId: parsed.giftVariantId ?? null,
+        lines: parsed.lines.filter(isLine),
+        giftProductId: parsed.giftProductId ?? null,
         coupon: parsed.coupon ?? null,
         drawerOpen: false,
       };
@@ -124,75 +118,65 @@ function subscribe(listener: () => void) {
 const getSnapshot = () => state;
 const getServerSnapshot = () => EMPTY;
 
+/** How many of a product the other lines already hold, so no line takes more than the product has. */
+const heldByOthers = (lines: CartLine[], productId: number, key: string) =>
+  lines.reduce((n, l) => (l.productId === productId && l.key !== key ? n + l.qty : n), 0);
+
+/** The most a line can be: what the product has left after its other lines, and never more than a line allows. */
+const room = (lines: CartLine[], line: Pick<CartLine, "productId" | "key" | "stock">) =>
+  Math.max(0, Math.min(MAX_QTY_PER_LINE, line.stock - heldByOthers(lines, line.productId, line.key)));
+
+/** Can this line take one more? Not if the product's other lines already hold what is left. */
+export const canAddMore = (lines: CartLine[], line: CartLine) => room(lines, line) > line.qty;
+
 // Actions -------------------------------------------------------------------
 
 export const cartActions = {
-  add(line: Omit<CartLine, "qty" | "key" | "bundle">, qty = 1) {
+  /** Puts a choice in the bag. The same choice again adds to its quantity. */
+  add(line: Omit<CartLine, "qty" | "key">, qty = 1) {
     const key = lineKey(line);
-    const existing = state.lines.find((l) => lineKey(l) === key);
-    const max = Math.min(line.stock, MAX_QTY_PER_LINE);
+    const existing = state.lines.find((l) => l.key === key);
+    const base = { ...line, key };
     const lines = existing
-      ? state.lines.map((l) => (lineKey(l) === key ? { ...l, ...line, qty: Math.min(l.qty + qty, max) } : l))
-      : [...state.lines, { ...line, qty: Math.min(qty, max) }];
-    set({ lines, drawerOpen: true });
-  },
-  /** Adds one set of an offer (for example any 2 noserings). The same pieces again make it 2 sets. */
-  addBundle(base: Pick<CartLine, "productId" | "slug" | "name" | "price" | "image" | "stock">, pieces: BundlePiece[]) {
-    const key = `b${base.productId}:${pieces.map((p) => p.variantId).sort((a, b) => a - b).join("-")}`;
-    const max = Math.min(base.stock, MAX_QTY_PER_LINE);
-    if (max < 1) return;
-    const existing = state.lines.find((l) => lineKey(l) === key);
-    const lines = existing
-      ? state.lines.map((l) => (lineKey(l) === key ? { ...l, price: base.price, stock: max, qty: Math.min(l.qty + 1, max) } : l))
-      : [
-          ...state.lines,
-          {
-            ...base,
-            key,
-            variantId: pieces[0].variantId,
-            variantName: pieces.map((p) => `${p.heading}: ${p.label}`).join("; "),
-            stock: max,
-            qty: 1,
-            bundle: pieces,
-          },
-        ];
-    set({ lines, drawerOpen: true });
+      ? state.lines.map((l) => (l.key === key ? { ...l, ...base, qty: Math.min(l.qty + qty, room(state.lines, base)) } : l))
+      : [...state.lines, { ...base, qty: Math.min(qty, room(state.lines, base)) }];
+    set({ lines: lines.filter((l) => l.qty > 0), drawerOpen: true });
   },
   setQty(key: string, qty: number) {
     if (qty < 1) return cartActions.remove(key);
     set({
-      lines: state.lines.map((l) => (lineKey(l) === key ? { ...l, qty: Math.min(qty, l.stock, MAX_QTY_PER_LINE) } : l)),
+      lines: state.lines.map((l) => (l.key === key ? { ...l, qty: Math.min(qty, room(state.lines, l)) } : l)),
     });
   },
   remove(key: string) {
-    set({ lines: state.lines.filter((l) => lineKey(l) !== key) });
+    set({ lines: state.lines.filter((l) => l.key !== key) });
   },
-  /** Refresh display data (price, stock) from the server; drop unavailable lines. */
+  /** Refresh display data (price, stock) from the server; drop products that are gone or sold out. */
   sync(fresh: Map<number, { price: number; stock: number } | null>) {
-    const lines = state.lines.flatMap((l) => {
-      if (l.bundle) {
-        const known = l.bundle.map((p) => fresh.get(p.variantId));
-        if (known.some((f) => f === undefined)) return [l];
-        if (known.some((f) => f === null)) return [];
-        const sets = setsAllowed(l.bundle, (id) => fresh.get(id)?.stock ?? 0);
-        if (sets < 1) return [];
-        return [{ ...l, price: known[0]!.price, stock: sets, qty: Math.min(l.qty, sets) }];
-      }
-      const f = fresh.get(l.variantId);
+    const kept = state.lines.flatMap((l) => {
+      const f = fresh.get(l.productId);
       if (f === undefined) return [l];
       if (f === null || f.stock < 1) return [];
-      return [{ ...l, price: f.price, stock: f.stock, qty: Math.min(l.qty, f.stock, MAX_QTY_PER_LINE) }];
+      return [{ ...l, price: f.price, stock: f.stock }];
+    });
+    // Everything bought of a product together cannot be more than it has: trim the later lines first.
+    const taken = new Map<number, number>();
+    const lines = kept.flatMap((l) => {
+      const used = taken.get(l.productId) ?? 0;
+      const qty = Math.min(l.qty, Math.max(0, l.stock - used));
+      taken.set(l.productId, used + qty);
+      return qty > 0 ? [{ ...l, qty }] : [];
     });
     set({ lines });
   },
-  setGift(variantId: number | null) {
-    set({ giftVariantId: variantId });
+  setGift(productId: number | null) {
+    set({ giftProductId: productId });
   },
   setCoupon(coupon: AppliedCoupon | null) {
     set({ coupon });
   },
   clear() {
-    set({ lines: [], giftVariantId: null, coupon: null });
+    set({ lines: [], giftProductId: null, coupon: null });
   },
   openDrawer() {
     set({ drawerOpen: true }, false);
@@ -207,8 +191,7 @@ export const cartActions = {
 export function useCart() {
   const s = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   return useMemo(() => {
-    // Pieces: a set of 2 noserings counts as 2 (the free-gift offer and the bag badge count pieces).
-    const count = s.lines.reduce((n, l) => n + l.qty * (l.bundle?.length ?? 1), 0);
+    const count = s.lines.reduce((n, l) => n + l.qty, 0);
     const subtotal = s.lines.reduce((n, l) => n + l.price * l.qty, 0);
     return { ...s, count, subtotal };
   }, [s]);

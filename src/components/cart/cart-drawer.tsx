@@ -14,7 +14,7 @@ import {
   useCartTotals,
 } from "@/components/cart/cart-parts";
 import { Button } from "@/components/ui/button";
-import { cartActions, lineKey, useCart } from "@/lib/cart-store";
+import { cartActions, useCart } from "@/lib/cart-store";
 
 export function CartButton() {
   const { count } = useCart();
@@ -95,7 +95,7 @@ export function CartDrawer() {
               <FreeShippingBar className="pt-5" />
               <ul className="divide-y divide-border" aria-label="Items in your bag">
                 {cart.lines.map((l) => (
-                  <CartLineItem key={lineKey(l)} line={l} onNavigate={cartActions.closeDrawer} />
+                  <CartLineItem key={l.key} line={l} onNavigate={cartActions.closeDrawer} />
                 ))}
               </ul>
               <GiftPicker className="mb-5" />

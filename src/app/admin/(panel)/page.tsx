@@ -21,13 +21,7 @@ export default async function AdminDashboard() {
       .eq("payment_status", "awaiting_verification")
       .neq("order_status", "cancelled"),
     supabase.from("orders").select("total, created_at, order_status").gte("created_at", since30).limit(2000),
-    supabase
-      .from("product_variants")
-      .select("id, name, stock, product:products(id, name)")
-      .eq("is_active", true)
-      .lte("stock", 3)
-      .order("stock")
-      .limit(8),
+    supabase.from("products").select("id, name, stock").eq("is_active", true).lte("stock", 3).order("stock").limit(8),
     supabase.from("products").select("id", { count: "exact", head: true }).eq("is_sample", true),
     supabase.from("payment_accounts").select("id", { count: "exact", head: true }).eq("is_active", true),
     supabase
@@ -135,18 +129,14 @@ export default async function AdminDashboard() {
         <Panel title="Low stock">
           {lowStock.data?.length ? (
             <ul className="divide-y divide-border">
-              {lowStock.data.map((v) => {
-                const p = v.product as unknown as { id: number; name: string } | null;
-                return (
-                  <li key={v.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0 text-sm">
-                    <Link prefetch={false} href={p ? `/admin/products/${p.id}` : "/admin/products"} className="min-w-0 truncate underline-offset-4 hover:underline">
-                      {p?.name ?? "Product"}
-                      {v.name !== "Standard" && <span className="text-muted-foreground">, {v.name}</span>}
-                    </Link>
-                    <Pill tone={v.stock === 0 ? "bad" : "warn"}>{v.stock === 0 ? "Sold out" : `${v.stock} left`}</Pill>
-                  </li>
-                );
-              })}
+              {lowStock.data.map((p) => (
+                <li key={p.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0 text-sm">
+                  <Link prefetch={false} href={`/admin/products/${p.id}`} className="min-w-0 truncate underline-offset-4 hover:underline">
+                    {p.name}
+                  </Link>
+                  <Pill tone={p.stock === 0 ? "bad" : "warn"}>{p.stock === 0 ? "Sold out" : `${p.stock} left`}</Pill>
+                </li>
+              ))}
             </ul>
           ) : (
             <p className="text-sm text-muted-foreground">Everything is well stocked.</p>

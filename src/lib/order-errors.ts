@@ -8,8 +8,8 @@ export function describeOrderError(message: string): string {
     case "OUT_OF_STOCK":
     case "ITEM_UNAVAILABLE":
       return "Sorry, one of the items in your bag just sold out or is no longer available. Please review your bag.";
-    case "BUNDLE_INCOMPLETE":
-      return "One of the offers in your bag needs all of its pieces chosen. Please review your bag.";
+    case "INVALID_OPTION":
+      return "One of the sizes or colours in your bag is no longer available. Please review your bag.";
     case "COUPON_INVALID":
       return "That coupon code is not valid any more. Remove it from your bag and try again.";
     case "COUPON_EXHAUSTED":

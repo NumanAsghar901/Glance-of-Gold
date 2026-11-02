@@ -9,7 +9,6 @@ import { normalizePhone } from "@/lib/pakistan";
 import { rateLimit } from "@/lib/rate-limit";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { cartPayloadSchema, checkoutSchema } from "@/lib/validators";
-import { composeChosenName } from "@/lib/variant-name";
 
 export type CheckoutState = {
   error?: string;
@@ -19,41 +18,6 @@ export type CheckoutState = {
 };
 
 const TEXT_FIELDS = ["name", "phone", "email", "province", "city", "address", "landmark", "notes"] as const;
-
-/**
- * A customer may choose only a size, only a design, or both. Stock is taken from the variant that matches, but
- * the order must say only what they chose, so the saved name of each line is rebuilt from the variant's own
- * values and the parts they picked. The text comes from our database, never from the browser. Never throws:
- * if it cannot be done the order keeps the variant's full name.
- */
-async function applyChosenNames(
-  supabase: ReturnType<typeof createServiceClient>,
-  orderId: number,
-  items: { variantId: number; parts?: ("colour" | "size" | "design")[] }[],
-) {
-  const wanted = items.filter((i) => i.parts && i.parts.length > 0);
-  if (wanted.length === 0) return;
-  try {
-    const ids = wanted.map((i) => i.variantId);
-    const [{ data: variants, error }, { data: lines }] = await Promise.all([
-      supabase.from("product_variants").select("id, color, design, size").in("id", ids),
-      supabase.from("order_items").select("id, variant_id, variant_name").eq("order_id", orderId).eq("is_gift", false).in("variant_id", ids),
-    ]);
-    // The colour, design and size columns only exist once their migration has been run.
-    if (error || !variants || !lines) return;
-    await Promise.all(
-      wanted.map(async (item) => {
-        const variant = variants.find((v) => v.id === item.variantId);
-        const line = lines.find((l) => l.variant_id === item.variantId);
-        if (!variant || !line) return;
-        const name = composeChosenName(variant, item.parts ?? []);
-        if (name !== line.variant_name) await supabase.from("order_items").update({ variant_name: name }).eq("id", line.id);
-      }),
-    );
-  } catch (err) {
-    console.error("[order] could not write the chosen names:", err);
-  }
-}
 
 /** Marks the customer's saved checkout (if any) as recovered. Never throws: it must not affect the order. */
 async function markCheckoutRecovered(supabase: ReturnType<typeof createServiceClient>, phone: string, orderId: number) {
@@ -145,9 +109,16 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
       notes: input.notes ?? "",
       payment_method: input.paymentMethod,
       coupon_code: cart.data.couponCode ?? "",
-      gift_variant_id: cart.data.giftVariantId ?? null,
+      gift_product_id: cart.data.giftProductId ?? null,
       meta_event_id: input.submissionId,
-      items: cart.data.items.map((i) => ({ variant_id: i.variantId, qty: i.qty })),
+      // Each line is a product with the group, size and colour chosen; the database checks them against the product.
+      items: cart.data.items.map((i) => ({
+        product_id: i.productId,
+        qty: i.qty,
+        group: i.group ?? null,
+        size: i.size ?? null,
+        colour: i.colour ?? null,
+      })),
     },
   });
 
@@ -157,8 +128,6 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   }
 
   const order = data as { id: number; access_token: string; total: number; meta_event_id: string };
-  // Before the emails go out, make each order line say only what the customer chose (for example just "Size 6").
-  await applyChosenNames(supabase, order.id, cart.data.items);
   const metaCtx = await readMetaContext();
 
   after(async () => {
@@ -170,7 +139,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
         {
           eventId: order.meta_event_id,
           value: order.total,
-          contentIds: cart.data.items.map((i) => String(i.variantId)),
+          contentIds: [...new Set(cart.data.items.map((i) => String(i.productId)))],
           phone: input.phone,
           email: input.email,
           name: input.name,

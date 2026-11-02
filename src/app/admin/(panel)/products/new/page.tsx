@@ -9,13 +9,11 @@ export const metadata: Metadata = { title: "Add product" };
 
 export default async function NewProductPage() {
   const { supabase } = await requireAdmin();
-  const [{ data: categories }, { error: attrsMissing }, { error: bundleMissing }] = await Promise.all([
-
+  const [{ data: categories }, { error: groupsMissing }, { error: stockMissing }] = await Promise.all([
     supabase.from("categories").select("id, name").order("sort"),
-    // Fails until the design and size migration has been run; the form then explains what to do.
-    supabase.from("product_variants").select("design").limit(1),
-    // Fails until the offers migration has been run.
-    supabase.from("products").select("bundle_size").limit(1),
+    // Fail until the variant groups migration has been run; the form then explains what to do.
+    supabase.from("product_option_groups").select("id").limit(1),
+    supabase.from("products").select("stock").limit(1),
   ]);
 
   return (
@@ -26,8 +24,7 @@ export default async function NewProductPage() {
       <PageHeader title="Add product" description="Add the details, set the stock and upload photos. You can edit everything later." />
       <ProductForm
         categories={categories ?? []}
-        attrsAvailable={!attrsMissing}
-        bundleAvailable={!bundleMissing}
+        ready={!groupsMissing && !stockMissing}
         product={{
           name: "",
           slug: "",
@@ -39,10 +36,8 @@ export default async function NewProductPage() {
           tags: "",
           isActive: true,
           isFeatured: false,
-          allowMultiple: false,
-          bundleSize: 1,
-          pieceName: "",
-          variants: [],
+          stock: "",
+          groups: [],
         }}
       />
     </>
