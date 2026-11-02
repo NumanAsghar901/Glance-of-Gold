@@ -13,11 +13,11 @@ import { piecesLabel } from "@/lib/order-text";
 import { LOW_STOCK_THRESHOLD } from "@/lib/stock";
 import { cn, formatPKR } from "@/lib/utils";
 
-const chipBase =
+export const chipBase =
   "grid min-h-11 min-w-12 cursor-pointer place-items-center border px-4 py-1.5 text-center text-sm leading-tight transition-[border-color,background-color,transform] duration-200 ease-(--ease-out) active:scale-[0.97] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold";
-const chipOn = "border-foreground bg-foreground text-background";
-const chipOff = "border-border bg-surface hover:border-gold";
-const chipOut = "cursor-not-allowed text-muted-foreground line-through opacity-50 hover:border-border";
+export const chipOn = "border-foreground bg-foreground text-background";
+export const chipOff = "border-border bg-surface hover:border-gold";
+export const chipOut = "cursor-not-allowed text-muted-foreground line-through opacity-50 hover:border-border";
 
 /** "a size", "a design", "a size or design" or "a colour": for button text like "Select a size". */
 export function choiceNoun(sel: VariantSelection) {
@@ -61,6 +61,16 @@ export function SelectionPrice({
         compareAt={v?.priceOverride ? null : product.compareAtPrice}
         className={className}
       />
+    </div>
+  );
+}
+
+/** The price of an offer: one price for the whole set, said plainly ("Rs. 1,099 for 2 pieces"). */
+export function OfferPrice({ product, className }: { product: ProductDetail; className?: string }) {
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-3">
+      <Price price={product.price} compareAt={product.compareAtPrice} className={className} />
+      <p className="text-sm text-muted-foreground">for {piecesLabel(product.bundleSize)}</p>
     </div>
   );
 }

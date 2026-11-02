@@ -1,11 +1,12 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
+import { useBundleSelection, type BundleSelection } from "@/components/store/use-bundle-selection";
 import { useVariantSelection, type VariantSelection } from "@/components/store/use-variant-selection";
-import { SelectionPrice } from "@/components/store/variant-picker";
+import { OfferPrice, SelectionPrice } from "@/components/store/variant-picker";
 import type { ProductDetail } from "@/lib/data/types";
 
-type Purchase = { product: ProductDetail; sel: VariantSelection };
+type Purchase = { product: ProductDetail; sel: VariantSelection; bundle: BundleSelection };
 
 const PurchaseContext = createContext<Purchase | null>(null);
 
@@ -15,7 +16,9 @@ const PurchaseContext = createContext<Purchase | null>(null);
  */
 export function PurchaseProvider({ product, children }: { product: ProductDetail; children: ReactNode }) {
   const sel = useVariantSelection(product);
-  return <PurchaseContext.Provider value={{ product, sel }}>{children}</PurchaseContext.Provider>;
+  // Only used for an offer of several pieces (bundleSize above 1); inert for every other product.
+  const bundle = useBundleSelection(product);
+  return <PurchaseContext.Provider value={{ product, sel, bundle }}>{children}</PurchaseContext.Provider>;
 }
 
 export function usePurchase() {
@@ -27,5 +30,6 @@ export function usePurchase() {
 /** Price that follows the customer's choice (a size with its own price, or the total of several). */
 export function LivePrice({ className }: { className?: string }) {
   const { product, sel } = usePurchase();
+  if (product.bundleSize > 1) return <OfferPrice product={product} className={className} />;
   return <SelectionPrice product={product} sel={sel} className={className} />;
 }

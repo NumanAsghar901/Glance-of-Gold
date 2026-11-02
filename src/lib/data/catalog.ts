@@ -35,6 +35,8 @@ type RawProduct = {
   sold_count?: number | null;
   option_label?: string | null;
   allow_multiple?: boolean | null;
+  bundle_size?: number | null;
+  piece_name?: string | null;
   category: { name: string; slug: string } | null;
   images: (Omit<ProductImage, "width" | "height" | "publicId"> & {
     width?: number | null;
@@ -78,15 +80,17 @@ const attrsAvailable = () => columnAvailable("attrs", "product_variants", "desig
 const sizesAvailable = () => columnAvailable("photo-sizes", "product_images", "width");
 export const cloudAvailable = () => columnAvailable("photo-cloudinary", "product_images", "cloudinary_public_id");
 
-/** The optional photo columns (pixel size, Cloudinary public_id) that exist in this database. */
-type PhotoColumns = { sizes: boolean; cloud: boolean };
+const bundleAvailable = () => columnAvailable("bundle", "products", "bundle_size");
+
+/** The optional columns (photo pixel size, Cloudinary public_id, offers with pieces) that exist in this database. */
+type PhotoColumns = { sizes: boolean; cloud: boolean; bundle: boolean };
 const photoColumns = async (): Promise<PhotoColumns> => {
-  const [sizes, cloud] = await Promise.all([sizesAvailable(), cloudAvailable()]);
-  return { sizes, cloud };
+  const [sizes, cloud, bundle] = await Promise.all([sizesAvailable(), cloudAvailable(), bundleAvailable()]);
+  return { sizes, cloud, bundle };
 };
 
-const summarySelect = (inner: boolean, stats: boolean, options = false, attrs = false, photos: PhotoColumns = { sizes: false, cloud: false }) =>
-  `${BASE_COLUMNS}${stats ? `, ${STATS}` : ""}, category:categories${inner ? "!inner" : ""}(name, slug), ${relations(options, attrs, photos.sizes, photos.cloud)}`;
+const summarySelect = (inner: boolean, stats: boolean, options = false, attrs = false, photos: PhotoColumns = { sizes: false, cloud: false, bundle: false }) =>
+  `${BASE_COLUMNS}${stats ? `, ${STATS}` : ""}${photos.bundle ? ", bundle_size, piece_name" : ""}, category:categories${inner ? "!inner" : ""}(name, slug), ${relations(options, attrs, photos.sizes, photos.cloud)}`;
 // option_label is only needed to sort older products (saved before designs and sizes had their own columns).
 const detailSelect = (stats: boolean, options: boolean, attrs: boolean, photos: PhotoColumns) =>
   `${summarySelect(false, stats, options, attrs, photos)}, description, material, tags${options ? `, allow_multiple${attrs ? "" : ", option_label"}` : ""}`;
@@ -131,8 +135,11 @@ function toSummary(r: RawProduct): ProductSummary {
     rating: Number(r.rating_avg ?? 0),
     ratingCount: r.rating_count ?? 0,
     soldCount: r.sold_count ?? 0,
+    bundleSize: r.bundle_size ?? 1,
+    pieceName: r.piece_name ?? null,
+    // A piece of an offer is only sold as part of a set, so there is no one-tap add.
     quickAdd:
-      r.variants.length === 1
+      r.variants.length === 1 && (r.bundle_size ?? 1) === 1
         ? { variantId: r.variants[0].id, variantName: r.variants[0].name, stock: r.variants[0].stock }
         : null,
   };
@@ -223,7 +230,7 @@ export const getProducts = unstable_cache(
   },
   // The key carries a version: bump it whenever the shape of a cached product changes, because the
   // data cache survives deployments and would otherwise hand old-shaped objects to new code.
-  ["products-v4"],
+  ["products-v5"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 
@@ -235,7 +242,7 @@ export const getProduct = unstable_cache(
     if (error) throw new Error(`getProduct: ${error.message}`);
     return data ? toDetail(data as unknown as RawProduct) : null;
   },
-  ["product-v6"],
+  ["product-v7"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 
@@ -253,7 +260,7 @@ export const getRelatedProducts = unstable_cache(
     if (error) throw new Error(`getRelatedProducts: ${error.message}`);
     return (data as unknown as RawProduct[]).map(toSummary);
   },
-  ["related-v4"],
+  ["related-v5"],
   { tags: ["catalog"], revalidate: REVALIDATE },
 );
 
@@ -285,7 +292,7 @@ export const searchProducts = unstable_cache(
     const byId = new Map((data as unknown as RawProduct[]).map((p) => [p.id, toSummary(p)]));
     return ids.flatMap((id) => byId.get(id) ?? []);
   },
-  ["search-v4"],
+  ["search-v5"],
   { tags: ["catalog"], revalidate: 120 },
 );
 

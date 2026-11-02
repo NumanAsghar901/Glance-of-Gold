@@ -7,6 +7,7 @@ import { ActionForm } from "@/components/admin/action-form";
 import { CloudinaryUploader } from "@/components/admin/cloudinary-uploader";
 import { Check, Field, Input, Panel, Select, Textarea } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { composeVariantName } from "@/lib/variant-name";
 
 export type ProductFormData = {
@@ -23,6 +24,10 @@ export type ProductFormData = {
   isFeatured: boolean;
   /** Whether customers may pick several designs or sizes at once, each with its own quantity. */
   allowMultiple: boolean;
+  /** Pieces sold together for the price: 1 for a normal product, 2 for "any 2 for one price". */
+  bundleSize: number;
+  /** What one piece of an offer is called, for example "Nosering". */
+  pieceName: string;
   /**
    * A variant is one thing a customer can buy. Its colour, design and size are kept apart and joined into its
    * name when saved. `name` is only used by the older form, before the design and size migration.
@@ -50,11 +55,14 @@ export function ProductForm({
   product,
   categories,
   attrsAvailable,
+  bundleAvailable,
 }: {
   product: ProductFormData;
   categories: { id: number; name: string }[];
   /** False until the design and size migration has been run on the database. */
   attrsAvailable: boolean;
+  /** False until the offers migration (20261102000001) has been run on the database. */
+  bundleAvailable: boolean;
 }) {
   const [rows, setRows] = useState<Row[]>(() =>
     (product.variants.length
@@ -66,6 +74,10 @@ export function ProductForm({
   // HTML and in the browser are the same.
   const nextKey = useRef(rows.length);
   const [allowMultiple, setAllowMultiple] = useState(product.allowMultiple);
+  // Kept in state so what was typed survives the form being reset after a save.
+  const [bundleSize, setBundleSize] = useState(String(product.bundleSize));
+  const [pieceName, setPieceName] = useState(product.pieceName);
+  const pieces = Math.max(1, Math.min(6, Math.floor(Number(bundleSize)) || 1));
   const [gen, setGen] = useState({ colours: "", designs: "", sizes: "", stock: "10", price: "" });
   const [genNote, setGenNote] = useState("");
   // What this product comes in. Each one ticked gets its own box on every variant and its own picker on the
@@ -147,6 +159,7 @@ export function ProductForm({
         )}
       />
       {attrsAvailable && <input type="hidden" name="attrs" value="1" />}
+      {bundleAvailable && <input type="hidden" name="bundle" value="1" />}
 
       <Panel title="Details">
         <div className="space-y-5">
@@ -289,7 +302,51 @@ export function ProductForm({
               </div>
             )}
 
-            <label className="flex cursor-pointer items-start gap-3 text-sm">
+            {bundleAvailable ? (
+              <div className="border border-border p-4">
+                <p className="text-sm font-medium">Offer of several pieces</p>
+                <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
+                  For an offer such as any 2 noserings for one price. The customer chooses a size, then a colour, for each piece. Set the
+                  price above to the price of the whole set. Leave at 1 for a normal product.
+                </p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <Field label="Pieces in one set" htmlFor="bundleSize" hint="1 to 6. A set is always sold complete.">
+                    <Input
+                      id="bundleSize"
+                      name="bundleSize"
+                      type="number"
+                      min={1}
+                      max={6}
+                      value={bundleSize}
+                      onChange={(e) => setBundleSize(e.target.value)}
+                    />
+                  </Field>
+                  <Field label="What one piece is called" htmlFor="pieceName" hint="For example Nosering. Shown as Nosering size 1.">
+                    <Input
+                      id="pieceName"
+                      name="pieceName"
+                      maxLength={40}
+                      placeholder="Nosering"
+                      value={pieceName}
+                      onChange={(e) => setPieceName(e.target.value)}
+                    />
+                  </Field>
+                </div>
+                {pieces > 1 && (
+                  <p className="mt-3 text-xs leading-relaxed text-gold-hover">
+                    Customers will buy {pieces} pieces for the price above. A price set on a single variant is ignored for this product.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="border border-gold bg-sand/50 p-4 text-sm leading-relaxed">
+                To sell an offer of several pieces (any 2 for one price), run the database step{" "}
+                <code className="bg-surface px-1.5 py-0.5 text-xs">supabase/migrations/20261102000001_offers_with_pieces.sql</code> once in
+                the Supabase SQL Editor, then reload this page.
+              </p>
+            )}
+
+            <label className={cn("flex cursor-pointer items-start gap-3 text-sm", pieces > 1 && "hidden")}>
               <input
                 type="checkbox"
                 name="allowMultiple"

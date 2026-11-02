@@ -19,13 +19,16 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   if (!parsed.success) notFound();
   const id = parsed.data;
 
-  const [{ data: product }, { data: categories }, { data: images }, { data: variants }, { error: attrsMissing }] = await Promise.all([
+  const [{ data: product }, { data: categories }, { data: images }, { data: variants }, { error: attrsMissing }, { error: bundleMissing }] = await Promise.all([
+    // The `*` below returns bundle_size and piece_name once the offers migration has been run.
     supabase.from("products").select("*").eq("id", id).maybeSingle(),
     supabase.from("categories").select("id, name").order("sort"),
     supabase.from("product_images").select("*").eq("product_id", id).order("sort").order("id"),
     supabase.from("product_variants").select("*").eq("product_id", id).order("sort").order("id"),
     // Fails until the design and size migration has been run; the form then explains what to do.
     supabase.from("product_variants").select("design").limit(1),
+    // Fails until the offers migration has been run.
+    supabase.from("products").select("bundle_size").limit(1),
   ]);
   if (!product) notFound();
   const attrsAvailable = !attrsMissing;
@@ -80,6 +83,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         <ProductForm
           categories={categories ?? []}
           attrsAvailable={attrsAvailable}
+          bundleAvailable={!bundleMissing}
           product={{
             id: product.id,
             name: product.name,
@@ -93,6 +97,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
             isActive: product.is_active,
             isFeatured: product.is_featured,
             allowMultiple: product.allow_multiple ?? false,
+            bundleSize: product.bundle_size ?? 1,
+            pieceName: product.piece_name ?? "",
             variants: (variants ?? []).map((v) => ({
               id: v.id,
               // Before the design and size migration the form only has one name box, so it holds the full name.

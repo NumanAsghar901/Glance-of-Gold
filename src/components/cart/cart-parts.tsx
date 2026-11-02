@@ -7,9 +7,8 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { getCartSnapshot, previewCoupon } from "@/app/actions/cart";
 import { useStore } from "@/components/store/store-provider";
 import { Button } from "@/components/ui/button";
-import { cartActions, useCart, type CartLine } from "@/lib/cart-store";
+import { cartActions, lineDetails, lineKey, useCart, type CartLine } from "@/lib/cart-store";
 import { piecesLabel } from "@/lib/order-text";
-import { variantLines } from "@/lib/variant-name";
 import { amountToFreeShipping, shippingFor } from "@/lib/pricing";
 import { cn, formatPKR } from "@/lib/utils";
 
@@ -18,8 +17,8 @@ import { cn, formatPKR } from "@/lib/utils";
 /** Refresh price/stock of cart lines from the server while `active`. */
 export function useCartSync(active: boolean) {
   const { lines } = useCart();
-  const key = lines
-    .map((l) => l.variantId)
+  // Every variant in the bag, including each piece of an offer set.
+  const key = [...new Set(lines.flatMap((l) => (l.bundle ? l.bundle.map((p) => p.variantId) : [l.variantId])))]
     .sort((a, b) => a - b)
     .join(",");
 
@@ -73,7 +72,7 @@ export function QtyStepper({ line, size = "md" }: { line: CartLine; size?: "sm" 
   );
   return (
     <div className="inline-flex items-center border border-border" role="group" aria-label={`Quantity for ${line.name}`}>
-      <button type="button" className={btn} aria-label="Decrease quantity" onClick={() => cartActions.setQty(line.variantId, line.qty - 1)}>
+      <button type="button" className={btn} aria-label="Decrease quantity" onClick={() => cartActions.setQty(lineKey(line), line.qty - 1)}>
         <Minus className="size-3.5" strokeWidth={1.5} />
       </button>
       <span className="min-w-8 text-center text-sm tabular-nums" aria-live="polite">
@@ -84,7 +83,7 @@ export function QtyStepper({ line, size = "md" }: { line: CartLine; size?: "sm" 
         className={btn}
         aria-label="Increase quantity"
         disabled={line.qty >= line.stock}
-        onClick={() => cartActions.setQty(line.variantId, line.qty + 1)}
+        onClick={() => cartActions.setQty(lineKey(line), line.qty + 1)}
       >
         <Plus className="size-3.5" strokeWidth={1.5} />
       </button>
@@ -110,17 +109,21 @@ export function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?
             <Link href={`/product/${line.slug}`} onClick={onNavigate} className="block truncate font-heading text-lg leading-tight hover:text-gold-hover">
               {line.name}
             </Link>
-            {variantLines(line.variantName).map((part) => (
+            {lineDetails(line).map((part) => (
               <p key={part} className="mt-0.5 text-xs text-muted-foreground">
                 {part}
               </p>
             ))}
-            {line.qty > 1 && <p className="mt-0.5 text-xs text-muted-foreground">{formatPKR(line.price)} each</p>}
+            {line.qty > 1 && (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {formatPKR(line.price)} {line.bundle ? "per set" : "each"}
+              </p>
+            )}
           </div>
           <button
             type="button"
             aria-label={`Remove ${line.name}`}
-            onClick={() => cartActions.remove(line.variantId)}
+            onClick={() => cartActions.remove(lineKey(line))}
             className="-mr-2 -mt-1 grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-sand hover:text-foreground"
           >
             <X className="size-4" strokeWidth={1.5} />

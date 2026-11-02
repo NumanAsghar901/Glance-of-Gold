@@ -68,6 +68,9 @@ const productSchema = z.object({
   isFeatured: z.boolean(),
   variants: z.array(variantSchema).min(1, "Add at least one variant").max(40),
   allowMultiple: z.boolean().optional(),
+  // An offer sells this many pieces together for the product price (1 is a normal product).
+  bundleSize: z.coerce.number().int().min(1).max(6).optional(),
+  pieceName: z.string().trim().max(40).optional(),
 });
 
 export async function saveProduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -95,6 +98,9 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
     variants: variantsRaw,
     // The form only sends the marker "attrs" once the design and size migration has been run, so older databases still save.
     allowMultiple: formData.has("attrs") ? formData.get("allowMultiple") === "on" : undefined,
+    // Only sent once the offers migration has been run, so older databases still save.
+    bundleSize: formData.has("bundle") ? formData.get("bundleSize") || 1 : undefined,
+    pieceName: formData.has("bundle") ? formData.get("pieceName") || undefined : undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check the product details." };
   const v = parsed.data;
@@ -137,7 +143,9 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
       .filter(Boolean),
     is_active: v.isActive,
     is_featured: v.isFeatured,
-    ...(withAttrs ? { allow_multiple: v.allowMultiple ?? false } : {}),
+    // An offer of several pieces is chosen piece by piece, so choosing several sizes at once does not apply to it.
+    ...(withAttrs ? { allow_multiple: (v.bundleSize ?? 1) > 1 ? false : (v.allowMultiple ?? false) } : {}),
+    ...(formData.has("bundle") ? { bundle_size: v.bundleSize ?? 1, piece_name: (v.bundleSize ?? 1) > 1 ? (v.pieceName ?? null) : null } : {}),
   };
 
   // Create or update the product, retrying once with a different slug if it is taken.

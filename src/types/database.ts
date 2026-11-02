@@ -730,6 +730,7 @@ export type Database = {
       products: {
         Row: {
           allow_multiple: boolean
+          bundle_size: number
           category_id: number | null
           compare_at_price: number | null
           created_at: string
@@ -741,6 +742,7 @@ export type Database = {
           material: string | null
           name: string
           option_label: string
+          piece_name: string | null
           price: number
           rating_avg: number
           rating_count: number
@@ -752,6 +754,7 @@ export type Database = {
         }
         Insert: {
           allow_multiple?: boolean
+          bundle_size?: number
           category_id?: number | null
           compare_at_price?: number | null
           created_at?: string
@@ -763,6 +766,7 @@ export type Database = {
           material?: string | null
           name: string
           option_label?: string
+          piece_name?: string | null
           price: number
           rating_avg?: number
           rating_count?: number
@@ -774,6 +778,7 @@ export type Database = {
         }
         Update: {
           allow_multiple?: boolean
+          bundle_size?: number
           category_id?: number | null
           compare_at_price?: number | null
           created_at?: string
@@ -785,6 +790,7 @@ export type Database = {
           material?: string | null
           name?: string
           option_label?: string
+          piece_name?: string | null
           price?: number
           rating_avg?: number
           rating_count?: number

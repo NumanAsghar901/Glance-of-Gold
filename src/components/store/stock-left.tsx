@@ -12,11 +12,13 @@ import { cn } from "@/lib/utils";
 export function StockLeft({ className }: { className?: string }) {
   const { product, sel } = usePurchase();
 
-  const left = sel.scope.reduce((n, v) => n + Math.max(0, v.stock), 0);
+  // An offer's pieces are chosen one by one, so the count is for the whole product.
+  const offer = product.bundleSize > 1;
+  const left = (offer ? product.variants : sel.scope).reduce((n, v) => n + Math.max(0, v.stock), 0);
   if (left <= 0 || product.variants.length === 0) return null;
 
   // Say which choice the count is for, when a choice has been made, for example "for Size 6".
-  const scope = sel.hasChoice && !sel.multi ? sel.scopeLabel : "";
+  const scope = !offer && sel.hasChoice && !sel.multi ? sel.scopeLabel : "";
 
   return (
     <p aria-live="polite" className={cn("flex items-center gap-3 text-sm", className)}>

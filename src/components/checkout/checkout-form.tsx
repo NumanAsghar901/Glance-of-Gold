@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 import { piecesLabel } from "@/lib/order-text";
 import { PROVINCES } from "@/lib/pakistan";
-import { variantLines } from "@/lib/variant-name";
+import { lineDetails, lineKey } from "@/lib/cart-store";
 import { cn, formatPKR, uuid } from "@/lib/utils";
 
 type Method = "cod" | "jazzcash" | "easypaisa" | "bank_transfer";
@@ -109,7 +109,10 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
   }, []);
 
   const cartPayload = JSON.stringify({
-    items: cart.lines.map((l) => ({ variantId: l.variantId, qty: l.qty, parts: l.parts })),
+    // A set of an offer is sent as its pieces: the server prices them together and takes each piece's stock.
+    items: cart.lines.flatMap((l) =>
+      l.bundle ? l.bundle.map((p) => ({ variantId: p.variantId, qty: l.qty })) : [{ variantId: l.variantId, qty: l.qty, parts: l.parts }],
+    ),
     giftVariantId: cart.giftEligible ? cart.giftVariantId : null,
     couponCode: cart.coupon?.code ?? null,
   });
@@ -260,20 +263,20 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
           </h2>
           <ul className="divide-y divide-border">
             {cart.lines.map((l) => (
-              <li key={l.variantId} className="flex items-center gap-4 py-4 first:pt-0">
+              <li key={lineKey(l)} className="flex items-center gap-4 py-4 first:pt-0">
                 <div className="relative h-20 w-16 shrink-0 overflow-hidden bg-sand">
                   {l.image && <Photo src={l.image} alt="" fill sizes="64px" quality={60} className="object-contain" />}
                   <span className="absolute -right-0 -top-0 grid min-w-5 place-items-center bg-foreground px-1 text-[0.6875rem] text-background">{l.qty}</span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm">{l.name}</p>
-                  {variantLines(l.variantName).map((part) => (
+                  {lineDetails(l).map((part) => (
                     <p key={part} className="text-xs text-muted-foreground">
                       {part}
                     </p>
                   ))}
                   <p className="text-xs text-muted-foreground">
-                    Qty {l.qty}, {formatPKR(l.price)} each
+                    Qty {l.qty}, {formatPKR(l.price)} {l.bundle ? "per set" : "each"}
                   </p>
                 </div>
                 <p className="shrink-0 text-sm">{formatPKR(l.price * l.qty)}</p>

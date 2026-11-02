@@ -38,6 +38,13 @@ export type ProductSummary = {
   rating: number;
   ratingCount: number;
   soldCount: number;
+  /**
+   * Pieces sold together for the product price. 1 for a normal product; 2 for "any 2 for one price", where the
+   * customer chooses a size and colour for each piece.
+   */
+  bundleSize: number;
+  /** What one piece of an offer is called ("Nosering"), used in "Nosering size 1". */
+  pieceName: string | null;
   /** Set when the product has exactly one variant, so cards can offer quick add. */
   quickAdd: { variantId: number; variantName: string; stock: number } | null;
 };
