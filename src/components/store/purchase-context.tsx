@@ -24,8 +24,8 @@ export function usePurchase() {
   return ctx;
 }
 
-/** Price that follows the customer's choice: one piece, or the total of everything chosen. */
+/** The product's price. It stays the same whatever is chosen; the total is shown with the selection. */
 export function LivePrice({ className }: { className?: string }) {
-  const { product, sel } = usePurchase();
-  return <SelectionPrice product={product} sel={sel} className={className} />;
+  const { product } = usePurchase();
+  return <SelectionPrice product={product} className={className} />;
 }

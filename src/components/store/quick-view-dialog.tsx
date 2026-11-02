@@ -146,7 +146,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
       <div className="flex min-w-0 flex-col p-5 sm:p-6 md:p-8">
         {product.category && <p className="text-sm text-muted-foreground">{product.category.name}</p>}
         <h2 className="mt-1 pr-10 font-heading text-4xl leading-tight">{product.name}</h2>
-        <SelectionPrice product={product} sel={sel} className="mt-3 text-lg" />
+        <SelectionPrice product={product} className="mt-3 text-lg" />
         <StockTag inStock={product.inStock} lowStock={product.lowStock} className="mt-3 inline-block self-start" />
 
         {product.description && (

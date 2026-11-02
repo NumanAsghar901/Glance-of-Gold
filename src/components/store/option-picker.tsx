@@ -16,21 +16,12 @@ const chipOff = "border-border bg-surface hover:border-gold";
 /** "a size", "a colour" or "a size and colour": for button text like "Select a size". */
 export const choiceNoun = (sel: OptionSelection) => sel.missing ?? "an option";
 
-/** The price for what is chosen: one price, or the total when several pieces are chosen. */
-export function SelectionPrice({ product, sel, className }: { product: ProductDetail; sel: OptionSelection; className?: string }) {
-  if (sel.pieces > 1) {
-    return (
-      <p aria-live="polite" className={cn("flex flex-wrap items-baseline gap-x-2 text-sm", className)}>
-        <span className="font-medium text-foreground">{formatPKR(sel.total)}</span>
-        <span className="text-muted-foreground">for {piecesLabel(sel.pieces)}</span>
-      </p>
-    );
-  }
-  return (
-    <div aria-live="polite">
-      <Price price={product.price} compareAt={product.compareAtPrice} className={className} />
-    </div>
-  );
+/**
+ * The product's own price, shown under the title. It never changes with what is chosen: the total for the pieces
+ * chosen is shown in "Your selection" and on the add button, not here.
+ */
+export function SelectionPrice({ product, className }: { product: ProductDetail; className?: string }) {
+  return <Price price={product.price} compareAt={product.compareAtPrice} className={className} />;
 }
 
 /** A quantity with - and + buttons. Going below one calls `onChange` with 0 so the caller can remove the line. */
