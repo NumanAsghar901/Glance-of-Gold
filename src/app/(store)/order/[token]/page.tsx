@@ -34,7 +34,12 @@ export default async function OrderPage({ params }: { params: Promise<{ token: s
 
   return (
     <div className="wrap py-10 lg:py-16">
-      <OrderPlaced eventId={order.meta_event_id} value={order.total} ids={order.items.map((i) => i.name)} />
+      {/* Product ids, the same as the view and add to cart events and the server event use, so Meta can match them. */}
+      <OrderPlaced
+        eventId={order.meta_event_id}
+        value={order.total}
+        ids={[...new Set(order.items.flatMap((i) => (i.product_id && !i.is_gift ? [String(i.product_id)] : [])))]}
+      />
 
       <header className="mx-auto max-w-xl text-center">
         <CheckCircle2 className="mx-auto size-12 text-gold" strokeWidth={1.25} />

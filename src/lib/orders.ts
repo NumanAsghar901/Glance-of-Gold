@@ -7,7 +7,9 @@ import type { EmailOrder } from "@/lib/email/templates";
 const ORDER_COLUMNS =
   "id, order_number, access_token, customer_name, phone, email, province, city, address, landmark, notes, subtotal, discount, shipping_fee, total, coupon_code, payment_method, payment_status, order_status, courier, tracking_number, cancel_reason, meta_event_id, created_at";
 
-export type OrderView = EmailOrder & {
+export type OrderView = Omit<EmailOrder, "items"> & {
+  /** What was ordered. `product_id` lets the purchase event name the products by id, like the other events. */
+  items: (EmailOrder["items"][number] & { product_id: number | null })[];
   payment_status: "unpaid" | "awaiting_verification" | "paid" | "failed" | "refunded";
   order_status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "returned";
   courier: string | null;
@@ -33,7 +35,7 @@ export async function getOrder(where: Where): Promise<OrderView | null> {
   const [{ data: items }, { data: events }, { count }] = await Promise.all([
     supabase
       .from("order_items")
-      .select("name, variant_name, qty, unit_price, is_gift")
+      .select("product_id, name, variant_name, qty, unit_price, is_gift")
       .eq("order_id", order.id)
       .order("id"),
     supabase
