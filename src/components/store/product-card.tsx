@@ -9,6 +9,9 @@ import { DEFAULT_PHOTO_RATIO } from "@/lib/image-ratio";
 import type { ProductSummary } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
 
+/** Badge size on a card: compact below 640px (11px text), the usual size from there up. */
+const BADGE = "px-1.5 py-0.5 text-[0.6875rem] leading-tight sm:px-2.5 sm:py-1 sm:text-xs";
+
 const SIZES = "(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 50vw";
 
 export function ProductCard({
@@ -72,10 +75,11 @@ export function ProductCard({
           )}
         </Link>
 
-        <div className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-1.5">
-          <StockTag inStock={product.inStock} lowStock={product.lowStock} />
+        {/* Small on phones, so the photo shows; full size from sm up. */}
+        <div className="pointer-events-none absolute left-2 top-2 flex flex-col items-start gap-1 sm:left-3 sm:top-3 sm:gap-1.5">
+          <StockTag inStock={product.inStock} lowStock={product.lowStock} className={BADGE} />
           {product.inStock && off > 0 && (
-            <span className="bg-blush px-2.5 py-1 text-xs text-foreground">
+            <span className={cn("bg-blush text-foreground", BADGE)}>
               {off}% off
             </span>
           )}
