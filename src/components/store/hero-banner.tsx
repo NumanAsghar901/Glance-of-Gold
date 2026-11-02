@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Photo } from "@/components/ui/photo";
+import { PhotoArt } from "@/components/ui/photo";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { HeroSlide } from "@/lib/hero-defaults";
@@ -80,26 +80,16 @@ export function HeroBanner({ slides }: { slides: HeroSlide[] }) {
             )}
           >
             <div className={cn("hero-drift absolute inset-0", active && !reduced && "hero-drift-on")}>
-              <Photo
+              <PhotoArt
                 src={s.image}
+                mobileSrc={s.mobileImage}
                 alt={s.alt}
-                fill
                 priority={i === 0}
                 sizes="100vw"
                 quality={85}
-                className={cn("object-cover object-[70%_center]", s.mobileImage && "hidden md:block")}
+                // The wide photo keeps its subject right of the headline; a tall phone photo is centred.
+                className={cn("object-cover", s.mobileImage ? "object-center md:object-[70%_center]" : "object-[70%_center]")}
               />
-              {s.mobileImage && (
-                <Photo
-                  src={s.mobileImage}
-                  alt={s.alt}
-                  fill
-                  priority={i === 0}
-                  sizes="100vw"
-                  quality={85}
-                  className="object-cover md:hidden"
-                />
-              )}
             </div>
 
             {/* Keeps the text readable over any photo an admin uploads */}
