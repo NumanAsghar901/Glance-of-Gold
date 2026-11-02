@@ -53,7 +53,13 @@ export default async function Home() {
   ];
 
   // Tells search engines the site's name, so results say "Little Luxe Glow".
-  const siteData = JSON.stringify({ "@context": "https://schema.org", "@type": "WebSite", name: site.name, url: site.url }).replace(/</g, "\\u003c");
+  const siteData = JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "WebSite", name: site.name, url: site.url },
+      { "@type": "Organization", name: site.name, url: site.url, logo: `${site.url}/brand/logo-full.png` },
+    ],
+  }).replace(/</g, "\\u003c");
 
   return (
     <>

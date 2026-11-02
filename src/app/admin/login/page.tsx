@@ -9,7 +9,7 @@ export default function LoginPage() {
     <main className="grid min-h-dvh place-items-center px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="flex justify-center">
-          <Logo />
+          <Logo variant="full" className="h-36" />
         </div>
         <div className="mt-10 border border-border bg-surface p-6 sm:p-8">
           <h1 className="font-heading text-3xl">Sign in</h1>

@@ -17,7 +17,7 @@ export function Header({ categories }: { categories: { id: number; slug: string;
       <header className="sticky top-0 z-40 border-b border-border bg-background">
         <div className="wrap grid h-16 grid-cols-[1fr_auto] items-center gap-4 lg:h-20 lg:grid-cols-[1fr_auto_1fr]">
           <HomeLink aria-label={`${site.name} home`} className="justify-self-start">
-            <Logo />
+            <Logo priority decorative className="h-6 min-[360px]:h-7 min-[414px]:h-8 sm:h-9 lg:h-12" />
           </HomeLink>
 
           <nav aria-label="Primary" className="hidden lg:block">

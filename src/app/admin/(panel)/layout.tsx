@@ -20,7 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <aside className="sticky top-0 z-30 border-b border-border bg-surface lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between px-4 py-2 lg:block lg:px-5 lg:py-6">
           <Link href="/admin" prefetch={false} aria-label="Admin home" className="py-1">
-            <Logo compact />
+            <Logo decorative className="h-7" />
           </Link>
           <AdminMobileMenu>
             <AdminNav />

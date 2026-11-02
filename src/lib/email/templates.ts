@@ -62,8 +62,7 @@ function shell(preheader: string, body: string, helpline: string, contactEmail: 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg};"><tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${C.surface};border:1px solid ${C.gold};">
 <tr><td align="center" style="padding:32px 24px 20px;border-bottom:1px solid ${C.gold};">
-<a href="${siteUrl}" style="text-decoration:none;color:${C.text};"><div style="font-family:Georgia,'Times New Roman',serif;font-size:20px;letter-spacing:4px;text-transform:uppercase;color:${C.text};">Little Luxe Glow</div>
-<div style="font-size:10px;letter-spacing:5px;text-transform:uppercase;color:${C.muted};margin-top:6px;">Jewellery</div></a>
+<a href="${siteUrl}" style="text-decoration:none;color:${C.text};"><img src="${siteUrl}/brand/logo-wordmark.png" width="250" alt="Little Luxe Glow Jewellery" style="display:block;margin:0 auto;border:0;outline:none;height:auto;max-width:250px;font-family:Georgia,'Times New Roman',serif;font-size:20px;letter-spacing:4px;text-transform:uppercase;color:${C.text};"></a>
 </td></tr>
 <tr><td style="padding:28px 24px;">${body}</td></tr>
 <tr><td align="center" style="background:${C.sand};padding:20px 24px;font-size:12px;color:${C.muted};line-height:1.6;">

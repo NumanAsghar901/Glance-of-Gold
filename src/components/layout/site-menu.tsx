@@ -44,7 +44,7 @@ export function SiteMenu({ categories }: { categories: Category[] }) {
         <div className="flex h-full flex-col overflow-y-auto px-6 pb-8 pt-5">
           <div className="flex items-center justify-between">
             <HomeLink onClick={close} aria-label={`${site.name} home`}>
-              <Logo compact />
+              <Logo decorative className="h-8" />
             </HomeLink>
             <button
               type="button"

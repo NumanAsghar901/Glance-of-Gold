@@ -11,7 +11,7 @@ export function Footer() {
       <div className="wrap py-16 lg:py-24">
         <div className="grid gap-14 lg:grid-cols-12">
           <div className="reveal lg:col-span-4">
-            <Logo />
+            <Logo variant="full" className="h-40 sm:h-44" />
             <p className="mt-8 max-w-sm font-heading text-3xl leading-snug">
               Jewellery chosen to catch the light, delivered across Pakistan.
             </p>
