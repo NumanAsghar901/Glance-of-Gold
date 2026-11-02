@@ -165,8 +165,40 @@ export function FreeShippingBar({ className }: { className?: string }) {
 
 // Free gift -------------------------------------------------------------------
 
+/** How many gifts show before the list scrolls. */
+const GIFTS_IN_VIEW = 6;
+
 export function GiftPicker({ className }: { className?: string }) {
   const { giftOffer, giftEligible, count, giftProductId } = useCartTotals();
+  const scroller = useRef<HTMLDivElement>(null);
+  const grid = useRef<HTMLDivElement>(null);
+  const options = giftOffer?.options.length ?? 0;
+  const showing = !!giftOffer && giftEligible;
+
+  // The list is only as tall as its first six gifts, however many columns they sit in, and scrolls for the rest.
+  // Measured from the cards themselves, so it stays right at every width. Set on the element directly: React does not own this style.
+  useEffect(() => {
+    const box = scroller.current;
+    const cards = grid.current?.children;
+    if (!box || !cards || !showing) return;
+    const fit = () => {
+      if (cards.length <= GIFTS_IN_VIEW) {
+        box.style.maxHeight = "";
+        return;
+      }
+      const top = cards[0].getBoundingClientRect().top;
+      const bottom = cards[GIFTS_IN_VIEW - 1].getBoundingClientRect().bottom;
+      // A copy that is not on screen (hidden at this width) has no size to measure.
+      if (bottom <= top) return;
+      // A little extra so the selected card's border is not cut off.
+      box.style.maxHeight = `${Math.ceil(bottom - top) + 4}px`;
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [options, showing]);
+
   if (!giftOffer) return null;
 
   if (!giftEligible) {
@@ -186,36 +218,41 @@ export function GiftPicker({ className }: { className?: string }) {
         <Gift className="size-4 text-gold-hover" strokeWidth={1.5} />
         Choose your free gift
       </legend>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {giftOffer.options.map((o) => {
-          const selected = giftProductId === o.productId;
-          return (
-            <label
-              key={o.productId}
-              className={cn(
-                "relative block cursor-pointer border bg-surface p-2 transition-[border-color,transform] duration-200 ease-(--ease-out) active:scale-[0.98]",
-                selected ? "border-gold" : "border-border hover:border-gold",
-              )}
-            >
-              <input
-                type="radio"
-                name="gift"
-                className="peer sr-only"
-                checked={selected}
-                onChange={() => cartActions.setGift(o.productId)}
-              />
-              <span className="absolute inset-0 border-2 border-transparent peer-focus-visible:border-gold" aria-hidden="true" />
-              <span className="relative block aspect-[4/5] overflow-hidden bg-sand">
-                {o.image && <Photo src={o.image} alt="" fit="fill" fill sizes="120px" quality={75} className="object-cover" />}
-              </span>
-              <span className="mt-2 block text-xs leading-snug">{o.productName}</span>
-              <span className={cn("mt-1 block text-xs", selected ? "text-gold-hover" : "text-muted-foreground")}>
-                {selected ? "Selected" : "Free"}
-              </span>
-            </label>
-          );
-        })}
+      <div ref={scroller} data-lenis-prevent className="-m-0.5 overflow-y-auto overscroll-contain p-0.5">
+        <div ref={grid} className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {giftOffer.options.map((o) => {
+            const selected = giftProductId === o.productId;
+            return (
+              <label
+                key={o.productId}
+                className={cn(
+                  "relative block cursor-pointer border bg-surface p-2 transition-[border-color,transform] duration-200 ease-(--ease-out) active:scale-[0.98]",
+                  selected ? "border-gold" : "border-border hover:border-gold",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="gift"
+                  className="peer sr-only"
+                  checked={selected}
+                  onChange={() => cartActions.setGift(o.productId)}
+                />
+                <span className="absolute inset-0 border-2 border-transparent peer-focus-visible:border-gold" aria-hidden="true" />
+                <span className="relative block aspect-[4/5] overflow-hidden bg-sand">
+                  {o.image && <Photo src={o.image} alt="" fit="fill" fill sizes="120px" quality={75} className="object-cover" />}
+                </span>
+                <span className="mt-2 block text-xs leading-snug">{o.productName}</span>
+                <span className={cn("mt-1 block text-xs", selected ? "text-gold-hover" : "text-muted-foreground")}>
+                  {selected ? "Selected" : "Free"}
+                </span>
+              </label>
+            );
+          })}
+        </div>
       </div>
+      {giftOffer.options.length > GIFTS_IN_VIEW && (
+        <p className="mt-2 text-xs text-muted-foreground">Scroll the list to see all {giftOffer.options.length} gifts.</p>
+      )}
       {giftProductId && (
         <button type="button" onClick={() => cartActions.setGift(null)} className="mt-3 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground">
           Skip the gift
