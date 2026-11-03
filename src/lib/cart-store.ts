@@ -8,10 +8,16 @@ import { MAX_QTY_PER_LINE } from "@/lib/pricing";
  * Cart kept in localStorage. Prices stored here are only for display; the
  * server re-prices every line when the order is placed.
  *
- * A line is one choice: a product, and (when it has variant groups) the group, size and colour chosen from it.
- * The same product can have several lines (6mm gold x 2, 8mm silver x 1); they all draw on the product's one
- * stock number.
+ * A line is one choice: a product, and (when it has variant groups) the combined
+ * variant selections chosen for that complete product unit.
+ * All lines of a product draw on the product's one stock number.
  */
+
+export type CartOptionChoice = {
+  group: string;
+  size: string | null;
+  colour: string | null;
+};
 
 export type CartLine = {
   /** Identifies the line: the product and what was chosen from its groups. See `lineKey`. */
@@ -19,10 +25,12 @@ export type CartLine = {
   productId: number;
   slug: string;
   name: string;
-  /** The variant group, size and colour chosen. Null for a product with no groups. */
-  group: string | null;
-  size: string | null;
-  colour: string | null;
+  /** When a product has variant groups, all chosen variant options are saved together. */
+  options?: CartOptionChoice[] | null;
+  /** The variant group, size and colour chosen (for backwards compatibility / single group). */
+  group?: string | null;
+  size?: string | null;
+  colour?: string | null;
   price: number;
   image: string | null;
   qty: number;
@@ -43,16 +51,30 @@ type CartState = {
 const STORAGE_KEY = "gog-cart-v2";
 const EMPTY: CartState = { lines: [], giftProductId: null, coupon: null, drawerOpen: false };
 
-type Choice = Pick<CartLine, "productId" | "group" | "size" | "colour">;
+type Choice = {
+  productId: number;
+  options?: CartOptionChoice[] | null;
+  group?: string | null;
+  size?: string | null;
+  colour?: string | null;
+};
 
 /** The identity of a line: the product plus what was chosen from its groups. */
-export const lineKey = (c: Choice) => `p${c.productId}|${c.group ?? ""}|${c.size ?? ""}|${c.colour ?? ""}`;
+export const lineKey = (c: Choice) => {
+  if (c.options && c.options.length > 0) {
+    const opts = c.options
+      .map((o) => `${o.group}:${o.size ?? ""}:${o.colour ?? ""}`)
+      .join(";");
+    return `p${c.productId}|${opts}`;
+  }
+  return `p${c.productId}|${c.group ?? ""}|${c.size ?? ""}|${c.colour ?? ""}`;
+};
 
-/** The choice written out for the bag, checkout and orders: "Nose Ring 1, Size 6mm, gold". */
-export const lineLabel = (l: Pick<CartLine, "group" | "size" | "colour">) => composeOptionLabel(l);
+/** The choice written out for the bag, checkout and orders: "Nose Ring 1: Size 6mm, Gold · Nose Ring 2: Size 8mm, Silver". */
+export const lineLabel = (l: Choice) => composeOptionLabel(l);
 
 /** What to show under a line's name, one line per part. */
-export const lineDetails = (l: Pick<CartLine, "group" | "size" | "colour">) => optionLines(lineLabel(l));
+export const lineDetails = (l: Choice) => optionLines(lineLabel(l));
 
 let state: CartState = EMPTY;
 let hydrated = false;

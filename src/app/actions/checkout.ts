@@ -115,6 +115,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
       items: cart.data.items.map((i) => ({
         product_id: i.productId,
         qty: i.qty,
+        options: i.options ?? (i.group ? [{ group: i.group, size: i.size ?? null, colour: i.colour ?? null }] : null),
         group: i.group ?? null,
         size: i.size ?? null,
         colour: i.colour ?? null,

@@ -110,7 +110,14 @@ export function CheckoutForm({ transferMethods }: { transferMethods: Method[] })
 
   const cartPayload = JSON.stringify({
     // Each line is a product with the group, size and colour chosen. The server checks them against the product.
-    items: cart.lines.map((l) => ({ productId: l.productId, qty: l.qty, group: l.group, size: l.size, colour: l.colour })),
+    items: cart.lines.map((l) => ({
+      productId: l.productId,
+      qty: l.qty,
+      options: l.options ?? (l.group ? [{ group: l.group, size: l.size, colour: l.colour }] : null),
+      group: l.group,
+      size: l.size,
+      colour: l.colour,
+    })),
     giftProductId: cart.giftEligible ? cart.giftProductId : null,
     couponCode: cart.coupon?.code ?? null,
   });

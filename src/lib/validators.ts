@@ -29,6 +29,16 @@ export const cartPayloadSchema = z.object({
         group: z.string().trim().max(60).nullable().optional(),
         size: z.string().trim().max(60).nullable().optional(),
         colour: z.string().trim().max(60).nullable().optional(),
+        options: z
+          .array(
+            z.object({
+              group: z.string().trim().max(60),
+              size: z.string().trim().max(60).nullable().optional(),
+              colour: z.string().trim().max(60).nullable().optional(),
+            }),
+          )
+          .nullable()
+          .optional(),
       }),
     )
     .min(1, "Your bag is empty")

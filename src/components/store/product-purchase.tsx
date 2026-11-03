@@ -8,7 +8,7 @@ import { usePurchase } from "@/components/store/purchase-context";
 import { useStore } from "@/components/store/store-provider";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
-import { piecesLabel, quantityLine } from "@/lib/order-text";
+import { quantityLine } from "@/lib/order-text";
 import { site, whatsappLink } from "@/lib/site";
 import { cn, formatPKR } from "@/lib/utils";
 
@@ -19,9 +19,9 @@ export function ProductPurchase() {
   const [showSticky, setShowSticky] = useState(false);
   const cta = useRef<HTMLDivElement>(null);
 
-  const count = sel.pieces;
-  const needsChoice = sel.hasGroups && sel.lines.length === 0;
-  const total = count > 0 ? sel.total : product.price;
+  const count = sel.totalQty;
+  const needsChoice = sel.hasGroups && !sel.canAdd;
+  const total = sel.total;
 
   useEffect(() => {
     track("ViewContent", {
@@ -65,17 +65,20 @@ export function ProductPurchase() {
     </>
   ) : (
     <>
-      <ShoppingBag /> {count > 1 ? `Add ${piecesLabel(count)} to cart` : "Add to cart"}
+      <ShoppingBag /> {count > 1 ? `Add ${count} sets to cart` : "Add to cart"}
     </>
   );
   const stickyLabel = sel.soldOut ? "Out of stock" : needsChoice ? `Select ${choiceNoun(sel)}` : added ? "Added" : count > 1 ? `Add ${count}` : "Add to cart";
   const disabled = !sel.canAdd;
 
+  const waLines = sel.hasGroups && sel.lines.length > 0
+    ? sel.lines.map((l) => quantityLine(l.label ? `${product.name} (${l.label})` : product.name, l.qty, product.price))
+    : [quantityLine(product.name, count, product.price)];
+
   const waText = [
     "Hello Little Luxe Glow, I would like to order:",
-    product.name,
-    ...(sel.hasGroups ? sel.lines.map((l) => quantityLine(l.label, l.qty, product.price)) : []),
-    `Total${count > 0 ? ` (${piecesLabel(count)})` : ""}: ${formatPKR(total)}`,
+    ...waLines,
+    `Total${count > 1 ? ` (${count} sets)` : ""}: ${formatPKR(total)}`,
     `${site.url}/product/${product.slug}`,
   ].join("\n");
 
@@ -116,12 +119,12 @@ export function ProductPurchase() {
             {sel.hasGroups && sel.lines.length > 0 && (
               <p className="truncate text-xs text-muted-foreground">
                 {sel.lines[0].label}
-                {sel.lines.length > 1 && ` and ${sel.lines.length - 1} more`}
+                {sel.lines.length > 1 && ` + ${sel.lines.length - 1} more`}
               </p>
             )}
             <p className="text-sm">
               {formatPKR(total)}
-              {count > 1 && <span className="ml-2 text-muted-foreground">for {piecesLabel(count)}</span>}
+              {count > 1 && <span className="ml-2 text-muted-foreground">Qty {count}</span>}
             </p>
           </div>
           <Button onClick={addToCart} disabled={disabled} tabIndex={showSticky ? 0 : -1} className="shrink-0">
