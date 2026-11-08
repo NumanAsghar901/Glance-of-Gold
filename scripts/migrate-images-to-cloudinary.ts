@@ -14,7 +14,7 @@
  *   3. banner photos         (banners.image_url and mobile_image_url)
  *   4. order lines of past orders (order_items.image_url, matched to the product photo that was copied)
  *   5. payment screenshots   (payment_proofs.screenshot_path, copied as private files)
- *   6. the story photo       (public/story/glance-story.jpg, shown on the home and About pages)
+ *   6. the story photo       (public/story/luxe-story.jpg, shown on the home and About pages)
  *
  * Safe by design:
  *   - Nothing is ever deleted from Supabase: no file, no row. Supabase keeps every original.
@@ -313,13 +313,13 @@ async function main() {
   );
 
   // 6. The story photo -----------------------------------------------------------------------------
-  const storyFile = "public/story/glance-story.jpg";
+  const storyFile = "public/story/luxe-story.jpg";
   await each(
     "Story photo",
     existsSync(storyFile) ? [storyFile] : [],
     (f) => f,
     async (f) => {
-      const publicId = `${FOLDERS.site}/glance-story`;
+      const publicId = `${FOLDERS.site}/luxe-story`;
       if (!apply) return { outcome: "would copy", note: `${mb(readFileSync(f).length)} -> ${publicId}` };
       const done = await upload(readFileSync(f), publicId, 2000);
       return { outcome: "copied", note: `${done.width} x ${done.height}, ${mb(done.bytes)} -> ${done.public_id}` };

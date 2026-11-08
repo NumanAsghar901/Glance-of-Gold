@@ -14,7 +14,7 @@
   --gold-hover: #8f6e3b;
   --blush: #ebd9d0;
   --danger: #a1403a;
-  /* WhatsApp brand green, used only for the floating chat button so it is recognised at a glance. */
+  /* WhatsApp brand green, used only for the floating chat button so it is easily recognised. */
   --whatsapp: #25d366;
   --whatsapp-hover: #1ebe5b;
   /* Calm green for small "good news" dots, such as the delivery estimate. Never the only signal. */

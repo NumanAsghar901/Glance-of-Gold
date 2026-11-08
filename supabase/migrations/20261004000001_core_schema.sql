@@ -1,4 +1,4 @@
--- Glance of Gold: core schema (enums, tables, indexes, triggers).
+-- Little Luxe Glow: core schema (enums, tables, indexes, triggers).
 -- Money columns are integer PKR (whole rupees).
 
 create schema if not exists private;

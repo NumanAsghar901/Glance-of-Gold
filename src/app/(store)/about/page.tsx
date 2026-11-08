@@ -43,7 +43,7 @@ export default function AboutPage() {
     <>
       <section className="wrap grid items-center gap-14 overflow-hidden pb-20 pt-10 lg:grid-cols-12 lg:gap-10 lg:pb-28 lg:pt-16">
         <div className="order-2 lg:order-1 lg:col-span-7">
-          <h1 className="text-display hero-in max-w-[12ch]">A glance is all it takes</h1>
+          <h1 className="text-display hero-in max-w-[12ch]">Jewellery with a little glow</h1>
           <p className="hero-in hero-in-delay-1 mt-8 max-w-md text-lg leading-relaxed text-muted-foreground">
             Little Luxe Glow is a Pakistani jewellery brand built on a simple idea: beautiful jewellery should be
             effortless to wear and easy to buy.

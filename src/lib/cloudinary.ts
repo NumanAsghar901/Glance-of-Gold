@@ -100,4 +100,4 @@ export const limitLoader = ({ src, width }: { src: string; width: number }) =>
   deliver(src, `f_auto,q_auto,c_limit,w_${snapWidth(width)}`);
 
 /** The story photo on the home and About pages. Falls back to the copy in /public when Cloudinary is not configured. */
-export const STORY_PHOTO = CLOUD_NAME ? cloudinarySrc(`${FOLDERS.site}/glance-story`) : "/story/glance-story.jpg";
+export const STORY_PHOTO = CLOUD_NAME ? cloudinarySrc(`${FOLDERS.site}/glance-story`) : "/story/luxe-story.jpg";

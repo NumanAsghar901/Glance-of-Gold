@@ -7,7 +7,7 @@ Status: approved by owner on 2026-10-03. Update this file when decisions change.
 | Area | Decision |
 |---|---|
 | Hosting | Vercel (domain added later) |
-| Backend | Supabase project `gold of glance` (`krxgnyiqytkvbjemfxhj`, ap-southeast-1) |
+| Backend | Supabase project `little-luxe-glow` (`krxgnyiqytkvbjemfxhj`, ap-southeast-1) |
 | Language / currency | English only, PKR only, Pakistan-only shipping |
 | Customers | Guest checkout only; order tracking via order number + phone |
 | Admin | Custom `/admin` inside the site, Supabase Auth email + password |

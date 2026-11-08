@@ -254,7 +254,7 @@ export default async function Home() {
           </ArchFrame>
         </div>
         <div className="reveal lg:col-span-6 lg:col-start-7">
-          <h2 className="text-title">A glance is all it takes</h2>
+          <h2 className="text-title">A gentle glow in every piece</h2>
           <p className="mt-8 max-w-lg font-heading text-3xl leading-snug sm:text-4xl">
             Beautiful jewellery should feel effortless to wear and easy to buy.
           </p>

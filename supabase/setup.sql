@@ -1,11 +1,11 @@
--- Glance of Gold: full database setup for a NEW Supabase project.
+-- Little Luxe Glow: full database setup for a NEW Supabase project.
 -- Paste this whole file into Supabase > SQL Editor > New query, then Run. Run it ONCE on an empty project.
 -- It is the six files in supabase/migrations/ joined in order.
 
 -- ============================================================
 -- 20261004000001_core_schema.sql
 -- ============================================================
--- Glance of Gold: core schema (enums, tables, indexes, triggers).
+-- Little Luxe Glow: core schema (enums, tables, indexes, triggers).
 -- Money columns are integer PKR (whole rupees).
 
 create schema if not exists private;
