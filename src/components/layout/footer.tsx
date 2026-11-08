@@ -53,7 +53,7 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href={`mailto:${site.email}`} className="link-draw flex items-center gap-3 whitespace-nowrap py-1 hover:text-foreground">
+                <a href={`mailto:${site.email}`} className="link-draw flex items-center gap-3 break-all sm:break-normal py-1 hover:text-foreground">
                   <Mail className="size-4 shrink-0 text-gold" strokeWidth={1.5} />
                   {site.email}
                 </a>

@@ -18,7 +18,34 @@ import { site, whatsappLink } from "@/lib/site";
 import { cn, formatPKR } from "@/lib/utils";
 
 // The home page names itself as the main address of the site, which also tells search engines that other addresses are copies.
-export const metadata: Metadata = { alternates: { canonical: "/" } };
+export const metadata: Metadata = {
+  title: "Little Luxe Glow | Pakistani Jewellery Brand",
+  description:
+    "Little Luxe Glow is a Pakistani jewellery brand. Discover handcrafted nose rings, rings, necklaces, earrings and bangles with cash on delivery across Pakistan.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Little Luxe Glow | Pakistani Jewellery Brand",
+    description:
+      "Little Luxe Glow is a Pakistani jewellery brand. Discover handcrafted nose rings, rings, necklaces, earrings and bangles with cash on delivery across Pakistan.",
+    url: site.url,
+    siteName: site.name,
+    images: [
+      {
+        url: `${site.url}/opengraph-image.png`,
+        width: 1200,
+        height: 630,
+        alt: "Little Luxe Glow Jewellery",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Little Luxe Glow | Pakistani Jewellery Brand",
+    description:
+      "Little Luxe Glow is a Pakistani jewellery brand. Discover handcrafted nose rings, rings, necklaces, earrings and bangles with cash on delivery across Pakistan.",
+    images: [`${site.url}/opengraph-image.png`],
+  },
+};
 
 export default async function Home() {
   const [banners, categories, newest, featured, giftOffer, settings, reviews] = await Promise.all([
@@ -56,8 +83,42 @@ export default async function Home() {
   const siteData = JSON.stringify({
     "@context": "https://schema.org",
     "@graph": [
-      { "@type": "WebSite", name: site.name, url: site.url },
-      { "@type": "Organization", name: site.name, url: site.url, logo: `${site.url}/brand/logo-full.png` },
+      {
+        "@type": "WebSite",
+        "@id": `${site.url}/#website`,
+        name: site.name,
+        alternateName: ["Little Luxe Glow", "Little Luxe Glow Jewellery", "LittleLuxeGlow"],
+        url: site.url,
+        description: site.description,
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: `${site.url}/search?q={search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
+        },
+      },
+      {
+        "@type": "Organization",
+        "@id": `${site.url}/#organization`,
+        name: site.name,
+        legalName: "Little Luxe Glow",
+        url: site.url,
+        logo: `${site.url}/brand/logo-full.png`,
+        image: `${site.url}/opengraph-image.png`,
+        email: site.email,
+        telephone: site.helplineTel,
+        contactPoint: [
+          {
+            "@type": "ContactPoint",
+            telephone: site.helplineTel,
+            contactType: "customer service",
+            areaServed: "PK",
+            availableLanguage: ["English", "Urdu"],
+          },
+        ],
+      },
     ],
   }).replace(/</g, "\\u003c");
 

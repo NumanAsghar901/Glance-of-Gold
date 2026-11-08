@@ -13,7 +13,7 @@ import { confirmOrderMessage, piecesIn } from "@/lib/order-text";
 import { whatsappLink } from "@/lib/site";
 import { formatPKR } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Order confirmed", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Order Confirmed", robots: { index: false, follow: false } };
 
 // Order details are private and tied to the visitor's link, so this page is always rendered fresh.
 export const dynamic = "force-dynamic";
@@ -65,8 +65,8 @@ export default async function OrderPage({ params }: { params: Promise<{ token: s
         </div>
       </header>
 
-      <div className="mx-auto mt-12 grid max-w-5xl gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
-        <div className="space-y-8">
+      <div className="mx-auto mt-12 grid max-w-5xl min-w-0 gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
+        <div className="space-y-8 min-w-0">
           {!cancelled && (
             <section className="border border-gold bg-surface p-5 sm:p-7">
               <h2 className="font-heading text-2xl">Confirm on WhatsApp</h2>
@@ -158,7 +158,7 @@ export default async function OrderPage({ params }: { params: Promise<{ token: s
           </section>
         </div>
 
-        <aside className="h-fit space-y-6 border border-border bg-surface p-5 sm:p-7">
+        <aside className="h-fit min-w-0 space-y-6 border border-border bg-surface p-5 sm:p-7">
           <h2 className="font-heading text-2xl">Order summary</h2>
           <OrderProgress order={order} />
           <OrderLines order={order} />

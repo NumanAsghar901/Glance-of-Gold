@@ -19,14 +19,63 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
-  title: { default: `${site.name} | ${site.tagline}`, template: `%s | ${site.name}` },
+  title: {
+    default: "Little Luxe Glow | Pakistani Jewellery Brand",
+    template: "%s | Little Luxe Glow",
+  },
   description: site.description,
+  applicationName: "Little Luxe Glow",
+  keywords: [
+    "Little Luxe Glow",
+    "Little Luxe Glow Jewellery",
+    "Pakistani jewellery",
+    "jewellery Pakistan",
+    "online jewellery store Pakistan",
+    "nose rings",
+    "rings",
+    "necklaces",
+    "earrings",
+    "bangles",
+    "cash on delivery jewellery",
+  ],
+  authors: [{ name: "Little Luxe Glow", url: site.url }],
+  creator: "Little Luxe Glow",
+  publisher: "Little Luxe Glow",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     siteName: site.name,
     locale: "en_PK",
-    title: `${site.name} | ${site.tagline}`,
+    url: site.url,
+    title: "Little Luxe Glow | Pakistani Jewellery Brand",
     description: site.description,
+    images: [
+      {
+        url: `${site.url}/opengraph-image.png`,
+        width: 1200,
+        height: 630,
+        alt: "Little Luxe Glow Jewellery",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Little Luxe Glow | Pakistani Jewellery Brand",
+    description: site.description,
+    images: [`${site.url}/opengraph-image.png`],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 

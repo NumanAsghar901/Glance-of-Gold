@@ -129,7 +129,7 @@ export async function ShopView({
       )}
 
       {pageCount > 1 && (
-        <nav aria-label="Pagination" className="mt-14 flex items-center justify-center gap-2">
+        <nav aria-label="Pagination" className="mt-14 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
           {page > 1 && (
             <Link
               href={shopHref(basePath, params, { page: String(page - 1) })}

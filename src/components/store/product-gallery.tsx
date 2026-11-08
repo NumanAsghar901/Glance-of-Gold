@@ -36,7 +36,7 @@ export function ProductGallery({ images, name }: { images: ProductImage[]; name:
   return (
     // The thumbnail column only exists when there is more than one photo. With one photo the main image
     // must fill the whole width, not slide into the narrow thumbnail column.
-    <div className={cn(multiple && "lg:grid lg:grid-cols-[4.5rem_1fr] lg:gap-4")}>
+    <div className={cn("min-w-0", multiple && "lg:grid lg:grid-cols-[4.5rem_1fr] lg:gap-4")}>
       {multiple && (
         <ul className="hidden flex-col gap-3 lg:flex" aria-label="Product images">
           {images.map((img, i) => (
@@ -59,7 +59,7 @@ export function ProductGallery({ images, name }: { images: ProductImage[]; name:
         </ul>
       )}
 
-      <div className="group relative">
+      <div className="group relative min-w-0 overflow-hidden">
         <ul
           ref={track}
           onScroll={(e) => {

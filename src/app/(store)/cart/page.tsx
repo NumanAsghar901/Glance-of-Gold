@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CartPageView } from "@/components/cart/cart-page-view";
 
-export const metadata: Metadata = { title: "Your bag", robots: { index: false } };
+export const metadata: Metadata = { title: "Your Bag", robots: { index: false } };
 
 export default function CartPage() {
   return (

@@ -18,9 +18,9 @@ export function ProductGrid({
 }) {
   const ratio = commonRatio(products.map((p) => p.images[0]));
   return (
-    <ul className={cn("grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 md:gap-x-6 xl:grid-cols-4", className)}>
+    <ul className={cn("grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-4 sm:gap-y-10 md:grid-cols-3 md:gap-x-6 xl:grid-cols-4", className)}>
       {products.map((p, i) => (
-        <li key={p.id} className={i < priorityCount ? undefined : "reveal"}>
+        <li key={p.id} className={cn("min-w-0", i < priorityCount ? undefined : "reveal")}>
           <ProductCard product={p} ratio={ratio} showAdd={showAdd} priority={i < priorityCount} />
         </li>
       ))}

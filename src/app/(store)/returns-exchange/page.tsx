@@ -3,9 +3,29 @@ import { PolicyPage, PolicySection } from "@/components/store/policy";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Returns & Exchange",
-  description: "Return or exchange your Little Luxe Glow order within 14 days of delivery.",
+  title: "Returns & Exchange Policy",
+  description: "Return or exchange your Little Luxe Glow order within 14 days of delivery across Pakistan.",
   alternates: { canonical: "/returns-exchange" },
+  openGraph: {
+    title: "Returns & Exchange Policy | Little Luxe Glow",
+    description: "Return or exchange your Little Luxe Glow order within 14 days of delivery across Pakistan.",
+    url: `${site.url}/returns-exchange`,
+    siteName: site.name,
+    images: [
+      {
+        url: `${site.url}/opengraph-image.png`,
+        width: 1200,
+        height: 630,
+        alt: "Returns & Exchange - Little Luxe Glow",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Returns & Exchange Policy | Little Luxe Glow",
+    description: "Return or exchange your Little Luxe Glow order within 14 days of delivery across Pakistan.",
+    images: [`${site.url}/opengraph-image.png`],
+  },
 };
 
 export default function ReturnsPage() {

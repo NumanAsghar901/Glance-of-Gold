@@ -72,7 +72,7 @@ export function TrackView() {
           <OrderProgress order={order} />
 
           {order.tracking_number && (
-            <p className="bg-sand px-4 py-3 text-sm">
+            <p className="bg-sand px-4 py-3 text-sm break-all sm:break-normal">
               {order.courier ?? "Courier"} tracking number: <strong className="font-medium">{order.tracking_number}</strong>
             </p>
           )}

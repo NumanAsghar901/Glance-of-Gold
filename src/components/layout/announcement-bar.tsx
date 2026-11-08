@@ -43,13 +43,13 @@ export function AnnouncementBar({ items }: { items: Announcement[] }) {
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
-      <div className="wrap grid h-9 place-items-center text-[0.8125rem]">
+      <div className="wrap grid min-h-9 py-1 place-items-center text-xs sm:text-[0.8125rem]">
         {items.map((item, i) => (
           <p
             key={item.id}
             aria-hidden={i !== index}
             className={cn(
-              "col-start-1 row-start-1 flex items-center gap-2 text-center transition-opacity duration-300",
+              "col-start-1 row-start-1 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-center transition-opacity duration-300 px-2",
               i === index ? "opacity-100" : "pointer-events-none opacity-0",
             )}
           >

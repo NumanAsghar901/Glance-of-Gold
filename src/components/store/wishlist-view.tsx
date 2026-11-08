@@ -48,9 +48,9 @@ export function WishlistView() {
 
   const ratio = commonRatio(shown.map((x) => x.images[0]));
   return (
-    <ul className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 md:gap-x-6 xl:grid-cols-4">
+    <ul className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-4 sm:gap-y-10 md:grid-cols-3 md:gap-x-6 xl:grid-cols-4">
       {shown.map((p) => (
-        <li key={p.id}>
+        <li key={p.id} className="min-w-0">
           <ProductCard product={p} ratio={ratio} />
         </li>
       ))}

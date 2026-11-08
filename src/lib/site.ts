@@ -3,12 +3,16 @@ export const PRODUCTION_URL = "https://www.littleluxeglow.com";
 
 const trimSlash = (u: string) => u.replace(/\/+$/, "");
 
+const isProd = process.env.NODE_ENV === "production";
+const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+const resolvedUrl = isProd && envUrl?.includes("localhost") ? PRODUCTION_URL : (envUrl ?? PRODUCTION_URL);
+
 export const site = {
   name: "Little Luxe Glow",
-  tagline: "Jewellery with a little glow",
+  tagline: "Pakistani Jewellery Brand",
   description:
-    "Little Luxe Glow is a Pakistani jewellery brand. Discover elegant necklaces, earrings, rings and bangles with cash on delivery across Pakistan.",
-  url: trimSlash(process.env.NEXT_PUBLIC_SITE_URL ?? PRODUCTION_URL),
+    "Little Luxe Glow is a Pakistani jewellery brand. Discover handcrafted nose rings, rings, necklaces, earrings and bangles with cash on delivery across Pakistan.",
+  url: trimSlash(resolvedUrl),
   // Every link inside an email points here (also when the order was placed on a local dev copy).
   emailUrl: trimSlash(process.env.EMAIL_SITE_URL ?? PRODUCTION_URL),
   helpline: "0316 6568142",

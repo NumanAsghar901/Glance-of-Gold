@@ -9,6 +9,7 @@ import { Photo } from "@/components/ui/photo";
 import { choiceNoun, OptionPicker, SelectionPrice } from "@/components/store/option-picker";
 import { useOptionSelection } from "@/components/store/use-option-selection";
 import { Button } from "@/components/ui/button";
+import { StarRating } from "@/components/ui/star-rating";
 import { StockTag } from "@/components/ui/stock-tag";
 import { photoRatio } from "@/lib/image-ratio";
 import type { ProductDetail } from "@/lib/data/types";
@@ -146,18 +147,32 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
         {product.category && <p className="text-sm text-muted-foreground">{product.category.name}</p>}
         <h2 className="mt-1 pr-10 font-heading text-4xl leading-tight">{product.name}</h2>
         <SelectionPrice product={product} className="mt-3 text-lg" />
+        {(product.ratingCount > 0 || product.soldCount > 0) && (
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-sm">
+            {product.soldCount > 0 && <span className="text-muted-foreground">{product.soldCount} sold</span>}
+            {product.ratingCount > 0 && (
+              <div className="inline-flex items-center gap-1.5">
+                <StarRating rating={product.rating} size="sm" />
+                <span className="font-medium text-foreground">{product.rating.toFixed(1)}</span>
+                <span className="text-muted-foreground">
+                  ({product.ratingCount} {product.ratingCount === 1 ? "review" : "reviews"})
+                </span>
+              </div>
+            )}
+          </div>
+        )}
         <StockTag inStock={product.inStock} lowStock={product.lowStock} className="mt-3 inline-block self-start" />
 
         {product.description && (
-          <p className="mt-5 line-clamp-4 text-[0.9375rem] leading-relaxed text-muted-foreground">{product.description}</p>
+          <p className="mt-5 line-clamp-4 text-[0.9375rem] leading-relaxed text-muted-foreground break-words">{product.description}</p>
         )}
 
         <div className="mt-6">
           <OptionPicker product={product} sel={sel} idPrefix="qv" />
         </div>
 
-        <div className="mt-8 flex gap-3">
-          <Button size="lg" onClick={add} disabled={!sel.canAdd || added} className="flex-1">
+        <div className="mt-8 flex items-center gap-2 sm:gap-3">
+          <Button size="lg" onClick={add} disabled={!sel.canAdd || added} className="flex-1 min-w-0">
             {sel.soldOut ? (
               "Out of stock"
             ) : needsChoice ? (
@@ -172,7 +187,7 @@ function QuickViewBody({ product }: { product: ProductDetail }) {
               </>
             )}
           </Button>
-          <WishlistButton slug={product.slug} name={product.name} className="size-14 border border-border bg-surface" />
+          <WishlistButton slug={product.slug} name={product.name} className="size-12 sm:size-14 shrink-0 border border-border bg-surface" />
         </div>
 
         <Link href={`/product/${product.slug}`} onClick={quickView.close} className="link-draw mt-6 self-start text-[0.9375rem]">

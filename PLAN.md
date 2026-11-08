@@ -1,4 +1,4 @@
-# Glance of Gold - Build Plan
+# Little Luxe Glow - Build Plan
 
 Status: approved by owner on 2026-10-03. Update this file when decisions change.
 
@@ -91,7 +91,7 @@ All money is `integer` PKR (whole rupees). All tables have RLS on. Admin check v
 
 ## Policy copy
 Owner supplied text from another store. Rules for adapting it:
-- Replace store name, email and phone with Glance of Gold's (helpline 03166568142, Glanceofgold@gmail.com). Replace every stray reference to the other store, including the "Nafees Jewellery" mention in Terms section 3.
+- Replace store name, email and phone with Little Luxe Glow's (helpline 03166568142, Littleluxeglowofficial@gmail.com). Replace every stray reference to the other store, including the "Nafees Jewellery" mention in Terms section 3.
 - Terms section 4 and Privacy "Payment Method" say COD only. Rewrite to match the site: COD plus manual JazzCash / Easypaisa / Bank Transfer.
 - Keep the owner's wording otherwise. Suggest a legal read before launch.
 

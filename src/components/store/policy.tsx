@@ -15,7 +15,7 @@ export function PolicyPage({
   return (
     <div className="wrap py-10 lg:py-16">
       <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground">
-        <ol className="flex items-center gap-2">
+        <ol className="flex flex-wrap items-center gap-2">
           <li>
             <Link href="/" className="link-draw">
               Home
@@ -34,7 +34,7 @@ export function PolicyPage({
         <p className="mt-4 text-muted-foreground">{subtitle}</p>
       </header>
 
-      <div className="mx-auto mt-12 max-w-2xl text-[0.9375rem] leading-relaxed text-foreground/85">
+      <div className="mx-auto mt-12 max-w-2xl text-[0.9375rem] leading-relaxed text-foreground/85 break-words">
         {intro && <p>{intro}</p>}
         {children}
       </div>

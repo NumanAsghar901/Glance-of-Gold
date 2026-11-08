@@ -2,12 +2,33 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PolicyPage, PolicySection } from "@/components/store/policy";
 import { getSettings } from "@/lib/data/site";
+import { site } from "@/lib/site";
 import { formatPKR } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Shipping & Delivery",
-  description: "Delivery charges, free delivery threshold and payment options at Little Luxe Glow.",
+  description: "Delivery charges, free delivery threshold and payment options at Little Luxe Glow across Pakistan.",
   alternates: { canonical: "/shipping" },
+  openGraph: {
+    title: "Shipping & Delivery | Little Luxe Glow",
+    description: "Delivery charges, free delivery threshold and payment options at Little Luxe Glow across Pakistan.",
+    url: `${site.url}/shipping`,
+    siteName: site.name,
+    images: [
+      {
+        url: `${site.url}/opengraph-image.png`,
+        width: 1200,
+        height: 630,
+        alt: "Shipping & Delivery - Little Luxe Glow",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Shipping & Delivery | Little Luxe Glow",
+    description: "Delivery charges, free delivery threshold and payment options at Little Luxe Glow across Pakistan.",
+    images: [`${site.url}/opengraph-image.png`],
+  },
 };
 
 export default async function ShippingPage() {

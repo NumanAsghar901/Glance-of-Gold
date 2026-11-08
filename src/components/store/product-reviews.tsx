@@ -16,8 +16,8 @@ export function ProductReviews({ product, data }: { product: ProductDetail; data
         </h2>
       </div>
 
-      <div className="mt-10 grid gap-12 lg:grid-cols-12 lg:gap-16">
-        <div className="lg:col-span-4">
+      <div className="mt-10 grid min-w-0 gap-12 lg:grid-cols-12 lg:gap-16">
+        <div className="min-w-0 lg:col-span-4">
           {total > 0 ? (
             <>
               <p className="font-heading text-6xl leading-none">{product.rating.toFixed(1)}</p>
@@ -46,16 +46,16 @@ export function ProductReviews({ product, data }: { product: ProductDetail; data
           )}
 
           <details className="group mt-8">
-            <summary className="inline-flex h-12 cursor-pointer list-none items-center border border-gold px-6 text-[0.9375rem] font-medium transition-colors duration-200 hover:bg-gold [&::-webkit-details-marker]:hidden">
+            <summary className="inline-flex min-h-12 cursor-pointer list-none items-center border border-gold px-6 text-[0.9375rem] font-medium transition-colors duration-200 hover:bg-gold [&::-webkit-details-marker]:hidden">
               Write a review
             </summary>
-            <div className="mt-6 border border-border bg-surface p-5">
+            <div className="mt-6 border border-border bg-surface p-4 sm:p-5">
               <ReviewForm slug={product.slug} />
             </div>
           </details>
         </div>
 
-        <ul className="divide-y divide-border lg:col-span-8">
+        <ul className="divide-y divide-border min-w-0 lg:col-span-8">
           {data.reviews.map((r) => (
             <li key={r.id} className="reveal py-6 first:pt-0">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -64,8 +64,8 @@ export function ProductReviews({ product, data }: { product: ProductDetail; data
                   {dateFmt.format(new Date(r.createdAt))}
                 </time>
               </div>
-              <p className="mt-3 max-w-prose leading-relaxed">{r.comment}</p>
-              <p className="mt-3 text-sm text-muted-foreground">
+              <p className="mt-3 max-w-prose leading-relaxed break-words">{r.comment}</p>
+              <p className="mt-3 text-sm text-muted-foreground break-words">
                 {r.authorName}
                 {r.city ? `, ${r.city}` : ""}
               </p>

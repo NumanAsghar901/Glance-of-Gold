@@ -4,10 +4,32 @@ import { ArchFrame } from "@/components/ui/arch";
 import { Button } from "@/components/ui/button";
 import { STORY_PHOTO } from "@/lib/cloudinary";
 
+import { site } from "@/lib/site";
+
 export const metadata: Metadata = {
-  title: "About us",
-  description: "The story behind Little Luxe Glow, a Pakistani jewellery brand.",
+  title: "About Us",
+  description: "The story behind Little Luxe Glow, a Pakistani jewellery brand delivering elegant pieces across Pakistan.",
   alternates: { canonical: "/about" },
+  openGraph: {
+    title: "About Us | Little Luxe Glow",
+    description: "The story behind Little Luxe Glow, a Pakistani jewellery brand delivering elegant pieces across Pakistan.",
+    url: `${site.url}/about`,
+    siteName: site.name,
+    images: [
+      {
+        url: `${site.url}/opengraph-image.png`,
+        width: 1200,
+        height: 630,
+        alt: "About Little Luxe Glow",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About Us | Little Luxe Glow",
+    description: "The story behind Little Luxe Glow, a Pakistani jewellery brand delivering elegant pieces across Pakistan.",
+    images: [`${site.url}/opengraph-image.png`],
+  },
 };
 
 const values = [

@@ -4,8 +4,28 @@ import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "The terms that govern your use of Little Luxe Glow.",
+  description: "The terms that govern your use of Little Luxe Glow and purchasing jewellery online.",
   alternates: { canonical: "/terms" },
+  openGraph: {
+    title: "Terms of Service | Little Luxe Glow",
+    description: "The terms that govern your use of Little Luxe Glow and purchasing jewellery online.",
+    url: `${site.url}/terms`,
+    siteName: site.name,
+    images: [
+      {
+        url: `${site.url}/opengraph-image.png`,
+        width: 1200,
+        height: 630,
+        alt: "Terms of Service - Little Luxe Glow",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms of Service | Little Luxe Glow",
+    description: "The terms that govern your use of Little Luxe Glow and purchasing jewellery online.",
+    images: [`${site.url}/opengraph-image.png`],
+  },
 };
 
 export default function TermsPage() {

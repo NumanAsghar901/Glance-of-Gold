@@ -16,7 +16,7 @@ const inputClass = (error?: string) =>
 function Send() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="lg" disabled={pending}>
+    <Button type="submit" size="lg" disabled={pending} className="w-full sm:w-auto">
       {pending ? "Posting..." : "Post review"}
     </Button>
   );

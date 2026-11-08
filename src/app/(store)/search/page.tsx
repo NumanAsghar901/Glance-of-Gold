@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { searchProducts } from "@/lib/data/catalog";
 
 export const metadata: Metadata = {
-  title: "Search",
+  title: "Search Jewellery",
   robots: { index: false },
 };
 

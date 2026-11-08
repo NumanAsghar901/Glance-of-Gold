@@ -87,11 +87,11 @@ export function ProductPurchase() {
       <OptionPicker product={product} sel={sel} idPrefix="pp" stockNote={false} />
 
       <div ref={cta} className="mt-6 flex flex-col gap-3">
-        <div className="flex gap-3">
-          <Button size="lg" onClick={addToCart} disabled={disabled} className="flex-1" aria-live="polite">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Button size="lg" onClick={addToCart} disabled={disabled} className="flex-1 min-w-0" aria-live="polite">
             {label}
           </Button>
-          <WishlistButton slug={product.slug} name={product.name} className="size-14 border border-border bg-surface" />
+          <WishlistButton slug={product.slug} name={product.name} className="size-12 sm:size-14 shrink-0 border border-border bg-surface" />
         </div>
         <Button
           href={whatsappLink(waText, settings.whatsapp)}
@@ -109,25 +109,25 @@ export function ProductPurchase() {
       <div
         aria-hidden={!showSticky}
         className={cn(
-          "fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 transition-transform duration-300 ease-(--ease-out) lg:hidden",
+          "fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background px-3 sm:px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 sm:pt-3 transition-transform duration-300 ease-(--ease-out) lg:hidden",
           showSticky ? "translate-y-0" : "translate-y-full",
         )}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 max-w-lg mx-auto">
           <div className="min-w-0 flex-1">
-            <p className="truncate font-heading text-lg leading-tight">{product.name}</p>
+            <p className="truncate font-heading text-base sm:text-lg leading-tight">{product.name}</p>
             {sel.hasGroups && sel.lines.length > 0 && (
               <p className="truncate text-xs text-muted-foreground">
                 {sel.lines[0].label}
                 {sel.lines.length > 1 && ` + ${sel.lines.length - 1} more`}
               </p>
             )}
-            <p className="text-sm">
+            <p className="text-xs sm:text-sm font-medium">
               {formatPKR(total)}
-              {count > 1 && <span className="ml-2 text-muted-foreground">Qty {count}</span>}
+              {count > 1 && <span className="ml-2 text-muted-foreground text-xs font-normal">Qty {count}</span>}
             </p>
           </div>
-          <Button onClick={addToCart} disabled={disabled} tabIndex={showSticky ? 0 : -1} className="shrink-0">
+          <Button onClick={addToCart} disabled={disabled} tabIndex={showSticky ? 0 : -1} className="shrink-0 text-xs sm:text-sm px-3.5 sm:px-6">
             {stickyLabel}
           </Button>
         </div>

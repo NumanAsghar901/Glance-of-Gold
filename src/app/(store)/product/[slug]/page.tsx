@@ -40,11 +40,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description =
     product.description?.slice(0, 155) ?? `${product.name} from ${site.name}. Cash on delivery across Pakistan.`;
   const image = product.images.find((i) => !i.url.endsWith(".svg"))?.url;
+  const imageUrl = image?.startsWith("http") ? image : image ? `${site.url}${image}` : `${site.url}/opengraph-image.png`;
+
   return {
     title: product.name,
     description,
     alternates: { canonical: `/product/${slug}` },
-    openGraph: { title: product.name, description, type: "website", images: image ? [image] : undefined },
+    openGraph: {
+      title: `${product.name} | ${site.name}`,
+      description,
+      type: "website",
+      siteName: site.name,
+      url: `${site.url}/product/${slug}`,
+      images: [{ url: imageUrl, alt: product.name }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.name} | ${site.name}`,
+      description,
+      images: [imageUrl],
+    },
   };
 }
 
@@ -52,10 +67,10 @@ function Detail({ title, children, defaultOpen = false }: { title: string; child
   return (
     <details open={defaultOpen} className="group border-b border-border">
       <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-4 font-heading text-xl [&::-webkit-details-marker]:hidden">
-        {title}
-        <ChevronDown className="size-4 transition-transform duration-300 ease-(--ease-out) group-open:rotate-180" strokeWidth={1.5} />
+        <span>{title}</span>
+        <ChevronDown className="size-4 shrink-0 transition-transform duration-300 ease-(--ease-out) group-open:rotate-180" strokeWidth={1.5} />
       </summary>
-      <div className="pb-6 text-sm leading-relaxed text-muted-foreground">{children}</div>
+      <div className="pb-6 text-sm leading-relaxed text-muted-foreground break-words">{children}</div>
     </details>
   );
 }
@@ -85,7 +100,9 @@ export default async function ProductPage({ params }: Props) {
       url: `${site.url}/product/${product.slug}`,
       priceCurrency: "PKR",
       price: product.price,
+      itemCondition: "https://schema.org/NewCondition",
       availability: product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      seller: { "@type": "Organization", name: site.name },
     },
     ...(product.ratingCount > 0
       ? { aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating, reviewCount: product.ratingCount } }
@@ -125,27 +142,35 @@ export default async function ProductPage({ params }: Props) {
         </ol>
       </nav>
 
-      <div className="mt-6 grid gap-8 lg:mt-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
-        <ProductGallery images={product.images} name={product.name} />
+      <div className="mt-6 grid min-w-0 gap-8 lg:mt-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+        <div className="min-w-0">
+          <ProductGallery images={product.images} name={product.name} />
+        </div>
 
-        <div className="lg:py-4">
+        <div className="min-w-0 lg:py-4">
           <PurchaseProvider product={product}>
-          <h1 className="text-title">{product.name}</h1>
+          <h1 className="text-title break-words">{product.name}</h1>
+          <LivePrice className="mt-3 text-lg" />
+
           {(product.ratingCount > 0 || product.soldCount > 0) && (
-            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+              {product.soldCount > 0 && <span className="text-muted-foreground">{product.soldCount} sold</span>}
               {product.ratingCount > 0 && (
-                <a href="#reviews" className="inline-flex items-center gap-2 transition-colors hover:text-gold-hover">
-                  <StarRating rating={product.rating} />
-                  <span className="font-medium">{product.rating.toFixed(1)}</span>
+                <a
+                  href="#reviews"
+                  className="inline-flex items-center gap-1.5 transition-colors hover:text-gold-hover"
+                  aria-label={`${product.rating.toFixed(1)} out of 5 stars based on ${product.ratingCount} reviews`}
+                >
+                  <StarRating rating={product.rating} size="sm" />
+                  <span className="font-medium text-foreground">{product.rating.toFixed(1)}</span>
                   <span className="text-muted-foreground underline underline-offset-4">
-                    {product.ratingCount} {product.ratingCount === 1 ? "review" : "reviews"}
+                    ({product.ratingCount} {product.ratingCount === 1 ? "review" : "reviews"})
                   </span>
                 </a>
               )}
-              {product.soldCount > 0 && <span className="text-muted-foreground">{product.soldCount} sold</span>}
             </div>
           )}
-          <LivePrice className="mt-4 text-lg" />
+
           <StockTag inStock={product.inStock} lowStock={product.lowStock} className="mt-3 inline-block" />
           <p className="mt-1 text-xs text-muted-foreground">
             {settings.freeShippingThreshold > 0 &&
@@ -163,22 +188,22 @@ export default async function ProductPage({ params }: Props) {
           <ul className="mt-8 grid gap-4 border-y border-border py-6 text-sm">
             <li className="flex items-center gap-3">
               <Truck className="size-5 shrink-0 text-gold" strokeWidth={1.25} />
-              Cash on delivery across Pakistan
+              <span>Cash on delivery across Pakistan</span>
             </li>
             <li className="flex items-center gap-3">
               <RotateCcw className="size-5 shrink-0 text-gold" strokeWidth={1.25} />
-              14-day returns and exchanges
+              <span>14-day returns and exchanges</span>
             </li>
             <li className="flex items-center gap-3">
               <ShieldCheck className="size-5 shrink-0 text-gold" strokeWidth={1.25} />
-              Order confirmed with you on WhatsApp
+              <span>Order confirmed with you on WhatsApp</span>
             </li>
           </ul>
 
           <div className="mt-2">
             <Detail title="Product information" defaultOpen>
-              {product.description && <p className="mb-4 max-w-prose whitespace-pre-line">{product.description}</p>}
-              <ul className="space-y-1.5">
+              {product.description && <p className="mb-4 max-w-prose whitespace-pre-line break-words">{product.description}</p>}
+              <ul className="space-y-1.5 break-words">
                 {product.material && <li>Finish: {product.material}</li>}
                 {product.category && <li>Category: {product.category.name}</li>}
                 {colours.length > 0 && <li>{colours.length === 1 ? "Colour" : "Colours"}: {colours.join(", ")}</li>}

@@ -2,12 +2,33 @@ import { ChevronDown } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSettings } from "@/lib/data/site";
+import { site } from "@/lib/site";
 import { formatPKR } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "FAQ",
+  title: "Frequently Asked Questions",
   description: "Answers to common questions about ordering, delivery, payment and returns at Little Luxe Glow.",
   alternates: { canonical: "/faq" },
+  openGraph: {
+    title: "Frequently Asked Questions | Little Luxe Glow",
+    description: "Answers to common questions about ordering, delivery, payment and returns at Little Luxe Glow.",
+    url: `${site.url}/faq`,
+    siteName: site.name,
+    images: [
+      {
+        url: `${site.url}/opengraph-image.png`,
+        width: 1200,
+        height: 630,
+        alt: "Little Luxe Glow FAQ",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Frequently Asked Questions | Little Luxe Glow",
+    description: "Answers to common questions about ordering, delivery, payment and returns at Little Luxe Glow.",
+    images: [`${site.url}/opengraph-image.png`],
+  },
 };
 
 export default async function FaqPage() {

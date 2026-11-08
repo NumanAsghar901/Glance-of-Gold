@@ -30,7 +30,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         </a>
         <AnnouncementBar items={announcements} />
         <Header categories={categories} />
-        <main id="main" className="flex-1">
+        <main id="main" className="flex-1 min-w-0">
           {children}
         </main>
         <Footer />
